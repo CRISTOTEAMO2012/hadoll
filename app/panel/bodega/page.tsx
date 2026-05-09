@@ -290,7 +290,7 @@ return(
 <input
 type="number"
 value={cantidad}
-onChange={e=>setCantidad(e.target.value)}
+onChange={e=>setCantidad(Number(e.target.value))}
 style={input}
 />
 
