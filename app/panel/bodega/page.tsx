@@ -69,7 +69,7 @@ movimiento:"Stock existente"
 // 🔥 COMPRAS SIN GASTO
 let comprasSinGasto = JSON.parse(localStorage.getItem("comprasSinGasto")||"[]")
 
-comprasSinGasto = comprasSinGasto.map(c=>({
+comprasSinGasto = comprasSinGasto.map((c:any) => ({
 ...c,
 movimiento:"Compra sin gasto"
 }))
