@@ -53,7 +53,7 @@ movimiento:"Compra con gasto"
 // 🔥 DAÑADOS
 let danados = JSON.parse(localStorage.getItem("danados")||"[]")
 
-danados = danados.map(d=>({
+danados = danados.map((d:any) => ({
 ...d,
 movimiento:"Dañado"
 }))
