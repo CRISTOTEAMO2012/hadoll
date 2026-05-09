@@ -44,8 +44,8 @@ function cargarHistorial(){
 let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
 
 let compras = gastos
-.filter(g=> g.tipo === "Compra inventario")
-.map(c=>({
+.filter((g:any) => g.tipo === "Compra inventario")
+.map((c:any) => ({
 ...c,
 movimiento:"Compra con gasto"
 }))
