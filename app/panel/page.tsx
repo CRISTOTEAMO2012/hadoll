@@ -1,0 +1,200 @@
+"use client"
+
+import Link from "next/link"
+
+export default function Panel(){
+
+return(
+
+<div style={contenedor}>
+
+{/* 🌊 MARCA DE AGUA */}
+<div style={marcaAgua}>
+<img src="/logo.png" alt="marca" style={logoMarca}/>
+</div>
+
+<div style={header}>
+
+<img
+src="/logo.png"
+alt="Logo empresa"
+style={logo}
+/>
+
+<h1 style={titulo}>
+💧 AGUA HADOLL PANEL PRINCIPAL
+</h1>
+
+</div>
+
+<div style={grid}>
+
+<Link href="/panel/dashboard" style={{...boton,background:"#6366f1"}}>
+📊 Dashboard
+</Link>
+
+<Link href="/panel/clientes" style={{...boton,background:"#22c55e"}}>
+👥 Clientes
+</Link>
+
+<Link href="/panel/productos" style={{...boton,background:"#06b6d4"}}>
+📦 Productos
+</Link>
+
+<Link href="/panel/bodega" style={{...boton,background:"#eab308"}}>
+🏬 Bodega / Compras
+</Link>
+
+<Link href="/panel/produccion" style={{...boton,background:"#f97316"}}>
+🏭 Producción
+</Link>
+
+<Link href="/panel/inventario" style={{...boton,background:"#0ea5e9"}}>
+📦 Inventario
+</Link>
+
+<Link href="/panel/vehiculos" style={{...boton,background:"#8b5cf6"}}>
+🚚 Vehículos Distribuidores
+</Link>
+
+<Link href="/panel/ventas" style={{...boton,background:"#16a34a"}}>
+💰 Ventas
+</Link>
+
+<Link href="/panel/traslados" style={{...boton,background:"#f43f5e"}}>
+🔄 Traslados
+</Link>
+
+<Link href="/panel/reportesproduccion" style={{...boton,background:"#f59e0b"}}>
+📈 Reporte Producción
+</Link>
+
+<Link href="/panel/reportesventas" style={{...boton,background:"#ef4444"}}>
+📊 Reporte Ventas
+</Link>
+
+<Link href="/panel/rutas" style={{...boton,background:"#0d9488"}}>
+🗺 Rutas
+</Link>
+
+<Link href="/panel/caja" style={{...boton,background:"#dc2626"}}>
+💵 Caja
+</Link>
+
+<Link href="/panel/gastos" style={{...boton,background:"#ef4444"}}>
+💸 Gastos Corrientes
+</Link>
+
+<Link href="/panel/finanzas" style={{...boton,background:"#0ea5e9"}}>
+📊 Finanzas
+</Link>
+
+<Link href="/panel/envases" style={{...boton,background:"#14b8a6"}}>
+🫙 Envases
+</Link>
+
+<Link href="/panel/cuentas" style={{...boton,background:"#f97316"}}>
+💳 Cuentas por cobrar
+</Link>
+
+<Link href="/panel/pedidos" style={{...boton,background:"#22c55e"}}>
+📝 Pedidos
+</Link>
+
+<Link href="/panel/insumos" style={{...boton,background:"#64748b"}}>
+🧪 Insumos
+</Link>
+
+</div>
+
+</div>
+
+)
+
+}
+
+/* 🌈 FONDO CLARO AZUL MORADO */
+const contenedor={
+
+background:
+"linear-gradient(135deg, #60a5fa 0%, #818cf8 45%, #c084fc 100%)",
+
+minHeight:"100vh",
+padding:"40px",
+position:"relative",
+overflow:"hidden",
+
+fontFamily:"Segoe UI, Tahoma, Geneva, Verdana, sans-serif"
+}
+
+/* 🌊 MARCA DE AGUA */
+const marcaAgua={
+position:"absolute",
+top:"50%",
+left:"50%",
+transform:"translate(-50%,-50%)",
+opacity:"0.07",
+pointerEvents:"none"
+}
+
+const logoMarca={
+width:"650px",
+height:"650px",
+objectFit:"contain"
+}
+
+const header={
+display:"flex",
+flexDirection:"column",
+alignItems:"center",
+marginBottom:"40px",
+position:"relative",
+zIndex:"2"
+}
+
+const logo={
+width:"90px",
+height:"90px",
+borderRadius:"50%",
+background:"#fff",
+padding:"10px",
+boxShadow:"0 6px 18px rgba(0,0,0,0.25)",
+marginBottom:"10px"
+}
+
+const titulo={
+fontSize:"38px",
+color:"#ffffff",
+textAlign:"center",
+fontWeight:"800",
+letterSpacing:"1px",
+textShadow:"0 3px 8px rgba(0,0,0,0.25)"
+}
+
+const grid={
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
+gap:"22px",
+justifyContent:"center",
+maxWidth:"1100px",
+margin:"0 auto",
+position:"relative",
+zIndex:"2"
+}
+
+const boton={
+padding:"22px",
+borderRadius:"18px",
+color:"#fff",
+textDecoration:"none",
+fontWeight:"bold",
+textAlign:"center",
+fontSize:"17px",
+boxShadow:"0 8px 18px rgba(0,0,0,0.18)",
+display:"flex",
+alignItems:"center",
+justifyContent:"center",
+height:"90px",
+transition:"0.25s",
+backdropFilter:"blur(4px)"
+}
