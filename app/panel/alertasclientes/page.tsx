@@ -13,7 +13,7 @@ let ventas = JSON.parse(localStorage.getItem("ventas") || "[]")
 
 let hoy = new Date()
 
-let resultado = []
+let resultado:any[] = []
 
 clientes.forEach(cliente=>{
 
