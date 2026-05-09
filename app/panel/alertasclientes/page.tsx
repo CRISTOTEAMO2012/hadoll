@@ -15,7 +15,7 @@ let hoy = new Date()
 
 let resultado:any[] = []
 
-clientes.forEach(cliente=>{
+clientes.forEach((cliente:any)=>{
 
 let ventasCliente = ventas.filter(v => v.cliente === cliente.nombre)
 
