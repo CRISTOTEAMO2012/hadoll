@@ -61,7 +61,7 @@ movimiento:"Dañado"
 // 🔥 STOCK EXISTENTE
 let existentes = JSON.parse(localStorage.getItem("stockExistente")||"[]")
 
-existentes = existentes.map(e=>({
+existentes = existentes.map((e:any) => ({
 ...e,
 movimiento:"Stock existente"
 }))
