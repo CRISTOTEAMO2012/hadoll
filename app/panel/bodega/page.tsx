@@ -379,7 +379,10 @@ Historial
 // 🎨 ESTILOS (SIN TOCAR)
 const container={background:"#f1f5f9",minHeight:"100vh",padding:"30px",color:"#111"}
 const bloque={background:"#ffffff",padding:"20px",borderRadius:"12px",width:"360px",margin:"auto",color:"#111"}
-const titulo={textAlign:"center", color:"#111"}
+const titulo: React.CSSProperties = {
+  textAlign: "center",
+  color: "#111"
+}
 const label={marginTop:"10px", color:"#111"}
 const contenedorBotones={display:"flex",gap:"10px"}
 const botonModo=(a)=>({flex:1,padding:"8px",background:a?"#16a34a":"#e5e7eb",color:a?"#fff":"#111",border:"none",borderRadius:"6px",cursor:"pointer"})
