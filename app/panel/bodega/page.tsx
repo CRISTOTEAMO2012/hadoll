@@ -83,7 +83,9 @@ let historialCompleto = [
 ]
 
 // 🔥 ORDENAR
-historialCompleto.sort((a,b)=> new Date(b.fecha) - new Date(a.fecha))
+historialCompleto.sort((a:any,b:any)=>
+Number(new Date(b.fecha)) - Number(new Date(a.fecha))
+)
 
 let totalG = 0
 
