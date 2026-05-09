@@ -11,7 +11,7 @@ const[cantidad,setCantidad]=useState(1)
 const[precio,setPrecio]=useState(0)
 const[destino,setDestino]=useState("empresa")
 
-const[historial,setHistorial]=useState([])
+const [historial, setHistorial] = useState<any[]>([])
 const[mostrarHistorial,setMostrarHistorial]=useState(false)
 
 // 🔍 FILTROS
@@ -89,7 +89,7 @@ Number(new Date(b.fecha)) - Number(new Date(a.fecha))
 
 let totalG = 0
 
-compras.forEach(c=> totalG += Number(c.total || 0))
+compras.forEach((c: any) => totalG += Number(c.total || 0))
 
 setTotalGeneral(totalG)
 
@@ -144,7 +144,7 @@ return inv
 }
 
 // 🔥 NOMBRE BONITO
-function nombreBonito(clave){
+function nombreBonito(clave: string){
 
 if(clave==="botellon20llave_vacios") return "Botellón 20L con llave"
 if(clave==="botellon20sin_llave_vacios") return "Botellón 20L sin llave"
