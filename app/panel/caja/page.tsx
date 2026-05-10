@@ -32,7 +32,7 @@ let vTr=0
 let cEf=0
 let cTr=0
 
-caja.forEach((m: any)=>{
+caja.forEach(m=>{
 
 if(m.fecha === fecha){
 
@@ -115,7 +115,7 @@ Total del día: $ {total}
 const contenedor={background:"#f4f6f9",minHeight:"100vh",padding:"40px",color:"#000"}
 const titulo={fontSize:"32px",marginBottom:"20px",fontWeight:"bold"}
 const input={marginBottom:"20px",padding:"8px",borderRadius:"6px",border:"1px solid #ccc"}
-const totalBox={background:"#16a34a",color:"#fff",padding:"20px",borderRadius:"10px",fontSize:"22px",marginBottom:"30px",textAlign:"center"}
+const totalBox={background:"#16a34a",color:"#fff",padding:"20px",borderRadius:"10px",fontSize:"22px",marginBottom:"30px",textAlign:"center" as const}
 const grid={display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"20px"}
 const card={background:"#fff",padding:"20px",borderRadius:"12px",textAlign:"center"}
 const cardCobro={background:"#dbeafe",padding:"20px",borderRadius:"12px",textAlign:"center"}
