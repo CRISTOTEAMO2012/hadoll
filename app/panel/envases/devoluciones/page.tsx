@@ -187,7 +187,7 @@ fontSize:"32px",
 marginBottom:"30px"
 }
 
-const card={
+const card: any = {
 background:"#fff",
 padding:"25px",
 borderRadius:"14px",

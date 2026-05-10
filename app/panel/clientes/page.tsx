@@ -421,7 +421,7 @@ marginTop:"10px"
 
 const grid={display:"grid",gridTemplateColumns:"repeat(3,260px)",gap:"20px",marginTop:"20px"}
 
-const card={
+const card: any = {
 background:"#fff",
 padding:"20px",
 borderRadius:"10px",

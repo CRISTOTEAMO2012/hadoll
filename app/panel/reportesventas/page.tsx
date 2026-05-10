@@ -285,6 +285,6 @@ const kpi={background:"#fff",padding:"20px",borderRadius:"12px",boxShadow:"0 2px
 const label={fontSize:"13px",color:"#6b7280"}
 const valor={color:"#111"}
 
-const card={background:"#fff",padding:"20px",borderRadius:"12px",marginTop:"20px"}
+const card: any = {background:"#fff",padding:"20px",borderRadius:"12px",marginTop:"20px"}
 
 const item={display:"flex",justifyContent:"space-between",marginBottom:"10px",gap:"10px"}

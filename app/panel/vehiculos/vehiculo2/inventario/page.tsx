@@ -79,4 +79,4 @@ const contenedor={background:"#f1f5f9",minHeight:"100vh",padding:"40px",color:"#
 const titulo={fontSize:"32px",marginBottom:"30px",textAlign:"center"}
 const subtitulo={fontSize:"20px",margin:"20px 0 10px 0"}
 const grid={display:"flex",flexWrap:"wrap",gap:"20px"}
-const card={padding:"20px",borderRadius:"12px",width:"220px",textAlign:"center",boxShadow:"0 4px 10px rgba(0,0,0,0.1)",border:"1px solid #e5e7eb"}
+const card: any = {padding:"20px",borderRadius:"12px",width:"220px",textAlign:"center",boxShadow:"0 4px 10px rgba(0,0,0,0.1)",border:"1px solid #e5e7eb"}

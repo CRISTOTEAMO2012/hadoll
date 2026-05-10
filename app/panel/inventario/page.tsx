@@ -311,7 +311,7 @@ gridTemplateColumns:"repeat(2,1fr)",
 gap:"15px"
 }
 
-const card={
+const card: any = {
 background:"#ffffff",
 padding:"15px",
 borderRadius:"12px",

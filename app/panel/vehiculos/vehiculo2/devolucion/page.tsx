@@ -144,7 +144,7 @@ Registrar envases
 // estilos
 const contenedor={background:"#f1f5f9",minHeight:"100vh",padding:"40px",color:"#000"}
 const titulo={fontSize:"32px",marginBottom:"30px",color:"#000"}
-const card={background:"#ffffff",padding:"20px",borderRadius:"12px",marginBottom:"30px",maxWidth:"500px",display:"flex",flexDirection:"column",gap:"12px",color:"#000"}
+const card: any = {background:"#ffffff",padding:"20px",borderRadius:"12px",marginBottom:"30px",maxWidth:"500px",display:"flex",flexDirection:"column",gap:"12px",color:"#000"}
 const input={padding:"10px",border:"1px solid #ccc",borderRadius:"6px",background:"#fff",color:"#000"}
 const botonAzul={background:"#2563eb",color:"#fff",padding:"10px",border:"none",borderRadius:"6px"}
 const botonNaranja={background:"#f97316",color:"#fff",padding:"10px",border:"none",borderRadius:"6px"}

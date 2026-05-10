@@ -267,7 +267,7 @@ Abonar
 const contenedor={background:"#ffffff",minHeight:"100vh",padding:"30px",color:"#000"}
 const titulo={fontSize:"28px",marginBottom:"20px"}
 
-const card={
+const card: any = {
 background:"#f9fafb",
 padding:"15px",
 border:"1px solid #ccc",
