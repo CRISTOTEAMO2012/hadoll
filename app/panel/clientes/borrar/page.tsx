@@ -13,7 +13,7 @@ setClientes(datos)
 
 },[])
 
-function borrar(nombre){
+function borrar(nombre: any){
 
 let nuevos=clientes.filter(c=>c.nombre!==nombre)
 
