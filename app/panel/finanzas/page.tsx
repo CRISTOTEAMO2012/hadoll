@@ -73,7 +73,7 @@ let movProduccion = produccionCostos.filter(p=> p.fecha >= desde && p.fecha <= h
 
 let totalIngresos = 0
 
-movCaja.forEach(m=>{
+movmovCaja.forEach((m: any)=>{
 if(m.tipo === "ingreso"){
 totalIngresos += Number(m.monto)
 }
@@ -98,7 +98,7 @@ produccion += Number(p.total || 0)
 
 let mapa = {}
 
-movCaja.forEach(m=>{
+movmovCaja.forEach((m: any)=>{
 if(!mapa[m.fecha]) mapa[m.fecha]={ingresos:0,gastos:0}
 
 if(m.tipo==="ingreso"){

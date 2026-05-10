@@ -32,7 +32,7 @@ let vTr=0
 let cEf=0
 let cTr=0
 
-caja.forEach(m=>{
+caja.forEach((m: any)=>{
 
 if(m.fecha === fecha){
 
