@@ -38,7 +38,7 @@ function guardar(){
 
 let data = JSON.parse(localStorage.getItem("clientes")||"[]")
 
-data[index] = {
+data[index as number] = {
 nombre,
 direccion,
 telefono,
