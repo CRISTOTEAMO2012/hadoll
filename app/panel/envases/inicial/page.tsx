@@ -8,7 +8,7 @@ export default function Inicial(){
 const [cliente,setCliente]=useState("")
 const [tipo,setTipo]=useState("")
 const [cantidad,setCantidad]=useState("")
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [data,setData]=useState([])
 const [verTabla,setVerTabla]=useState(false)
 

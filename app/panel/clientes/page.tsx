@@ -17,7 +17,7 @@ const [ciudad,setCiudad]=useState("")
 
 const [coords,setCoords]=useState(null)
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 
 const [buscar,setBuscar]=useState("")
 const [filtroDia,setFiltroDia]=useState("Todos")

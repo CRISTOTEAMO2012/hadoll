@@ -3,7 +3,7 @@ import {useState,useEffect} from "react"
 
 export default function BorrarCliente(){
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [busqueda,setBusqueda]=useState("")
 
 useEffect(()=>{

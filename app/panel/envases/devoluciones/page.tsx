@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 
 export default function DevolucionesEnvases(){
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [cliente,setCliente]=useState("")
 
 const [producto,setProducto]=useState("")

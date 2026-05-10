@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 
 export default function ListaClientes(){
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [filtroCiudad,setFiltroCiudad]=useState("")
 
 useEffect(()=>{

@@ -4,7 +4,7 @@ import {useState,useEffect} from "react"
 
 export default function Ventas(){
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [vehiculos,setVehiculos]=useState([])
 const [productos,setProductos]=useState([])
 

@@ -3,7 +3,7 @@ import {useEffect,useState} from "react"
 
 export default function WhatsAppClientes(){
 
-const [clientes,setClientes]=useState([])
+const [clientes, setClientes] = useState<any[]>([])
 const [dia,setDia]=useState("")
 
 const [mensaje,setMensaje]=useState("Hola 👋 hoy estamos pasando por su sector con agua HADOLL 💧. Si necesita botellones por favor indíquenos. Gracias por su preferencia.")
