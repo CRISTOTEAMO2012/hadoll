@@ -385,7 +385,7 @@ const titulo: React.CSSProperties = {
 }
 const label={marginTop:"10px", color:"#111"}
 const contenedorBotones={display:"flex",gap:"10px"}
-const botonModo=(a)=>({flex:1,padding:"8px",background:a?"#16a34a":"#e5e7eb",color:a?"#fff":"#111",border:"none",borderRadius:"6px",cursor:"pointer"})
+const botonModo=(a: boolean)=>({flex:1,padding:"8px",background:a?"#16a34a":"#e5e7eb",color:a?"#fff":"#111",border:"none",borderRadius:"6px",cursor:"pointer"})
 const input={margin:"5px 0",padding:"10px",width:"100%",border:"1px solid #ccc",borderRadius:"6px",background:"#fff",color:"#111"}
 const guardar={background:"#16a34a",color:"#fff",padding:"10px",width:"100%",border:"none",borderRadius:"6px",cursor:"pointer"}
 const acciones={display:"flex",justifyContent:"center",marginTop:"20px"}
