@@ -116,7 +116,7 @@ Botellón 20L sin llave
 type="number"
 placeholder="Cantidad devuelta"
 value={cantidad}
-onChange={(e)=>setCantidad(e.target.value)}
+onChange={(e)=>setCantidad(Number(e.target.value))}
 style={input}
 />
 

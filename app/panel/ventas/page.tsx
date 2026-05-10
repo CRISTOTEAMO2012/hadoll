@@ -241,7 +241,7 @@ return(
 </select>
 )}
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(e.target.value)} placeholder="Cantidad"/>
+<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))} placeholder="Cantidad"/>
 <input style={input} type="number" value={precio} onChange={(e)=>setPrecio(e.target.value)} placeholder="Precio"/>
 
 <select style={input} value={pago} onChange={(e)=>setPago(e.target.value)}>

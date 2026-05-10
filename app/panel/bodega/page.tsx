@@ -301,7 +301,7 @@ style={input}
 <input
 type="number"
 value={precio}
-onChange={e=>setPrecio(e.target.value)}
+onChange={e=>setPrecio(Number(e.target.value))}
 style={input}
 />
 </>

@@ -215,7 +215,7 @@ Agregar
 </select>
 
 <label style={label}>Cantidad</label>
-<input type="number" value={cantidad} onChange={e=>setCantidad(e.target.value)} style={input}/>
+<input type="number" value={cantidad} onChange={e=>setCantidad(Number(e.target.value))} style={input}/>
 
 {modo==="compra" &&(
 <>

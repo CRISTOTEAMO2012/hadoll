@@ -101,7 +101,7 @@ return(
 {productosMap.map((p,i)=>(<option key={i}>{p.label}</option>))}
 </select>
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(e.target.value)} />
+<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))} />
 
 <select style={input} value={destino} onChange={(e)=>setDestino(e.target.value)}>
 <option value="empresa">Empresa</option>

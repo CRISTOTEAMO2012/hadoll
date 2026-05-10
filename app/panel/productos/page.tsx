@@ -86,7 +86,7 @@ style={input}
 type="number"
 placeholder="Precio base"
 value={precio}
-onChange={e=>setPrecio(e.target.value)}
+onChange={e=>setPrecio(Number(e.target.value))}
 />
 
 <button
