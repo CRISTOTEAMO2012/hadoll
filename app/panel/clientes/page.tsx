@@ -116,7 +116,7 @@ let componentes = data.results[0]?.address_components || []
 
 let canton = ""
 
-componentes.forEach(c=>{
+componentes.forEach((c:any)=>{
 if(c.types.includes("locality")) canton = c.long_name
 if(c.types.includes("administrative_area_level_2")) canton = c.long_name
 })
