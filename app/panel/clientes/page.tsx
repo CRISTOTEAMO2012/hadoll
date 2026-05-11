@@ -197,7 +197,7 @@ alert("Guardado correctamente")
 }
 
 // ✏️ EDITAR
-function editarCliente(index){
+function editarCliente(index:any){
 
 let c = clientes[index]
 
