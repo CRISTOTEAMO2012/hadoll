@@ -127,7 +127,7 @@ function abonarDeuda(index:any){
 let monto = prompt("Ingrese valor a abonar")
 if(!monto) return
 
-monto = Number(monto)
+let montoNumero:any = Number(monto)
 
 if(isNaN(monto) || monto <= 0){
 alert("Valor inválido")
