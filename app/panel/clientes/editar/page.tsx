@@ -10,7 +10,11 @@ export default function EditarCliente(){
 const router = useRouter()
 const params = useSearchParams()
 
-const index = params.get("id")
+const [index,setIndex] = useState<any>(null)
+
+useEffect(()=>{
+setIndex(params.get("id"))
+},[params])
 
 const [nombre,setNombre]=useState("")
 const [direccion,setDireccion]=useState("")
