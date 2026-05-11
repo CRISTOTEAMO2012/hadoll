@@ -1,7 +1,7 @@
 "use client"
 
 export const dynamic = "force-dynamic"
-export const revalidate = 0
+
 import {useState,useEffect} from "react"
 import {useRouter,useSearchParams} from "next/navigation"
 
@@ -9,6 +9,8 @@ export default function EditarCliente(){
 
 const router = useRouter()
 const params = useSearchParams()
+
+if(!params) return null
 
 const [index,setIndex] = useState<any>(null)
 
