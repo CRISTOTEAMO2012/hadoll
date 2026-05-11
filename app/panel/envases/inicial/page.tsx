@@ -69,7 +69,7 @@ let prestados=JSON.parse(localStorage.getItem("envasesprestados")||"[]")
 let nombreEnvase = nombreBonito(tipo)
 
 // 🔥 BUSCAR SI YA EXISTE
-let index = prestados.findIndex(p =>
+let index:any = prestados.findIndex((p:any) =>
 
 p.cliente===cliente &&
 p.tipo==="inicial" &&
