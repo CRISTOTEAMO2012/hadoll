@@ -131,7 +131,7 @@ return mismaFecha && !enRuta
 })
 
 // ✅ ATENDER PEDIDO (BORRA)
-function atenderPedido(cliente){
+function atenderPedido(cliente:any){
 let nuevos = pedidos.filter(p=>p.cliente !== cliente)
 localStorage.setItem("pedidos", JSON.stringify(nuevos))
 setPedidos(nuevos)

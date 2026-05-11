@@ -213,7 +213,7 @@ setEditandoIndex(index)
 }
 
 // ❌ BORRAR
-function borrarCliente(index){
+function borrarCliente(index:any){
 
 if(!confirm("¿Eliminar cliente?")) return
 

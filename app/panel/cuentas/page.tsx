@@ -76,7 +76,7 @@ localStorage.setItem("caja",JSON.stringify(caja))
 }
 
 // COBRAR TODO
-function cobrarTodo(cliente){
+function cobrarTodo(cliente:any){
 
 let metodo = elegirMetodo()
 if(!metodo) return
@@ -102,7 +102,7 @@ setClienteActivo(null)
 }
 
 // COBRAR ITEM
-function cobrarItem(index){
+function cobrarItem(index:any){
 
 let metodo = elegirMetodo()
 if(!metodo) return
@@ -122,7 +122,7 @@ cargar()
 }
 
 // 🔥 ABONO PARCIAL (CORREGIDO)
-function abonarDeuda(index){
+function abonarDeuda(index:any){
 
 let monto = prompt("Ingrese valor a abonar")
 if(!monto) return

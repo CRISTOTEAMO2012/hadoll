@@ -54,7 +54,7 @@ setPrecio("")
 
 }
 
-function eliminarProducto(index){
+function eliminarProducto(index:any){
 
 let data=[...productos]
 

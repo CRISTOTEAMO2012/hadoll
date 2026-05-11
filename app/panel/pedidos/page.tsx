@@ -34,7 +34,7 @@ return dia.toLowerCase() === filtroDia.toLowerCase()
 }
 
 // 🔥 ATENDER PEDIDO
-function atenderPedido(index){
+function atenderPedido(index:any){
 
 let lista=[...pedidos]
 lista[index].estado="atendido"
@@ -45,7 +45,7 @@ setPedidos(lista)
 }
 
 // ❌ ELIMINAR
-function eliminarPedido(index){
+function eliminarPedido(index:any){
 
 if(!confirm("¿Eliminar pedido?")) return
 
