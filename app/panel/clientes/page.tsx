@@ -97,7 +97,7 @@ data,
 }
 
 // 🔥 FUNCION SEGURA
-async function obtenerDatos(lat,lng){
+async function obtenerDatos(lat:any,lng:any){
 
 try{
 
