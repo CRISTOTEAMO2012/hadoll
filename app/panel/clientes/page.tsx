@@ -289,8 +289,8 @@ zoomControl: true
 
 onClick={async (e)=>{
 
-let lat = e.latLng.lat()
-let lng = e.latLng.lng()
+let lat = e.latLng?.lat()
+let lng = e.latLng?.lng()
 
 setCoords({lat,lng})
 
