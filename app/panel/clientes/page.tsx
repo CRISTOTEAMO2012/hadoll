@@ -15,7 +15,7 @@ const [telefono,setTelefono]=useState("")
 const [dia,setDia]=useState("Lunes")
 const [ciudad,setCiudad]=useState("")
 
-const [coords,setCoords]=useState(null)
+const [coords,setCoords]=useState<any>(null)
 
 const [clientes, setClientes] = useState<any[]>([])
 
