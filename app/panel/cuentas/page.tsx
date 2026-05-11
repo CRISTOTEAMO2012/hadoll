@@ -129,7 +129,7 @@ if(!monto) return
 
 let montoNumero:any = Number(monto)
 
-if(isNaN(monto) || monto <= 0){
+if(isNaN(montoNumero) || montoNumero <= 0){
 alert("Valor inválido")
 return
 }
