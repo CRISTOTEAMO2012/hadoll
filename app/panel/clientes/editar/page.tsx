@@ -10,8 +10,6 @@ export default function EditarCliente(){
 const router = useRouter()
 const params = useSearchParams()
 
-if(!params) return null
-
 const [index,setIndex] = useState<any>(null)
 
 useEffect(()=>{
