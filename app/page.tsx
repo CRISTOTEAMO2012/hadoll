@@ -10,20 +10,20 @@ const [error, setError] = useState("");
 const usuarios = [
 
 {
-usuario:"admin",
-password:"1234",
+usuario:"CRISTO JESUS",
+password:"27011993",
 rol:"admin"
 },
 
 {
-usuario:"juan",
-password:"1111",
+usuario:"VENTA HADOLL",
+password:"24122012",
 rol:"vendedor"
 },
 
 {
-usuario:"pedro",
-password:"2222",
+usuario:"OPERACIONES HADOLL",
+password:"Futboldesde0",
 rol:"operador"
 }
 
@@ -71,10 +71,6 @@ style={logo}
 💧 AGUA HADOLL
 </h1>
 
-<p style={subtitulo}>
-Sistema Administrativo
-</p>
-
 <label style={label}>Usuario</label>
 
 <input
@@ -107,26 +103,6 @@ style={boton}
 >
 🔐 Iniciar Sesión
 </button>
-
-<div style={usuariosDemo}>
-
-<h3 style={{marginBottom:"10px"}}>
-👥 Usuarios Demo
-</h3>
-
-<p>
-<b>Gerente:</b> admin / 1234
-</p>
-
-<p>
-<b>Vendedor:</b> juan / 1111
-</p>
-
-<p>
-<b>Operador:</b> pedro / 2222
-</p>
-
-</div>
 
 </div>
 
@@ -211,7 +187,7 @@ height:"120px",
 
 objectFit:"contain",
 
-margin:"0 auto 15px auto",
+margin:"0 auto 20px auto",
 
 background:"#fff",
 
@@ -233,21 +209,9 @@ fontSize:"34px",
 
 fontWeight:"800",
 
-marginBottom:"5px",
-
-textShadow:"0 3px 8px rgba(0,0,0,0.2)"
-
-}
-
-const subtitulo={
-
-textAlign:"center",
-
-color:"#e0f2fe",
-
 marginBottom:"25px",
 
-fontSize:"16px"
+textShadow:"0 3px 8px rgba(0,0,0,0.2)"
 
 }
 
@@ -326,23 +290,5 @@ fontSize:"14px",
 marginTop:"10px",
 
 textAlign:"center"
-
-}
-
-const usuariosDemo={
-
-marginTop:"20px",
-
-background:"rgba(255,255,255,0.12)",
-
-padding:"15px",
-
-borderRadius:"12px",
-
-color:"#fff",
-
-fontSize:"14px",
-
-lineHeight:"28px"
 
 }
