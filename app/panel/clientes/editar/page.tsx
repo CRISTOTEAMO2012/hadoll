@@ -8,7 +8,7 @@ import {useRouter} from "next/navigation"
 export default function EditarCliente(){
 
 const router = useRouter()
-)const [index,setIndex] = useState<any>(null)
+const [index,setIndex] = useState<any>(null)
 
 useEffect(()=>{
 
