@@ -7,17 +7,45 @@ const [usuario, setUsuario] = useState("");
 const [password, setPassword] = useState("");
 const [error, setError] = useState("");
 
+const usuarios = [
+
+{
+usuario:"admin",
+password:"1234",
+rol:"admin"
+},
+
+{
+usuario:"juan",
+password:"1111",
+rol:"vendedor"
+},
+
+{
+usuario:"pedro",
+password:"2222",
+rol:"operador"
+}
+
+]
+
 const iniciarSesion = () => {
 
-if (usuario === "admin" && password === "1234") {
+const encontrado = usuarios.find(
+u => u.usuario === usuario && u.password === password
+)
+
+if(encontrado){
 
 localStorage.setItem("login","ok")
+localStorage.setItem("rol",encontrado.rol)
+localStorage.setItem("usuario",encontrado.usuario)
 
-window.location.href = "/panel";
+window.location.href = "/panel"
 
-} else {
+}else{
 
-setError("Usuario o contraseña incorrectos");
+setError("Usuario o contraseña incorrectos")
 
 }
 
@@ -80,6 +108,26 @@ style={boton}
 🔐 Iniciar Sesión
 </button>
 
+<div style={usuariosDemo}>
+
+<h3 style={{marginBottom:"10px"}}>
+👥 Usuarios Demo
+</h3>
+
+<p>
+<b>Gerente:</b> admin / 1234
+</p>
+
+<p>
+<b>Vendedor:</b> juan / 1111
+</p>
+
+<p>
+<b>Operador:</b> pedro / 2222
+</p>
+
+</div>
+
 </div>
 
 </div>
@@ -95,7 +143,7 @@ display:"flex",
 justifyContent:"center",
 alignItems:"center",
 
-height:"100vh",
+minHeight:"100vh",
 
 background:
 "linear-gradient(135deg, #60a5fa 0%, #818cf8 45%, #c084fc 100%)",
@@ -103,7 +151,9 @@ background:
 fontFamily:"Segoe UI, Tahoma, Geneva, Verdana, sans-serif",
 
 position:"relative",
-overflow:"hidden"
+overflow:"hidden",
+
+padding:"20px"
 
 }
 
@@ -276,5 +326,23 @@ fontSize:"14px",
 marginTop:"10px",
 
 textAlign:"center"
+
+}
+
+const usuariosDemo={
+
+marginTop:"20px",
+
+background:"rgba(255,255,255,0.12)",
+
+padding:"15px",
+
+borderRadius:"12px",
+
+color:"#fff",
+
+fontSize:"14px",
+
+lineHeight:"28px"
 
 }

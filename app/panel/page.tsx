@@ -136,7 +136,7 @@ background:
 "linear-gradient(135deg, #60a5fa 0%, #818cf8 45%, #c084fc 100%)",
 
 minHeight:"100vh",
-padding:"40px",
+padding:"20px",
 position:"relative",
 overflow:"hidden",
 
@@ -147,22 +147,23 @@ fontFamily:"Segoe UI, Tahoma, Geneva, Verdana, sans-serif"
 const botonCerrar={
 
 position:"absolute",
-top:"20px",
-right:"20px",
+top:"15px",
+right:"15px",
 
 background:"#dc2626",
 color:"#fff",
 
 border:"none",
-padding:"12px 20px",
+padding:"10px 16px",
 borderRadius:"10px",
 
 fontWeight:"bold",
 cursor:"pointer",
 
 boxShadow:"0 4px 10px rgba(0,0,0,0.2)",
-zIndex:"5"
+zIndex:"5",
 
+fontSize:"14px"
 }
 
 /* 🌊 MARCA DE AGUA */
@@ -176,23 +177,25 @@ pointerEvents:"none"
 }
 
 const logoMarca={
-width:"650px",
-height:"650px",
+width:"90vw",
+maxWidth:"650px",
+height:"auto",
 objectFit:"contain"
 }
 
 const header={
 display:"flex",
-flexDirection:"column",
+flexDirection:"column" as const,
 alignItems:"center",
-marginBottom:"40px",
+marginTop:"50px",
+marginBottom:"30px",
 position:"relative",
 zIndex:"2"
 }
 
 const logo={
-width:"90px",
-height:"90px",
+width:"80px",
+height:"80px",
 borderRadius:"50%",
 background:"#fff",
 padding:"10px",
@@ -201,18 +204,19 @@ marginBottom:"10px"
 }
 
 const titulo={
-fontSize:"38px",
+fontSize:"clamp(24px,5vw,38px)",
 color:"#ffffff",
-textAlign:"center",
+textAlign:"center" as const,
 fontWeight:"800",
 letterSpacing:"1px",
-textShadow:"0 3px 8px rgba(0,0,0,0.25)"
+textShadow:"0 3px 8px rgba(0,0,0,0.25)",
+padding:"0 10px"
 }
 
 const grid={
 display:"grid",
-gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",
-gap:"22px",
+gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",
+gap:"16px",
 justifyContent:"center",
 maxWidth:"1100px",
 margin:"0 auto",
@@ -221,18 +225,18 @@ zIndex:"2"
 }
 
 const boton={
-padding:"22px",
+padding:"18px",
 borderRadius:"18px",
 color:"#fff",
 textDecoration:"none",
 fontWeight:"bold",
-textAlign:"center",
-fontSize:"17px",
+textAlign:"center" as const,
+fontSize:"16px",
 boxShadow:"0 8px 18px rgba(0,0,0,0.18)",
 display:"flex",
 alignItems:"center",
 justifyContent:"center",
-height:"90px",
+minHeight:"85px",
 transition:"0.25s",
 backdropFilter:"blur(4px)"
 }
