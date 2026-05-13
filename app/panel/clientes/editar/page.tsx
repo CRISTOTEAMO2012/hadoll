@@ -3,18 +3,21 @@
 export const dynamic = "force-dynamic"
 
 import {useState,useEffect} from "react"
-import {useRouter,useSearchParams} from "next/navigation"
+import {useRouter} from "next/navigation"
 
 export default function EditarCliente(){
 
 const router = useRouter()
-const params = useSearchParams()
-
-const [index,setIndex] = useState<any>(null)
+)const [index,setIndex] = useState<any>(null)
 
 useEffect(()=>{
-setIndex(params.get("id"))
-},[params])
+
+const url = new URL(window.location.href)
+const id = url.searchParams.get("id")
+
+setIndex(id)
+
+},[])
 
 const [nombre,setNombre]=useState("")
 const [direccion,setDireccion]=useState("")
