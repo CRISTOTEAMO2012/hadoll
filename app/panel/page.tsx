@@ -1,8 +1,19 @@
 "use client"
 
 import Link from "next/link"
+import {useRouter} from "next/navigation"
 
 export default function Panel(){
+
+const router = useRouter()
+
+function cerrarSesion(){
+
+localStorage.removeItem("login")
+
+router.push("/")
+
+}
 
 return(
 
@@ -12,6 +23,11 @@ return(
 <div style={marcaAgua}>
 <img src="/logo.png" alt="marca" style={logoMarca}/>
 </div>
+
+{/* 🔴 BOTON CERRAR SESION */}
+<button onClick={cerrarSesion} style={botonCerrar}>
+🚪 Cerrar Sesión
+</button>
 
 <div style={header}>
 
@@ -125,6 +141,28 @@ position:"relative",
 overflow:"hidden",
 
 fontFamily:"Segoe UI, Tahoma, Geneva, Verdana, sans-serif"
+}
+
+/* 🔴 BOTON CERRAR SESION */
+const botonCerrar={
+
+position:"absolute",
+top:"20px",
+right:"20px",
+
+background:"#dc2626",
+color:"#fff",
+
+border:"none",
+padding:"12px 20px",
+borderRadius:"10px",
+
+fontWeight:"bold",
+cursor:"pointer",
+
+boxShadow:"0 4px 10px rgba(0,0,0,0.2)",
+zIndex:"5"
+
 }
 
 /* 🌊 MARCA DE AGUA */
