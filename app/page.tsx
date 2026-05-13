@@ -10,7 +10,7 @@ const [error, setError] = useState("");
 const usuarios = [
 
 {
-usuario:"CRISTO JESUS",
+usuario:"OH SEÑOR JESUS",
 password:"27011993",
 rol:"admin"
 },
