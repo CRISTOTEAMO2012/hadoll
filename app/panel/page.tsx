@@ -7,9 +7,15 @@ export default function Panel(){
 
 const router = useRouter()
 
+const rol = typeof window !== "undefined"
+? localStorage.getItem("rol")
+: ""
+
 function cerrarSesion(){
 
 localStorage.removeItem("login")
+localStorage.removeItem("rol")
+localStorage.removeItem("usuario")
 
 router.push("/")
 
@@ -44,6 +50,10 @@ style={logo}
 </div>
 
 <div style={grid}>
+
+{/* 👨‍💼 ADMIN */}
+{rol === "admin" && (
+<>
 
 <Link href="/panel/dashboard" style={{...boton,background:"#6366f1"}}>
 📊 Dashboard
@@ -120,6 +130,47 @@ style={logo}
 <Link href="/panel/insumos" style={{...boton,background:"#64748b"}}>
 🧪 Insumos
 </Link>
+
+</>
+)}
+
+{/* 🚚 VENDEDOR */}
+{rol === "vendedor" && (
+<>
+
+<Link href="/panel/clientes" style={{...boton,background:"#22c55e"}}>
+👥 Clientes
+</Link>
+
+<Link href="/panel/ventas" style={{...boton,background:"#16a34a"}}>
+💰 Ventas
+</Link>
+
+<Link href="/panel/traslados" style={{...boton,background:"#f43f5e"}}>
+🔄 Traslados
+</Link>
+
+<Link href="/panel/cuentas" style={{...boton,background:"#f97316"}}>
+💳 Cuentas por cobrar
+</Link>
+
+<Link href="/panel/pedidos" style={{...boton,background:"#22c55e"}}>
+📝 Pedidos
+</Link>
+
+</>
+)}
+
+{/* 🏭 OPERADOR */}
+{rol === "operador" && (
+<>
+
+<Link href="/panel/produccion" style={{...boton,background:"#f97316"}}>
+🏭 Producción
+</Link>
+
+</>
+)}
 
 </div>
 
