@@ -21,11 +21,28 @@ const [tipoVenta,setTipoVenta]=useState("")
 const numeroEmpresa = "593981143243"
 
 useEffect(()=>{
+
 let p = JSON.parse(localStorage.getItem("productos") || "[]")
 let c = JSON.parse(localStorage.getItem("clientes") || "[]")
 
+// 🔥 SI NO HAY PRODUCTOS CARGAR ESTOS
+if(p.length === 0){
+
+p = [
+
+{nombre:"BOTELLON 20L"},
+{nombre:"PAQ 15L"},
+{nombre:"PAQ 24L"},
+{nombre:"BOTELLA 6000ML"},
+{nombre:"BOTELLA 1L"}
+
+]
+
+}
+
 setProductos(p)
 setClientes(c)
+
 },[])
 
 // 🔍 CLIENTE
@@ -127,7 +144,7 @@ day:"numeric"
 })
 }
 
-// 💾 GUARDAR (CORREGIDO 🔥)
+// 💾 GUARDAR
 function enviar(){
 
 if(!nombre || !telefono || !producto || !ciudad){
@@ -137,19 +154,20 @@ return
 
 let pedidos = JSON.parse(localStorage.getItem("pedidos")||"[]")
 
-// 🔍 BUSCAR SI YA EXISTE PEDIDO
-let existente = pedidos.find(p => 
+let existente = pedidos.find((p:any) => 
 p.telefono === telefono &&
 p.producto === producto &&
 p.estado === "pendiente"
 )
 
 if(existente){
-// 🔥 SUMAR
+
 existente.cantidad = Number(existente.cantidad) + Number(cantidad)
+
 existente.total = Number(existente.precio) * Number(existente.cantidad)
+
 }else{
-// 🆕 NUEVO
+
 pedidos.push({
 cliente:nombre,
 telefono,
@@ -163,6 +181,7 @@ fecha:fechaSugerida,
 estado:"pendiente",
 origen:"qr"
 })
+
 }
 
 localStorage.setItem("pedidos",JSON.stringify(pedidos))
@@ -178,6 +197,7 @@ setPrecio(0)
 setCantidad(1)
 setFechaSugerida("")
 setTipoVenta("")
+
 }
 
 // 📲 WHATSAPP
@@ -235,6 +255,7 @@ zIndex:1
 <h2 style={{textAlign:"center"}}>💧 PEDIDOS HADOLL WATER</h2>
 
 <input placeholder="Teléfono" value={telefono} onChange={e=>buscarCliente(e.target.value)} style={input}/>
+
 <input placeholder="Nombre" value={nombre} onChange={e=>setNombre(e.target.value)} style={input}/>
 
 <select value={ciudad} onChange={e=>setCiudad(e.target.value)} style={input}>
@@ -267,11 +288,15 @@ fontWeight:"bold"
 
 <select value={producto} onChange={e=>seleccionarProducto(e.target.value)} style={input}>
 <option value="">🚰 SELECCIONA TU PRODUCTO</option>
-{productos.map((p,i)=>(
+
+{productos.map((p:any,i:number)=>(
+
 <option key={i} value={p.nombre}>
 🔥 {p.nombre.toUpperCase()}
 </option>
+
 ))}
+
 </select>
 
 {producto && (
@@ -294,6 +319,7 @@ value={cantidad}
 min={tipoVenta === "mayor" ? 4 : 1}
 onChange={e=>{
 let val = Number(e.target.value)
+
 if(tipoVenta === "mayor" && val < 4){
 setCantidad(4)
 }else{
@@ -354,7 +380,7 @@ const precioBox={
 background:"#dcfce7",
 padding:"12px",
 borderRadius:"8px",
-textAlign:"center",
+textAlign:"center" as const,
 marginBottom:"10px",
 fontWeight:"bold",
 fontSize:"18px"
