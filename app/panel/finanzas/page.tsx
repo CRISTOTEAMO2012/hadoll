@@ -37,7 +37,7 @@ const GASTOS_DEFAULT = [
 
 const [tipoGasto,setTipoGasto]=useState(GASTOS_DEFAULT[0])
 const [descripcion,setDescripcion]=useState("")
-const [monto,setMonto]=useState("")]
+const [monto,setMonto]=useState("")
 
 // 🔥 SOCIOS
 const SOCIOS_DEFAULT = [
