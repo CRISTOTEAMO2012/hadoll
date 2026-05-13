@@ -18,10 +18,10 @@ const [gastosProduccion,setGastosProduccion]=useState(0)
 const [desde,setDesde]=useState("")
 const [hasta,setHasta]=useState("")
 
-const [dataGrafico,setDataGrafico]=useState([])
+const [dataGrafico,setDataGrafico]=useState<any[]>([])
 
 const [vista,setVista]=useState("")
-const [detalle,setDetalle]=useState([])
+const [detalle,setDetalle]=useState<any[]>([])
 
 // 🔥 GASTOS
 const GASTOS_DEFAULT = [
@@ -37,7 +37,7 @@ const GASTOS_DEFAULT = [
 
 const [tipoGasto,setTipoGasto]=useState(GASTOS_DEFAULT[0])
 const [descripcion,setDescripcion]=useState("")
-const [monto,setMonto]=useState("")
+const [monto,setMonto]=useState("")]
 
 // 🔥 SOCIOS
 const SOCIOS_DEFAULT = [
@@ -67,13 +67,13 @@ let caja = JSON.parse(localStorage.getItem("caja")||"[]")
 let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
 let produccionCostos = JSON.parse(localStorage.getItem("produccionCostos")||"[]")
 
-let movCaja = caja.filter(m=> m.fecha >= desde && m.fecha <= hasta)
-let movGastos = gastos.filter(g=> g.fecha >= desde && g.fecha <= hasta)
-let movProduccion = produccionCostos.filter(p=> p.fecha >= desde && p.fecha <= hasta)
+let movCaja = caja.filter((m:any)=> m.fecha >= desde && m.fecha <= hasta)
+let movGastos = gastos.filter((g:any)=> g.fecha >= desde && g.fecha <= hasta)
+let movProduccion = produccionCostos.filter((p:any)=> p.fecha >= desde && p.fecha <= hasta)
 
 let totalIngresos = 0
 
-movmovCaja.forEach((m: any)=>{
+movCaja.forEach((m:any)=>{
 if(m.tipo === "ingreso"){
 totalIngresos += Number(m.monto)
 }
@@ -84,7 +84,7 @@ let insumos=0
 let bodega=0
 let produccion=0
 
-movGastos.forEach(g=>{
+movGastos.forEach((g:any)=>{
 let valor = Number(g.total || g.valor || 0)
 
 if(g.tipo === "Insumo") insumos += valor
@@ -92,13 +92,13 @@ else if(g.tipo === "Compra inventario") bodega += valor
 else corrientes += valor
 })
 
-movProduccion.forEach(p=>{
+movProduccion.forEach((p:any)=>{
 produccion += Number(p.total || 0)
 })
 
-let mapa = {}
+let mapa:any = {}
 
-movmovCaja.forEach((m: any)=>{
+movCaja.forEach((m:any)=>{
 if(!mapa[m.fecha]) mapa[m.fecha]={ingresos:0,gastos:0}
 
 if(m.tipo==="ingreso"){
@@ -106,19 +106,19 @@ mapa[m.fecha].ingresos += Number(m.monto)
 }
 })
 
-movGastos.forEach(g=>{
+movGastos.forEach((g:any)=>{
 if(!mapa[g.fecha]) mapa[g.fecha]={ingresos:0,gastos:0}
 
 mapa[g.fecha].gastos += Number(g.total || g.valor || 0)
 })
 
-movProduccion.forEach(p=>{
+movProduccion.forEach((p:any)=>{
 if(!mapa[p.fecha]) mapa[p.fecha]={ingresos:0,gastos:0}
 
 mapa[p.fecha].gastos += Number(p.total || 0)
 })
 
-let array = Object.keys(mapa).map(fecha=>({
+let array = Object.keys(mapa).map((fecha:any)=>({
 fecha,
 ingresos: mapa[fecha].ingresos,
 gastos: mapa[fecha].gastos,
@@ -134,7 +134,7 @@ setDataGrafico(array)
 }
 
 // ✅ ABRIR / CERRAR
-function abrirDetalle(tipo){
+function abrirDetalle(tipo:string){
 
 if(vista === tipo){
 setVista("")
@@ -147,28 +147,28 @@ let produccionCostos = JSON.parse(localStorage.getItem("produccionCostos")||"[]"
 let caja = JSON.parse(localStorage.getItem("caja")||"[]")
 
 // ✅ FILTRO POR FECHAS
-gastos = gastos.filter(g=>
+gastos = gastos.filter((g:any)=>
 g.fecha >= desde && g.fecha <= hasta
 )
 
-produccionCostos = produccionCostos.filter(p=>
+produccionCostos = produccionCostos.filter((p:any)=>
 p.fecha >= desde && p.fecha <= hasta
 )
 
-caja = caja.filter(c=>
+caja = caja.filter((c:any)=>
 c.fecha >= desde && c.fecha <= hasta
 )
 
-let lista = []
+let lista:any[] = []
 
 // ✅ INGRESOS
 if(tipo==="ingresos"){
-lista = caja.filter(c=> c.tipo === "ingreso")
+lista = caja.filter((c:any)=> c.tipo === "ingreso")
 }
 
 // ✅ CORRIENTES
 if(tipo==="corrientes"){
-lista = gastos.filter(g=> 
+lista = gastos.filter((g:any)=> 
 g.tipo !== "Insumo" &&
 g.tipo !== "Compra inventario"
 )
@@ -176,12 +176,12 @@ g.tipo !== "Compra inventario"
 
 // ✅ INSUMOS
 if(tipo==="insumos"){
-lista = gastos.filter(g=> g.tipo === "Insumo")
+lista = gastos.filter((g:any)=> g.tipo === "Insumo")
 }
 
 // ✅ BODEGA
 if(tipo==="bodega"){
-lista = gastos.filter(g=> g.tipo === "Compra inventario")
+lista = gastos.filter((g:any)=> g.tipo === "Compra inventario")
 }
 
 // ✅ PRODUCCION
@@ -196,11 +196,11 @@ setDetalle(lista)
 // 🔥 RESUMEN POR INSUMO
 function resumenPorInsumo(){
 
-let mapa = {}
+let mapa:any = {}
 
-detalle.forEach(p=>{
+detalle.forEach((p:any)=>{
 
-(p.detalle || []).forEach(d=>{
+(p.detalle || []).forEach((d:any)=>{
 
 let nombre = d.insumo || "Insumo"
 
@@ -375,97 +375,6 @@ UTILIDAD
 
 </div>
 
-{/* ✅ DETALLES */}
-{vista !== "" && vista !== "produccion" && (
-
-<div style={detalleBox}>
-
-<h3 style={{marginBottom:"15px"}}>
-Detalle {vista}
-</h3>
-
-{detalle.length === 0 && (
-<p>No hay registros</p>
-)}
-
-{detalle.map((d,i)=>(
-
-<div key={i} style={detalleItem}>
-
-<div>
-<b>
-{d.descripcion || d.detalle || d.tipo || "Registro"}
-</b>
-
-<p style={{fontSize:"13px",color:"#666"}}>
-{d.fecha}
-</p>
-</div>
-
-<div style={{fontWeight:"bold"}}>
-${Number(d.total || d.valor || d.monto || 0).toFixed(2)}
-</div>
-
-</div>
-
-))}
-
-</div>
-
-)}
-
-{/* ✅ PRODUCCIÓN */}
-{vista==="produccion" && (
-
-<div style={detalleBox}>
-
-<h3 style={{marginBottom:"15px"}}>
-Costos por insumo
-</h3>
-
-{Object.entries(resumenPorInsumo()).map(([k,v],i)=>(
-
-<div
-key={i}
-style={{
-padding:"10px",
-borderBottom:"1px solid #e5e7eb"
-}}
->
-
-<div style={{fontWeight:"bold"}}>
-{k}
-</div>
-
-<div style={{
-display:"flex",
-gap:"20px",
-fontSize:"14px",
-marginTop:"5px"
-}}>
-
-<span>
-Cant: <b>{v.cantidad}</b>
-</span>
-
-<span>
-Unit: <b>${Number(v.precio).toFixed(2)}</b>
-</span>
-
-<span>
-Total: <b>${Number(v.total).toFixed(2)}</b>
-</span>
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-)}
-
 <div style={graficos}>
 
 <PieChart width={320} height={320}>
@@ -569,26 +478,10 @@ const cardInsumo={...base,background:"#f97316"}
 const cardBodega={...base,background:"#2563eb"}
 const cardProduccion={...base,background:"#7c3aed"}
 
-const cardUtilidad=(u)=>({
+const cardUtilidad=(u:number)=>({
 ...base,
 background: u>=0 ? "#16a34a" : "#dc2626"
 })
-
-const detalleBox={
-marginTop:"20px",
-background:"#fff",
-padding:"20px",
-borderRadius:"12px",
-boxShadow:"0 2px 8px rgba(0,0,0,0.05)"
-}
-
-const detalleItem={
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
-padding:"12px 0",
-borderBottom:"1px solid #e5e7eb"
-}
 
 const graficos={
 display:"flex",
