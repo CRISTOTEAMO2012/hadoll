@@ -22,6 +22,8 @@ const numeroEmpresa = "593981143243"
 
 useEffect(()=>{
 
+function cargarDatos(){
+
 let p = JSON.parse(localStorage.getItem("productos") || "[]")
 let c = JSON.parse(localStorage.getItem("clientes") || "[]")
 
@@ -30,11 +32,12 @@ if(p.length === 0){
 
 p = [
 
-{nombre:"BOTELLON 20L"},
-{nombre:"PAQ 15L"},
-{nombre:"PAQ 24L"},
-{nombre:"BOTELLA 6000ML"},
-{nombre:"BOTELLA 1L"}
+{nombre:"Botellón 20L con llave", precio:2.5},
+{nombre:"Botellón 20L sin llave", precio:2},
+{nombre:"Paca 15 botellas 600 ml", precio:3.5},
+{nombre:"Paca 24 botellas 600 ml", precio:5},
+{nombre:"Botella 6000 ml", precio:1.5},
+{nombre:"Botella 1L", precio:1}
 
 ]
 
@@ -42,6 +45,20 @@ p = [
 
 setProductos(p)
 setClientes(c)
+
+}
+
+// 🔥 CARGA INICIAL
+cargarDatos()
+
+// 🔥 ACTUALIZA AUTOMÁTICAMENTE
+window.addEventListener("storage", cargarDatos)
+
+return ()=>{
+
+window.removeEventListener("storage", cargarDatos)
+
+}
 
 },[])
 
@@ -79,25 +96,29 @@ setCantidad(4)
 
 let prod = producto.toUpperCase()
 
-if(prod.includes("BOTELLON") || prod.includes("20")){
-if(tipo === "mayor") setPrecio(1)
+if(prod.includes("BOTELLÓN 20L CON LLAVE")){
+if(tipo === "mayor") setPrecio(2)
+if(tipo === "unidad") setPrecio(2.5)
+}
+else if(prod.includes("BOTELLÓN 20L SIN LLAVE")){
+if(tipo === "mayor") setPrecio(1.5)
 if(tipo === "unidad") setPrecio(2)
 }
 else if(prod.includes("15")){
 if(tipo === "mayor") setPrecio(3)
-if(tipo === "unidad") setPrecio(4)
+if(tipo === "unidad") setPrecio(3.5)
 }
 else if(prod.includes("24")){
 if(tipo === "mayor") setPrecio(4)
 if(tipo === "unidad") setPrecio(5)
 }
 else if(prod.includes("6000")){
-if(tipo === "mayor") setPrecio(0.90)
-if(tipo === "unidad") setPrecio(1.50)
+if(tipo === "mayor") setPrecio(1)
+if(tipo === "unidad") setPrecio(1.5)
 }
-else if(prod.includes("1L") || prod.includes("1000")){
-if(tipo === "mayor") setPrecio(0.40)
-if(tipo === "unidad") setPrecio(0.70)
+else if(prod.includes("1L")){
+if(tipo === "mayor") setPrecio(0.70)
+if(tipo === "unidad") setPrecio(1)
 }
 
 }
