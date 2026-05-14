@@ -5,8 +5,8 @@ import {useState,useEffect} from "react"
 export default function Ventas(){
 
 const [clientes, setClientes] = useState<any[]>([])
-const [vehiculos,setVehiculos]=useState([])
-const [productos,setProductos]=useState([])
+const [vehiculos,setVehiculos]=useState<any[]>([])
+const [productos,setProductos]=useState<any[]>([])
 
 const [busqueda,setBusqueda]=useState("")
 const [cliente,setCliente]=useState("")
@@ -20,21 +20,41 @@ const [pago,setPago]=useState("efectivo")
 const [tipoEnvase,setTipoEnvase]=useState("cambio")
 
 useEffect(()=>{
+
 let c = JSON.parse(localStorage.getItem("clientes")||"[]")
 let v = JSON.parse(localStorage.getItem("vehiculos")||"[]")
 let p = JSON.parse(localStorage.getItem("productos")||"[]")
 
+// 🔥 SI NO EXISTEN PRODUCTOS CARGAR LOS PRINCIPALES
+if(!Array.isArray(p) || p.length === 0){
+
+p = [
+
+{nombre:"Botellón 20L con llave", precio:2.5},
+{nombre:"Botellón 20L sin llave", precio:2},
+{nombre:"Paca 15 botellas 600 ml", precio:3.5},
+{nombre:"Paca 24 botellas 600 ml", precio:5},
+{nombre:"Botella 6000 ml", precio:1.5},
+{nombre:"Botella 1L", precio:1}
+
+]
+
+localStorage.setItem("productos", JSON.stringify(p))
+
+}
+
 setClientes(c)
 setVehiculos(v)
 setProductos(p)
+
 },[])
 
-let clientesFiltrados = clientes.filter(c=>
+let clientesFiltrados = clientes.filter((c:any)=>
 (c.nombre || "").toLowerCase().includes(busqueda.toLowerCase())
 )
 
-// 🔥 TRADUCTOR CLAVE (CLAVE DEL SISTEMA)
-function obtenerClave(nombre){
+// 🔥 TRADUCTOR CLAVE
+function obtenerClave(nombre:string){
 
 nombre = nombre.toLowerCase()
 
@@ -49,7 +69,7 @@ return null
 }
 
 // 🔁 VACÍOS
-function obtenerClaveVacio(nombre){
+function obtenerClaveVacio(nombre:string){
 
 nombre = nombre.toLowerCase()
 
@@ -59,11 +79,19 @@ if(nombre.includes("sin llave")) return "botellon20sin_llave_vacios"
 return null
 }
 
-// 🔥 FECHA
+// 🔥 FECHA ECUADOR
 function obtenerFechaEcuador(){
-let fecha = new Date()
-let opciones = { timeZone: "America/Guayaquil" }
-return new Intl.DateTimeFormat("en-CA", opciones).format(fecha)
+
+const fecha = new Date()
+
+const ecuador = new Date(
+fecha.toLocaleString("en-US", {
+timeZone: "America/Guayaquil"
+})
+)
+
+return ecuador.toISOString().split("T")[0]
+
 }
 
 function guardarVenta(){
@@ -86,7 +114,7 @@ let hoy = obtenerFechaEcuador()
 let ventas = JSON.parse(localStorage.getItem("ventas")||"[]")
 let inventario = JSON.parse(localStorage.getItem("inventario")||"{}")
 
-let clave = obtenerClave(producto)
+let clave:any = obtenerClave(producto)
 
 // 🔒 VALIDAR INVENTARIO
 if(!inventario[origen] || inventario[origen][clave] === undefined){
@@ -102,10 +130,10 @@ return
 // 🔻 RESTAR INVENTARIO
 inventario[origen][clave] -= cant
 
-// 🔁 CAMBIO (SOLO BOTELLONES)
+// 🔁 CAMBIO BOTELLONES
 if(producto.toLowerCase().includes("20l") && tipoEnvase==="cambio"){
 
-let claveVacio = obtenerClaveVacio(producto)
+let claveVacio:any = obtenerClaveVacio(producto)
 
 if(!inventario[origen][claveVacio]){
 inventario[origen][claveVacio]=0
@@ -145,10 +173,10 @@ fecha:hoy
 localStorage.setItem("envasesvendidos",JSON.stringify(vendidos))
 }
 
-// 💾 GUARDAR INVENTARIO
+// 💾 INVENTARIO
 localStorage.setItem("inventario",JSON.stringify(inventario))
 
-// 🧾 GUARDAR VENTA
+// 🧾 VENTAS
 ventas.push({
 fecha:hoy,
 cliente,
@@ -199,69 +227,173 @@ alert("Venta registrada correctamente")
 
 setCantidad(1)
 setPrecio("")
+
 }
 
 return(
+
 <div style={contenedor}>
+
 <h1 style={titulo}>💰 Registrar Venta</h1>
 
 <div style={formulario}>
 
-<input style={input} placeholder="Buscar cliente" value={busqueda} onChange={(e)=>setBusqueda(e.target.value)}/>
+<input
+style={input}
+placeholder="Buscar cliente"
+value={busqueda}
+onChange={(e)=>setBusqueda(e.target.value)}
+/>
 
-<select style={input} value={cliente} onChange={(e)=>setCliente(e.target.value)}>
+<select
+style={input}
+value={cliente}
+onChange={(e)=>setCliente(e.target.value)}
+>
 <option value="">Seleccionar cliente</option>
-{clientesFiltrados.map((c,i)=>(
-<option key={i} value={c.nombre}>{c.nombre}</option>
+
+{clientesFiltrados.map((c:any,i:number)=>(
+
+<option key={i} value={c.nombre}>
+{c.nombre}
+</option>
+
 ))}
+
 </select>
 
-<select style={input} value={origen} onChange={(e)=>setOrigen(e.target.value)}>
+<select
+style={input}
+value={origen}
+onChange={(e)=>setOrigen(e.target.value)}
+>
+
 <option value="empresa">Empresa</option>
 <option value="dorita">Local Dorita</option>
-{vehiculos.map((v,i)=>(
+
+{vehiculos.map((v:any,i:number)=>(
+
 <option key={i} value={"vehiculo"+(i+1)}>
 {v.nombre || "Vehículo "+(i+1)}
 </option>
+
 ))}
+
 </select>
 
-<select style={input} value={producto} onChange={(e)=>setProducto(e.target.value)}>
+<select
+style={input}
+value={producto}
+onChange={(e)=>setProducto(e.target.value)}
+>
+
 <option value="">Seleccionar producto</option>
-{productos.map((p,i)=>(
-<option key={i} value={p.nombre}>{p.nombre}</option>
+
+{productos.map((p:any,i:number)=>(
+
+<option key={i} value={p.nombre}>
+{p.nombre}
+</option>
+
 ))}
+
 </select>
 
 {producto.toLowerCase().includes("20l") && (
-<select style={input} value={tipoEnvase} onChange={(e)=>setTipoEnvase(e.target.value)}>
+
+<select
+style={input}
+value={tipoEnvase}
+onChange={(e)=>setTipoEnvase(e.target.value)}
+>
+
 <option value="cambio">Cambio</option>
 <option value="prestado">Envase prestado</option>
 <option value="vendido">Envase vendido</option>
+
 </select>
+
 )}
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))} placeholder="Cantidad"/>
-<input style={input} type="number" value={precio} onChange={(e)=>setPrecio(e.target.value)} placeholder="Precio"/>
+<input
+style={input}
+type="number"
+value={cantidad}
+onChange={(e)=>setCantidad(Number(e.target.value))}
+placeholder="Cantidad"
+/>
 
-<select style={input} value={pago} onChange={(e)=>setPago(e.target.value)}>
+<input
+style={input}
+type="number"
+value={precio}
+onChange={(e)=>setPrecio(e.target.value)}
+placeholder="Precio"
+/>
+
+<select
+style={input}
+value={pago}
+onChange={(e)=>setPago(e.target.value)}
+>
+
 <option value="efectivo">Efectivo</option>
 <option value="transferencia">Transferencia</option>
 <option value="fiado">Fiado</option>
+
 </select>
 
-<button style={boton} onClick={guardarVenta}>
+<button
+style={boton}
+onClick={guardarVenta}
+>
 Guardar Venta
 </button>
 
 </div>
+
 </div>
+
 )
 
 }
 
-const contenedor={background:"#ffffff",minHeight:"100vh",padding:"40px",color:"#000"}
-const titulo={fontSize:"30px",marginBottom:"30px",textAlign:"center"}
-const formulario={background:"#f9fafb",padding:"25px",borderRadius:"10px",maxWidth:"420px",display:"flex",flexDirection:"column",gap:"12px",border:"1px solid #ddd",margin:"0 auto"}
-const input={padding:"10px",border:"1px solid #ccc",borderRadius:"6px"}
-const boton={background:"#16a34a",color:"#fff",padding:"12px",border:"none",borderRadius:"6px",cursor:"pointer"}
+const contenedor={
+background:"#ffffff",
+minHeight:"100vh",
+padding:"40px",
+color:"#000"
+}
+
+const titulo={
+fontSize:"30px",
+marginBottom:"30px",
+textAlign:"center" as const
+}
+
+const formulario={
+background:"#f9fafb",
+padding:"25px",
+borderRadius:"10px",
+maxWidth:"420px",
+display:"flex",
+flexDirection:"column" as const,
+gap:"12px",
+border:"1px solid #ddd",
+margin:"0 auto"
+}
+
+const input={
+padding:"10px",
+border:"1px solid #ccc",
+borderRadius:"6px"
+}
+
+const boton={
+background:"#16a34a",
+color:"#fff",
+padding:"12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer"
+}
