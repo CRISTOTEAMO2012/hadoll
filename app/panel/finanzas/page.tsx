@@ -146,7 +146,6 @@ let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
 let produccionCostos = JSON.parse(localStorage.getItem("produccionCostos")||"[]")
 let caja = JSON.parse(localStorage.getItem("caja")||"[]")
 
-// ✅ FILTRO POR FECHAS
 gastos = gastos.filter((g:any)=>
 g.fecha >= desde && g.fecha <= hasta
 )
@@ -161,12 +160,10 @@ c.fecha >= desde && c.fecha <= hasta
 
 let lista:any[] = []
 
-// ✅ INGRESOS
 if(tipo==="ingresos"){
 lista = caja.filter((c:any)=> c.tipo === "ingreso")
 }
 
-// ✅ CORRIENTES
 if(tipo==="corrientes"){
 lista = gastos.filter((g:any)=> 
 g.tipo !== "Insumo" &&
@@ -174,17 +171,14 @@ g.tipo !== "Compra inventario"
 )
 }
 
-// ✅ INSUMOS
 if(tipo==="insumos"){
 lista = gastos.filter((g:any)=> g.tipo === "Insumo")
 }
 
-// ✅ BODEGA
 if(tipo==="bodega"){
 lista = gastos.filter((g:any)=> g.tipo === "Compra inventario")
 }
 
-// ✅ PRODUCCION
 if(tipo==="produccion"){
 lista = produccionCostos
 }
@@ -400,6 +394,77 @@ UTILIDAD
 
 </div>
 
+{/* 🔍 DETALLE */}
+{vista && (
+
+<div style={detalleBox}>
+
+<h2 style={{marginBottom:"15px"}}>
+📋 DETALLE {vista.toUpperCase()}
+</h2>
+
+{vista === "produccion" ? (
+
+<div>
+
+{Object.entries(resumenPorInsumo()).map(([nombre,data]:any,i)=>(
+
+<div key={i} style={detalleItem}>
+
+<div>
+<b>{nombre}</b>
+</div>
+
+<div>
+Cantidad: {data.cantidad}
+</div>
+
+<div>
+Precio Unit: ${data.precio}
+</div>
+
+<div>
+Total: ${data.total.toFixed(2)}
+</div>
+
+</div>
+
+))}
+
+</div>
+
+) : (
+
+<div>
+
+{detalle.map((d:any,i:number)=>(
+
+<div key={i} style={detalleItem}>
+
+<div>
+<b>{d.tipo || d.detalle || d.producto || "Movimiento"}</b>
+</div>
+
+<div>
+${d.total || d.valor || d.monto || 0}
+</div>
+
+<div>
+📅 {d.fecha}
+</div>
+
+</div>
+
+))}
+
+</div>
+
+)}
+
+</div>
+
+)}
+
 </div>
 )
 }
@@ -467,7 +532,7 @@ padding:"15px",
 borderRadius:"10px",
 color:"#fff",
 minWidth:"140px",
-textAlign:"center",
+textAlign:"center" as const,
 cursor:"pointer",
 transition:"0.2s"
 }
@@ -488,4 +553,21 @@ display:"flex",
 gap:"40px",
 marginTop:"20px",
 flexWrap:"wrap"
+}
+
+const detalleBox={
+background:"#fff",
+padding:"20px",
+borderRadius:"12px",
+marginTop:"25px",
+boxShadow:"0 2px 10px rgba(0,0,0,0.1)"
+}
+
+const detalleItem={
+padding:"12px",
+borderBottom:"1px solid #e5e7eb",
+display:"flex",
+justifyContent:"space-between",
+flexWrap:"wrap" as const,
+gap:"10px"
 }
