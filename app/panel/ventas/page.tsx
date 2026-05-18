@@ -17,6 +17,10 @@ const [cantidad,setCantidad]=useState(1)
 const [precio,setPrecio]=useState("")
 const [pago,setPago]=useState("efectivo")
 
+// 🔥 NUEVO
+const [abono,setAbono]=useState("")
+const [metodoMixto,setMetodoMixto]=useState("efectivo")
+
 const [tipoEnvase,setTipoEnvase]=useState("cambio")
 
 useEffect(()=>{
@@ -109,6 +113,8 @@ alert("Cantidad o precio inválido")
 return
 }
 
+let totalVenta = cant * prec
+
 let hoy = obtenerFechaEcuador()
 
 let ventas = JSON.parse(localStorage.getItem("ventas")||"[]")
@@ -183,6 +189,7 @@ cliente,
 producto,
 cantidad:cant,
 precio:prec,
+total:totalVenta,
 origen,
 pago,
 tipoEnvase
@@ -190,7 +197,7 @@ tipoEnvase
 
 localStorage.setItem("ventas",JSON.stringify(ventas))
 
-// 💳 FIADO
+// 💳 FIADO TOTAL
 if(pago === "fiado"){
 
 let deudas = JSON.parse(localStorage.getItem("deudas")||"[]")
@@ -199,7 +206,7 @@ deudas.push({
 cliente,
 producto,
 cantidad:cant,
-monto: prec * cant,
+monto: totalVenta,
 fecha: hoy,
 estado: "pendiente"
 })
@@ -207,15 +214,15 @@ estado: "pendiente"
 localStorage.setItem("deudas",JSON.stringify(deudas))
 }
 
-// 💰 CAJA
-if(pago !== "fiado"){
+// 💰 EFECTIVO O TRANSFERENCIA TOTAL
+if(pago === "efectivo" || pago === "transferencia"){
 
 let caja = JSON.parse(localStorage.getItem("caja") || "[]")
 
 caja.push({
 tipo:"ingreso",
 descripcion:`Venta de ${producto}`,
-monto: prec * cant,
+monto: totalVenta,
 metodo:pago,
 fecha:hoy
 })
@@ -223,10 +230,57 @@ fecha:hoy
 localStorage.setItem("caja", JSON.stringify(caja))
 }
 
+// 🔥 PAGO MIXTO
+if(pago === "mixto"){
+
+let valorAbono = Number(abono)
+
+if(isNaN(valorAbono) || valorAbono <= 0){
+alert("Ingrese abono válido")
+return
+}
+
+if(valorAbono >= totalVenta){
+alert("El abono no puede ser mayor o igual al total")
+return
+}
+
+let restante = totalVenta - valorAbono
+
+// 💰 GUARDAR EN CAJA
+let caja = JSON.parse(localStorage.getItem("caja") || "[]")
+
+caja.push({
+tipo:"ingreso",
+descripcion:`Abono venta ${producto}`,
+monto: valorAbono,
+metodo:metodoMixto,
+fecha:hoy
+})
+
+localStorage.setItem("caja", JSON.stringify(caja))
+
+// 💳 GUARDAR DEUDA
+let deudas = JSON.parse(localStorage.getItem("deudas")||"[]")
+
+deudas.push({
+cliente,
+producto,
+cantidad:cant,
+monto: restante,
+fecha: hoy,
+estado: "pendiente"
+})
+
+localStorage.setItem("deudas",JSON.stringify(deudas))
+
+}
+
 alert("Venta registrada correctamente")
 
 setCantidad(1)
 setPrecio("")
+setAbono("")
 
 }
 
@@ -340,8 +394,37 @@ onChange={(e)=>setPago(e.target.value)}
 <option value="efectivo">Efectivo</option>
 <option value="transferencia">Transferencia</option>
 <option value="fiado">Fiado</option>
+<option value="mixto">Mixto</option>
 
 </select>
+
+{/* 🔥 SOLO SI ES MIXTO */}
+{pago === "mixto" && (
+
+<>
+
+<input
+style={input}
+type="number"
+value={abono}
+onChange={(e)=>setAbono(e.target.value)}
+placeholder="Valor abonado"
+/>
+
+<select
+style={input}
+value={metodoMixto}
+onChange={(e)=>setMetodoMixto(e.target.value)}
+>
+
+<option value="efectivo">Efectivo</option>
+<option value="transferencia">Transferencia</option>
+
+</select>
+
+</>
+
+)}
 
 <button
 style={boton}

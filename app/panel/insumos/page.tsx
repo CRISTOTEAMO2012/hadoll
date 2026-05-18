@@ -18,12 +18,14 @@ const[nuevoInsumo,setNuevoInsumo]=useState("")
 const[insumos,setInsumos]=useState([])
 
 const[insumo,setInsumo]=useState("")
-const[cantidad,setCantidad]=useState(1)
-const[precio,setPrecio]=useState(0)
+const[cantidad,setCantidad]=useState("")
+const[precio,setPrecio]=useState("")
 const[modo,setModo]=useState("compra")
 
 // 🔥 NUEVO (lo que pediste)
 const[tipoGasto,setTipoGasto]=useState("fijo")
+
+const[mensaje,setMensaje]=useState("")
 
 const[inventario,setInventario]=useState({})
 const[verInventario,setVerInventario]=useState(true)
@@ -150,13 +152,31 @@ setCantidad(1)
 setPrecio(0)
 setTipoGasto("fijo")
 
-alert("Movimiento registrado")
+setMensaje("✅ Movimiento registrado correctamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+setInsumo("")
+setCantidad("")
+setPrecio("")
+setTipoGasto("fijo")
 }
 
 return(
 
 <div style={container}>
+{mensaje && (
 
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h2 style={titulo}>🧪 INSUMOS</h2>
 
 <div style={filaPrincipal}>
@@ -207,7 +227,23 @@ Agregar
 </div>
 
 <label style={label}>Insumo</label>
-<select value={insumo} onChange={e=>setInsumo(e.target.value)} style={input}>
+<select
+value={insumo}
+onChange={e=>{
+
+let valor = e.target.value
+
+setInsumo(valor)
+
+if(FIJOS.includes(valor)){
+setTipoGasto("fijo")
+}else{
+setTipoGasto("variable")
+}
+
+}}
+style={input}
+>
 <option value="">Seleccione</option>
 {insumos.map((i,idx)=>(
 <option key={idx}>{i}</option>
@@ -215,7 +251,7 @@ Agregar
 </select>
 
 <label style={label}>Cantidad</label>
-<input type="number" value={cantidad} onChange={e=>setCantidad(Number(e.target.value))} style={input}/>
+<input type="number" value={cantidad} onChange={e=>setCantidad(e.target.value)} style={input}/>
 
 {modo==="compra" &&(
 <>
@@ -224,14 +260,23 @@ Agregar
 
 {/* 🔥 AQUÍ ESTÁ EXACTAMENTE LO QUE PEDISTE */}
 <label style={label}>Tipo de gasto</label>
-<select value={tipoGasto} onChange={(e)=>setTipoGasto(e.target.value)} style={input}>
-<option value="fijo">Fijo (no afecta finanzas)</option>
-<option value="variable">Variable (sí afecta finanzas)</option>
-</select>
+
+<input
+value={
+tipoGasto==="fijo"
+? "Fijo (no afecta finanzas)"
+: "Variable (sí afecta finanzas)"
+}
+readOnly
+style={{
+...input,
+background:"#e5e7eb",
+cursor:"not-allowed"
+}}
+/>
 
 </>
 )}
-
 <button onClick={registrar} style={guardar}>
 Registrar
 </button>
@@ -319,3 +364,25 @@ const btnModo=(a)=>({flex:"1 1 45%",padding:"8px",background:a?"#16a34a":"#e5e7e
 const item={display:"flex",justifyContent:"space-between",marginTop:"5px",background:"#f1f5f9",padding:"5px",borderRadius:"5px"}
 const btnEliminar={background:"red",color:"#fff",border:"none",borderRadius:"4px"}
 const btnInv={marginBottom:"10px",padding:"10px",background:"#0ea5e9",color:"#fff",border:"none",borderRadius:"6px"}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}

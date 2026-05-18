@@ -6,10 +6,10 @@ export default function Bodega(){
 
 const[modo,setModo]=useState("compra")
 
-const[producto,setProducto]=useState("botellon20llave_vacios")
-const[cantidad,setCantidad]=useState(1)
-const[precio,setPrecio]=useState(0)
-const[destino,setDestino]=useState("empresa")
+const[producto,setProducto]=useState("")
+const[cantidad,setCantidad]=useState("")
+const[precio,setPrecio]=useState("")
+const[destino,setDestino]=useState("")
 
 const [historial, setHistorial] = useState<any[]>([])
 const[mostrarHistorial,setMostrarHistorial]=useState(false)
@@ -22,6 +22,7 @@ const[filtroHasta,setFiltroHasta]=useState("")
 // 💰 TOTALES
 const[totalFiltrado,setTotalFiltrado]=useState(0)
 const[totalGeneral,setTotalGeneral]=useState(0)
+const[mensaje,setMensaje]=useState("")
 
 // ✅ CLAVES CORRECTAS
 const productos = [
@@ -214,7 +215,11 @@ fecha:new Date().toISOString().split("T")[0]
 localStorage.setItem("gastos",JSON.stringify(gastos))
 }
 
-alert("Compra registrada")
+setMensaje("✅ COMPRA REGISTRADA")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
 }
 
 if(modo==="existente"){
@@ -233,7 +238,11 @@ fecha:new Date().toISOString().split("T")[0]
 
 localStorage.setItem("stockExistente",JSON.stringify(existentes))
 
-alert("Stock existente agregado")
+setMensaje("✅ STOCK EXISTENTE AGREGADO")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
 }
 
 if(modo==="danado"){
@@ -253,7 +262,11 @@ tipo:"dañado"
 
 localStorage.setItem("danados",JSON.stringify(danados))
 
-alert("Stock dañado descontado")
+setMensaje("✅ STOCK DAÑADO DESCONTADO")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
 }
 
 localStorage.setItem("inventario",JSON.stringify(inventario))
@@ -261,15 +274,43 @@ localStorage.setItem("inventario",JSON.stringify(inventario))
 if(mostrarHistorial){
 cargarHistorial()
 }
+setProducto("")
+setCantidad("")
+setDestino("")
+setPrecio("")
 }
-
+const animacion = `
+@keyframes zoomIn {
+0%{
+transform:scale(0.7);
+opacity:0;
+}
+100%{
+transform:scale(1);
+opacity:1;
+}
+}
+`
 return(
 
 <div style={container}>
 
+<style>{animacion}</style>
+
 <div style={bloque}>
 
 <h2 style={titulo}>🏬 BODEGA GENERAL</h2>
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 
 <div style={contenedorBotones}>
 <button onClick={()=>setModo("compra")} style={botonModo(modo==="compra")}>Compra</button>
@@ -280,6 +321,8 @@ return(
 <label style={label}>Producto</label>
 
 <select value={producto} onChange={e=>setProducto(e.target.value)} style={input}>
+<option value="">Seleccione producto</option>
+
 {productos.map((p,i)=>(
 <option key={i} value={p.value}>{p.label}</option>
 ))}
@@ -290,7 +333,7 @@ return(
 <input
 type="number"
 value={cantidad}
-onChange={e=>setCantidad(Number(e.target.value))}
+onChange={e=>setCantidad(e.target.value)}
 style={input}
 />
 
@@ -314,6 +357,7 @@ value={destino}
 onChange={e=>setDestino(e.target.value)}
 style={input}
 >
+<option value="">Seleccione destino</option>  
 <option value="empresa">Empresa</option>
 <option value="dorita">Local Dorita</option>
 </select>
@@ -393,3 +437,27 @@ const btnAzul={background:"#2563eb",color:"#fff",padding:"10px",border:"none",bo
 const historialBox={background:"#ffffff",marginTop:"20px",padding:"15px",borderRadius:"10px",color:"#111"}
 const itemHistorial={display:"grid",gridTemplateColumns:"repeat(5,1fr)",borderBottom:"1px solid #e5e7eb",padding:"8px",fontSize:"14px"}
 const totales={display:"flex",justifyContent:"space-between",marginBottom:"10px",fontWeight:"bold"}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"35px 60px",
+borderRadius:"20px",
+fontWeight:"bold",
+fontSize:"32px",
+textAlign:"center" as const,
+boxShadow:"0 10px 40px rgba(0,0,0,0.4)",
+animation:"zoomIn 0.3s ease"
+}

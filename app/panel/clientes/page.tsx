@@ -24,7 +24,7 @@ const [filtroDia,setFiltroDia]=useState("Todos")
 const [filtroCiudad,setFiltroCiudad]=useState("Todas")
 
 const [editandoIndex,setEditandoIndex]=useState(null)
-
+const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 let data=JSON.parse(localStorage.getItem("clientes")||"[]")
 setClientes(data)
@@ -160,6 +160,18 @@ function guardarCliente(){
 
 if(nombre===""){
 alert("Ingrese nombre")
+const animacion = `
+@keyframes zoomIn {
+0%{
+transform:scale(0.7);
+opacity:0;
+}
+100%{
+transform:scale(1);
+opacity:1;
+}
+}
+`
 return
 }
 
@@ -193,7 +205,11 @@ setDia("Lunes")
 setCiudad("")
 setCoords(null)
 
-alert("Guardado correctamente")
+setMensaje("✅ CLIENTE GUARDADO EXITOSAMENTE")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
 }
 
 // ✏️ EDITAR
@@ -241,13 +257,37 @@ lista=lista.filter(c=>
 c.nombre.toLowerCase().includes(buscar.toLowerCase())
 )
 }
-
+const animacion = `
+@keyframes zoomIn {
+0%{
+transform:scale(0.7);
+opacity:0;
+}
+100%{
+transform:scale(1);
+opacity:1;
+}
+}
+`
 return(
+
 
 <div style={contenedor}>
 
-<h1 style={titulo}>👥 CLIENTES PRO + MAPA</h1>
+<style>{animacion}</style>
 
+<h1 style={titulo}>👥 CLIENTES PRO + MAPA</h1>
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h2>{editandoIndex !== null ? "Editar cliente" : "Registrar cliente"}</h2>
 
 <input style={input} placeholder="Nombre" value={nombre} onChange={e=>setNombre(e.target.value)}/>
@@ -371,7 +411,16 @@ Editar
 <button style={botonEliminar} onClick={()=>borrarCliente(i)}>
 Borrar
 </button>
+<a
+href={`https://wa.me/593${(c.telefono || "").replace(/^0/,"")}`}
+target="_blank"
+>
 
+<button style={botonWhatsapp}>
+WhatsApp
+</button>
+
+</a>
 </div>
 
 </div>
@@ -443,4 +492,39 @@ color:"#fff",
 padding:"8px 12px",
 border:"none",
 borderRadius:"6px"
+}
+
+const botonWhatsapp={
+background:"#25d366",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+marginLeft:"5px",
+cursor:"pointer"
+}
+
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"35px 60px",
+borderRadius:"20px",
+fontWeight:"bold",
+fontSize:"32px",
+textAlign:"center" as const,
+boxShadow:"0 10px 40px rgba(0,0,0,0.4)",
+animation:"zoomIn 0.3s ease"
 }
