@@ -19,6 +19,7 @@ setMarca(data[0].marca)
 setPlaca(data[0].placa)
 setChofer(data[0].chofer)
 setEditando(true)
+setVehiculoGuardado(data[0])
 }
 
 },[])
@@ -35,7 +36,7 @@ chofer
 }
 
 localStorage.setItem("vehiculos",JSON.stringify(vehiculos))
-
+setVehiculoGuardado(vehiculos[0])
 setMensaje("✅ Vehículo registrado correctamente")
 
 setTimeout(()=>{
@@ -48,7 +49,7 @@ setChofer("")
 setEditando(false)
 
 }
-
+const [vehiculoGuardado,setVehiculoGuardado]=useState<any>(null)
 return(
 
 <div style={contenedor}>
@@ -101,17 +102,17 @@ placeholder="Nombre del chofer"
 </button>
 
 </div>
-{JSON.parse(localStorage.getItem("vehiculos") || "[]")[0] && (
+{vehiculoGuardado && (
 
 <div style={tarjetaVehiculo}>
 
 <h3>🚚 Vehículo registrado</h3>
 
-<p><b>Marca:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].marca}</p>
+<p><b>Marca:</b> {vehiculoGuardado.marca}</p>
 
-<p><b>Placa:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].placa}</p>
+<p><b>Placa:</b> {vehiculoGuardado.placa}</p>
 
-<p><b>Chofer:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].chofer}</p>
+<p><b>Chofer:</b> {vehiculoGuardado.chofer}</p>
 
 <button
 style={botonEditar}

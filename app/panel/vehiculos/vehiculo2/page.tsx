@@ -51,6 +51,10 @@ setChofer("")
 setEditando(false)
 
 }
+const vehiculoGuardado =
+typeof window !== "undefined"
+? JSON.parse(localStorage.getItem("vehiculos") || "[]")[1]
+: null
 
 return(
 
@@ -85,17 +89,16 @@ return(
 {editando ? "Actualizar vehículo" : "Guardar vehículo"}
 </button>
 
-{JSON.parse(localStorage.getItem("vehiculos") || "[]")[1] && (
-
+{vehiculoGuardado && (
 <div style={tarjetaVehiculo}>
 
 <h3>🚚 Vehículo registrado</h3>
 
-<p><b>Marca:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[1].marca}</p>
+<p><b>Marca:</b> {vehiculoGuardado.marca}</p>
 
-<p><b>Placa:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[1].placa}</p>
+<p><b>Placa:</b> {vehiculoGuardado.placa}</p>
 
-<p><b>Chofer:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[1].chofer}</p>
+<p><b>Chofer:</b> {vehiculoGuardado.chofer}</p>
 
 <button
 style={botonEditar}
