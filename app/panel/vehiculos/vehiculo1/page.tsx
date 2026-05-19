@@ -8,7 +8,8 @@ export default function Vehiculo1(){
 const [marca,setMarca]=useState("")
 const [placa,setPlaca]=useState("")
 const [chofer,setChofer]=useState("")
-
+const [mensaje,setMensaje]=useState("")
+const [editando,setEditando]=useState(false)
 useEffect(()=>{
 
 let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
@@ -17,6 +18,7 @@ if(data[0]){
 setMarca(data[0].marca)
 setPlaca(data[0].placa)
 setChofer(data[0].chofer)
+setEditando(true)
 }
 
 },[])
@@ -34,13 +36,34 @@ chofer
 
 localStorage.setItem("vehiculos",JSON.stringify(vehiculos))
 
-alert("Vehículo guardado")
+setMensaje("✅ Vehículo registrado correctamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setMarca("")
+setPlaca("")
+setChofer("")
+setEditando(false)
 
 }
 
 return(
 
 <div style={contenedor}>
+
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 
 <h1 style={titulo}>🚚 Vehículo 1</h1>
 
@@ -74,11 +97,42 @@ placeholder="Nombre del chofer"
 />
 
 <button style={botonGuardar} onClick={guardar}>
-Guardar vehículo
+{editando ? "Actualizar vehículo" : "Guardar vehículo"}
+</button>
+
+</div>
+{JSON.parse(localStorage.getItem("vehiculos") || "[]")[0] && (
+
+<div style={tarjetaVehiculo}>
+
+<h3>🚚 Vehículo registrado</h3>
+
+<p><b>Marca:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].marca}</p>
+
+<p><b>Placa:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].placa}</p>
+
+<p><b>Chofer:</b> {JSON.parse(localStorage.getItem("vehiculos") || "[]")[0].chofer}</p>
+
+<button
+style={botonEditar}
+onClick={()=>{
+
+let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
+
+setMarca(data[0].marca)
+setPlaca(data[0].placa)
+setChofer(data[0].chofer)
+
+setEditando(true)
+
+}}
+>
+✏️ Editar
 </button>
 
 </div>
 
+)}
 <div style={botones}>
 
 <Link href="/panel/vehiculos/vehiculo1/cargar">
@@ -171,4 +225,45 @@ padding:"12px",
 border:"none",
 borderRadius:"6px",
 cursor:"pointer"
+}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}
+
+const tarjetaVehiculo={
+background:"#fff",
+padding:"20px",
+borderRadius:"10px",
+maxWidth:"420px",
+marginBottom:"30px",
+border:"1px solid #ddd"
+}
+
+const botonEditar={
+background:"#2563eb",
+color:"#fff",
+padding:"10px 15px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+marginTop:"10px"
 }

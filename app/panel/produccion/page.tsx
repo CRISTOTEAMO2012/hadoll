@@ -6,8 +6,8 @@ export default function Produccion(){
 
 const [productos,setProductos]=useState([])
 const [producto,setProducto]=useState("")
-const [cantidad,setCantidad]=useState(1)
-
+const [cantidad,setCantidad]=useState("")
+const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 
 let listaProductos = JSON.parse(localStorage.getItem("productos") || "[]")
@@ -298,13 +298,30 @@ fecha:new Date().toISOString().split("T")[0]
 
 localStorage.setItem("produccionCostos",JSON.stringify(costos))
 
-alert("Producción registrada OK")
+setMensaje("✅ Producción registrada correctamente")
 
-setCantidad(1)
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setProducto("")
+setCantidad("")
 }
 
 return(
 <div style={contenedor}>
+
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h1 style={titulo}>🏭 Producción</h1>
 
 <div style={formulario}>
@@ -332,3 +349,25 @@ const titulo={fontSize:"30px",marginBottom:"30px"}
 const formulario={display:"flex",flexDirection:"column",gap:"15px",maxWidth:"400px"}
 const input={padding:"10px",borderRadius:"6px",border:"1px solid #ccc"}
 const boton={background:"#f97316",color:"#fff",border:"none",padding:"12px",borderRadius:"6px"}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}

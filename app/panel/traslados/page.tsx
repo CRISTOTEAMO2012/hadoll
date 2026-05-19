@@ -8,7 +8,7 @@ const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState("")
 const [origen,setOrigen]=useState("")
 const [destino,setDestino]=useState("")
-
+const [mensaje,setMensaje]=useState("")
 function obtenerClave(prod){
 
 // 🔵 LLENOS
@@ -81,19 +81,34 @@ inventario[destino][clave] += cant
 // 💾 GUARDAR
 localStorage.setItem("inventario", JSON.stringify(inventario))
 
-alert("Traslado realizado correctamente")
+setMensaje("✅ Traslado registrado correctamente")
 
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setProducto("")
+setOrigen("")
+setDestino("")
 setCantidad("")
 }
 
 return(
 
-<div style={{
-background:"#f1f5f9",
-minHeight:"100vh",
-padding:"40px",
-color:"#000"
-}}>
+<div style={contenedor}>
+
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
+
 
 <h1 style={{marginBottom:"30px"}}>
 🔄 TRASLADOS COMPLETOS
@@ -183,4 +198,33 @@ border:"none",
 borderRadius:"10px",
 fontWeight:"bold",
 cursor:"pointer"
+}
+const contenedor={
+background:"#f1f5f9",
+minHeight:"100vh",
+padding:"40px",
+color:"#000"
+}
+
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
 }

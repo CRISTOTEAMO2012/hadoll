@@ -6,13 +6,13 @@ export default function DevolucionVehiculo2(){
 
 const [inventario,setInventario]=useState({})
 const [producto,setProducto]=useState("")
-const [cantidad,setCantidad]=useState(1)
+const [cantidad,setCantidad]=useState("")
 
 const [envase,setEnvase]=useState("")
-const [cantidadEnvase,setCantidadEnvase]=useState(1)
+const [cantidadEnvase,setCantidadEnvase]=useState("")
 
 const [destino,setDestino]=useState("empresa")
-
+const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 let data = JSON.parse(localStorage.getItem("inventario") || "{}")
 setInventario(data.vehiculo2 || {})
@@ -56,7 +56,15 @@ inv[destino][key] += cant
 localStorage.setItem("inventario",JSON.stringify(inv))
 setInventario(inv.vehiculo2)
 
-alert("Producto devuelto correctamente")
+setMensaje("✅ Producto devuelto exitosamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setProducto("")
+setCantidad("")
+setDestino("empresa")
 }
 
 // 🟡 ENVASE
@@ -83,12 +91,32 @@ inv[destino][envase] += cant
 localStorage.setItem("inventario",JSON.stringify(inv))
 setInventario(inv.vehiculo2)
 
-alert("Envases devueltos correctamente")
+setMensaje("✅ Envase devuelto exitosamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setEnvase("")
+setCantidadEnvase("")
+setDestino("empresa")
 }
 
 return(
 
 <div style={contenedor}>
+
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 
 <h1 style={titulo}>↩ Devolución Vehículo 2</h1>
 
@@ -101,7 +129,7 @@ return(
 {productosMap.map((p,i)=>(<option key={i}>{p.label}</option>))}
 </select>
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))} />
+<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(e.target.value)} />
 
 <select style={input} value={destino} onChange={(e)=>setDestino(e.target.value)}>
 <option value="empresa">Empresa</option>
@@ -148,3 +176,26 @@ const card: any = {background:"#ffffff",padding:"20px",borderRadius:"12px",margi
 const input={padding:"10px",border:"1px solid #ccc",borderRadius:"6px",background:"#fff",color:"#000"}
 const botonAzul={background:"#2563eb",color:"#fff",padding:"10px",border:"none",borderRadius:"6px"}
 const botonNaranja={background:"#f97316",color:"#fff",padding:"10px",border:"none",borderRadius:"6px"}
+
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}

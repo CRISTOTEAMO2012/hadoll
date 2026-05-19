@@ -6,8 +6,9 @@ export default function CargarVehiculo2(){
 
 const [productos,setProductos]=useState([])
 const [producto,setProducto]=useState("")
-const [cantidad,setCantidad]=useState(1)
-const [origen,setOrigen]=useState("empresa")
+const [cantidad,setCantidad]=useState("")
+const [origen,setOrigen]=useState("")
+const [mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
 let listaProductos = JSON.parse(localStorage.getItem("productos") || "[]")
@@ -70,20 +71,40 @@ inventario.vehiculo2[clave] += Number(cantidad)
 
 localStorage.setItem("inventario",JSON.stringify(inventario))
 
-alert("Cargado a Vehículo 2")
-setCantidad(1)
+setMensaje("✅ Producto cargado exitosamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setProducto("")
+setCantidad("")
+setOrigen("")
 
 }
+
 
 return(
 
 <div style={contenedor}>
 
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h1 style={titulo}>🚚 Cargar Vehículo 2</h1>
 
 <div style={formulario}>
 
 <select style={input} value={origen} onChange={(e)=>setOrigen(e.target.value)}>
+<option value="">Seleccionar origen</option>   
 <option value="empresa">Empresa</option>
 <option value="dorita">Local Dorita</option>
 </select>
@@ -95,7 +116,7 @@ return(
 ))}
 </select>
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))}/>
+<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(e.target.value)}/>
 
 <button style={boton} onClick={cargar}>
 Cargar
@@ -114,3 +135,25 @@ const titulo={fontSize:"30px",marginBottom:"20px"}
 const formulario={maxWidth:"400px",display:"flex",flexDirection:"column",gap:"10px"}
 const input={padding:"10px",border:"1px solid #ccc",borderRadius:"6px"}
 const boton={background:"#2563eb",color:"#fff",padding:"10px",border:"none",borderRadius:"6px"}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}
