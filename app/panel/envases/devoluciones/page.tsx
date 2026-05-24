@@ -11,7 +11,7 @@ const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState("")
 
 const [historial,setHistorial]=useState([])
-
+const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 
 let clientesGuardados = JSON.parse(localStorage.getItem("clientes") || "[]")
@@ -58,19 +58,34 @@ tipo:"devuelto"
 
 localStorage.setItem("envasesprestados",JSON.stringify(movimientos))
 
+setCliente("")
 setProducto("")
 setCantidad("")
 
 cargarHistorial()
 
-alert("Devolución registrada")
+setMensaje("✅ Envase devuelto correctamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
 
 }
 
 return(
 
 <div style={contenedor}>
+{mensaje && (
 
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h1 style={titulo}>♻️ Devolución de Envases</h1>
 
 <div style={card}>
@@ -238,4 +253,26 @@ padding:"10px 16px",
 borderRadius:"10px",
 fontWeight:"bold",
 color:"#166534"
+}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
 }

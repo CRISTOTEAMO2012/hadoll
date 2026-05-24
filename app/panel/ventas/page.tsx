@@ -22,7 +22,7 @@ const [abono,setAbono]=useState("")
 const [metodoMixto,setMetodoMixto]=useState("efectivo")
 
 const [tipoEnvase,setTipoEnvase]=useState("cambio")
-
+const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 
 let c = JSON.parse(localStorage.getItem("clientes")||"[]")
@@ -276,17 +276,39 @@ localStorage.setItem("deudas",JSON.stringify(deudas))
 
 }
 
-alert("Venta registrada correctamente")
+alert("✅ Venta registrada correctamente")
 
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+setBusqueda("")
+setCliente("")
+setOrigen("empresa")
+setProducto("")
 setCantidad(1)
 setPrecio("")
+setPago("efectivo")
 setAbono("")
-
+setMetodoMixto("efectivo")
+setTipoEnvase("cambio")
 }
 
 return(
 
 <div style={contenedor}>
+
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 
 <h1 style={titulo}>💰 Registrar Venta</h1>
 
@@ -479,4 +501,26 @@ padding:"12px",
 border:"none",
 borderRadius:"6px",
 cursor:"pointer"
+}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
 }
