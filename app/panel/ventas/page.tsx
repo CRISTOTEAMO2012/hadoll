@@ -276,7 +276,7 @@ localStorage.setItem("deudas",JSON.stringify(deudas))
 
 }
 
-alert("✅ Venta registrada correctamente")
+setMensaje("✅ Venta registrada correctamente")
 
 setTimeout(()=>{
 setMensaje("")
