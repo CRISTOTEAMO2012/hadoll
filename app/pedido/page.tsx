@@ -12,11 +12,9 @@ const [telefono,setTelefono]=useState("")
 const [ciudad,setCiudad]=useState("")
 const [direccion,setDireccion]=useState("")
 const [producto,setProducto]=useState("")
-const [precio,setPrecio]=useState(0)
-const [cantidad,setCantidad]=useState<any>(1)
+const [cantidad,setCantidad]=useState<any>("")
 const [fechaSugerida,setFechaSugerida]=useState("")
 
-const [tipoVenta,setTipoVenta]=useState("")
 const [mensaje,setMensaje]=useState("")
 
 const numeroEmpresa = "593981143243"
@@ -62,70 +60,38 @@ window.removeEventListener("storage", cargarDatos)
 
 // 🔍 CLIENTE
 function buscarCliente(tel:string){
+
 setTelefono(tel)
 
 let encontrado = clientes.find((c:any)=> c.telefono === tel)
 
 if(encontrado){
+
 setNombre(encontrado.nombre || "")
 setDireccion(encontrado.direccion || "")
 setCiudad(encontrado.ciudad || "")
+
 }
+
 }
 
 // 🛒 PRODUCTO
 function seleccionarProducto(nombreProd:string){
+
 setProducto(nombreProd)
-setTipoVenta("")
-setPrecio(0)
-setCantidad(1)
-}
-
-// 🔥 PRECIOS
-function seleccionarTipo(e:any){
-
-let tipo = e.target.value
-setTipoVenta(tipo)
-
-if(tipo === "mayor" && cantidad < 4){
-setCantidad(4)
-}
-
-let prod = producto.toUpperCase()
-
-if(prod.includes("BOTELLÓN 20L CON LLAVE")){
-if(tipo === "mayor") setPrecio(2)
-if(tipo === "unidad") setPrecio(2.5)
-}
-else if(prod.includes("BOTELLÓN 20L SIN LLAVE")){
-if(tipo === "mayor") setPrecio(1.5)
-if(tipo === "unidad") setPrecio(2)
-}
-else if(prod.includes("15")){
-if(tipo === "mayor") setPrecio(3)
-if(tipo === "unidad") setPrecio(3.5)
-}
-else if(prod.includes("24")){
-if(tipo === "mayor") setPrecio(4)
-if(tipo === "unidad") setPrecio(5)
-}
-else if(prod.includes("6000")){
-if(tipo === "mayor") setPrecio(1)
-if(tipo === "unidad") setPrecio(1.5)
-}
-else if(prod.includes("1L")){
-if(tipo === "mayor") setPrecio(0.70)
-if(tipo === "unidad") setPrecio(1)
-}
+setCantidad("")
 
 }
 
 // 📅 DIAS
 function diasCiudad(){
+
 if(ciudad==="GUARANDA") return [1,2,3]
 if(["CHIMBO","SAN MIGUEL","CHILLANES"].includes(ciudad)) return [4]
 if(ciudad==="RIOBAMBA") return [5]
+
 return []
+
 }
 
 // 📅 FECHA
@@ -140,12 +106,15 @@ let hoy = new Date()
 for(let i=0;i<10;i++){
 
 let f = new Date()
+
 f.setDate(hoy.getDate()+i)
 
 if(dias.includes(f.getDay())){
 
 let iso = f.toISOString().split("T")[0]
+
 setFechaSugerida(iso)
+
 return
 
 }
@@ -155,7 +124,9 @@ return
 }
 
 useEffect(()=>{
+
 if(ciudad) calcularFecha()
+
 },[ciudad])
 
 function formatearFechaBonita(fecha:string){
@@ -174,39 +145,44 @@ day:"numeric"
 // 💾 GUARDAR
 function enviar(){
 
-if(!nombre || !telefono || !producto || !ciudad){
+if(!nombre || !telefono || !producto || !ciudad || !cantidad){
+
 alert("Completa datos")
+
 return
+
 }
 
 let pedidos = JSON.parse(localStorage.getItem("pedidos")||"[]")
 
 let existente = pedidos.find((p:any)=>
+
 p.telefono === telefono &&
 p.producto === producto &&
 p.estado === "pendiente"
+
 )
 
 if(existente){
 
 existente.cantidad = Number(existente.cantidad) + Number(cantidad)
 
-existente.total = Number(existente.precio) * Number(existente.cantidad)
-
 }else{
 
 pedidos.push({
+
 cliente:nombre,
 telefono,
 ciudad,
 direccion,
 producto,
-precio,
+precio:0,
 cantidad,
-total:precio*cantidad,
+total:0,
 fecha:fechaSugerida,
 estado:"pendiente",
 origen:"qr"
+
 })
 
 }
@@ -217,7 +193,9 @@ localStorage.setItem("pedidos",JSON.stringify(pedidos))
 setMensaje("✅ PEDIDO REALIZADO CORRECTAMENTE")
 
 setTimeout(()=>{
+
 setMensaje("")
+
 },2000)
 
 setNombre("")
@@ -225,10 +203,8 @@ setTelefono("")
 setCiudad("")
 setDireccion("")
 setProducto("")
-setPrecio(0)
-setCantidad(1)
+setCantidad("")
 setFechaSugerida("")
-setTipoVenta("")
 
 }
 
@@ -322,12 +298,14 @@ value={ciudad}
 onChange={e=>setCiudad(e.target.value)}
 style={input}
 >
+
 <option value="">CIUDAD</option>
 <option>GUARANDA</option>
 <option>CHIMBO</option>
 <option>SAN MIGUEL</option>
 <option>CHILLANES</option>
 <option>RIOBAMBA</option>
+
 </select>
 
 {fechaSugerida && (
@@ -376,70 +354,26 @@ style={input}
 
 </select>
 
-{producto && (
-
-<select
-value={tipoVenta}
-onChange={seleccionarTipo}
-style={input}
->
-
-<option value="">💰 TIPO DE COMPRA</option>
-<option value="mayor">📦 AL POR MAYOR</option>
-<option value="unidad">🧃 POR UNIDAD</option>
-
-</select>
-
-)}
-
-{precio > 0 && (
-
-<div style={precioBox}>
-💰 PRECIO: ${precio} POR UNIDAD
-</div>
-
-)}
-
 <input
 type="number"
 value={cantidad}
-min={tipoVenta === "mayor" ? 4 : 1}
+min={1}
 onChange={e=>{
 
 let valor = e.target.value
 
-// permitir borrar temporalmente
 if(valor === ""){
 setCantidad("")
 return
 }
 
-let val = Number(valor)
-
-if(tipoVenta === "mayor"){
-
-if(val >= 4){
-setCantidad(val)
-}
-
-}else{
-
-setCantidad(val)
-
-}
+setCantidad(Number(valor))
 
 }}
 onBlur={()=>{
 
-// si queda vacío volver a 4 o 1
 if(cantidad === ""){
-
-if(tipoVenta === "mayor"){
-setCantidad(4)
-}else{
 setCantidad(1)
-}
-
 }
 
 }}
@@ -472,6 +406,7 @@ style={botonW}
 // 🎨 ESTILOS
 
 const input={
+
 display:"block",
 width:"100%",
 padding:"12px",
@@ -481,9 +416,11 @@ borderRadius:"8px",
 background:"#fff",
 color:"#000",
 fontWeight:"bold"
+
 }
 
 const boton={
+
 background:"#16a34a",
 color:"#fff",
 padding:"12px",
@@ -491,9 +428,11 @@ border:"none",
 borderRadius:"8px",
 width:"100%",
 fontWeight:"bold"
+
 }
 
 const botonW={
+
 background:"#25d366",
 color:"#fff",
 padding:"12px",
@@ -502,19 +441,11 @@ borderRadius:"8px",
 width:"100%",
 marginTop:"10px",
 fontWeight:"bold"
-}
 
-const precioBox={
-background:"#dcfce7",
-padding:"12px",
-borderRadius:"8px",
-textAlign:"center" as const,
-marginBottom:"10px",
-fontWeight:"bold",
-fontSize:"18px"
 }
 
 const overlayMensaje={
+
 position:"fixed" as const,
 top:0,
 left:0,
@@ -525,9 +456,11 @@ display:"flex",
 justifyContent:"center",
 alignItems:"center",
 zIndex:9999
+
 }
 
 const mensajeExito={
+
 background:"#16a34a",
 color:"#fff",
 padding:"30px 45px",
@@ -535,4 +468,5 @@ borderRadius:"14px",
 fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+
 }
