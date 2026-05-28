@@ -1,7 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
-
+import { supabase } from "../../../supabase"
 export default function Ventas(){
 
 const [clientes, setClientes] = useState<any[]>([])

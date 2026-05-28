@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-
+import { supabase } from "../supabase"
+console.log(supabase)
 export default function Home() {
 
 const [usuario, setUsuario] = useState("");

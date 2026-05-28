@@ -5,7 +5,7 @@ import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api"
 
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
-
+import { supabase } from "@/supabase"
 export default function Clientes(){
 
 const [nombre,setNombre]=useState("")
@@ -156,7 +156,7 @@ alert("No se pudo obtener ubicación")
 }
 
 // 💾 GUARDAR
-function guardarCliente(){
+async function guardarCliente(){
 
 if(nombre===""){
 alert("Ingrese nombre")
@@ -196,7 +196,29 @@ data.push(nuevo)
 
 localStorage.setItem("clientes",JSON.stringify(data))
 setClientes(data)
+const { error } = await supabase
+.from("clientes")
+.insert([
+{
+nombre,
+direccion,
+referencia,
+telefono,
+dia,
+ciudad
+}
+])
 
+if(error){
+
+alert("ERROR SUPABASE: " + error.message)
+console.log(error)
+
+}else{
+
+console.log("GUARDADO EN SUPABASE ✅")
+
+}
 setNombre("")
 setDireccion("")
 setReferencia("")
