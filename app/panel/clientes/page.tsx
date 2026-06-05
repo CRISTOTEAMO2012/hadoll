@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api"
-
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
 import { supabase } from "@/supabase"
+
 export default function Clientes(){
 
 const [nombre,setNombre]=useState("")
@@ -14,7 +14,6 @@ const [referencia,setReferencia]=useState("")
 const [telefono,setTelefono]=useState("")
 const [dia,setDia]=useState("Lunes")
 const [ciudad,setCiudad]=useState("")
-
 const [coords,setCoords]=useState<any>(null)
 
 const [clientes, setClientes] = useState<any[]>([])
@@ -23,14 +22,34 @@ const [buscar,setBuscar]=useState("")
 const [filtroDia,setFiltroDia]=useState("Todos")
 const [filtroCiudad,setFiltroCiudad]=useState("Todas")
 
-const [editandoIndex,setEditandoIndex]=useState(null)
+const [editandoIndex,setEditandoIndex]=useState<any>(null)
+
 const [mensaje,setMensaje]=useState("")
+
+// CARGAR CLIENTES
 useEffect(()=>{
-let data=JSON.parse(localStorage.getItem("clientes")||"[]")
-setClientes(data)
+
+async function cargarClientes(){
+
+const { data, error } = await supabase
+.from("clientes")
+.select("*")
+.order("id",{ascending:false})
+
+if(error){
+console.log(error)
+return
+}
+
+setClientes(data || [])
+
+}
+
+cargarClientes()
+
 },[])
 
-// 📤 EXPORTAR A EXCEL REAL
+// EXPORTAR EXCEL
 function exportarExcel(){
 
 if(clientes.length===0){
@@ -39,6 +58,7 @@ return
 }
 
 let datos = clientes.map((c,i)=>({
+
 "N°": i+1,
 "Nombre": c.nombre,
 "Dirección": c.direccion,
@@ -48,6 +68,7 @@ let datos = clientes.map((c,i)=>({
 "Día de Ruta": c.dia,
 "Latitud": c.coords?.lat || "",
 "Longitud": c.coords?.lng || ""
+
 }))
 
 const worksheet = XLSX.utils.json_to_sheet(datos)
@@ -96,16 +117,17 @@ data,
 
 }
 
-// 🔥 FUNCION SEGURA
+// OBTENER DIRECCIÓN
 async function obtenerDatos(lat:any,lng:any){
 
 try{
 
 let res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyC38UAIuSha_SbHHMK_Jf0pnsNDOM7WaH8`)
+
 let data = await res.json()
 
 if(data.status !== "OK"){
-console.log("Error geocoding:", data)
+console.log(data)
 return
 }
 
@@ -117,19 +139,24 @@ let componentes = data.results[0]?.address_components || []
 let canton = ""
 
 componentes.forEach((c:any)=>{
+
 if(c.types.includes("locality")) canton = c.long_name
+
 if(c.types.includes("administrative_area_level_2")) canton = c.long_name
+
 })
 
 setCiudad(canton)
 
 }catch(err){
-console.log("Error:",err)
-}
+
+console.log(err)
 
 }
 
-// 📍 UBICACION
+}
+
+// UBICACIÓN
 function usarUbicacion(){
 
 if(!navigator.geolocation){
@@ -138,6 +165,7 @@ return
 }
 
 navigator.geolocation.getCurrentPosition(
+
 async (pos)=>{
 
 let lat = pos.coords.latitude
@@ -148,36 +176,55 @@ setCoords({lat,lng})
 await obtenerDatos(lat,lng)
 
 },
+
 ()=>{
 alert("No se pudo obtener ubicación")
 }
+
 )
 
 }
 
-// 💾 GUARDAR
+// GUARDAR CLIENTE
 async function guardarCliente(){
 
 if(nombre===""){
 alert("Ingrese nombre")
-const animacion = `
-@keyframes zoomIn {
-0%{
-transform:scale(0.7);
-opacity:0;
-}
-100%{
-transform:scale(1);
-opacity:1;
-}
-}
-`
 return
 }
 
-let data=[...clientes]
+// EDITAR
+if(editandoIndex !== null){
 
-let nuevo={
+let clienteEditar:any = clientes[editandoIndex]
+
+const { error } = await supabase
+.from("clientes")
+.update({
+
+nombre,
+direccion,
+referencia,
+telefono,
+dia,
+ciudad
+
+})
+.eq("id", clienteEditar.id)
+
+if(error){
+
+alert("ERROR EDITANDO")
+console.log(error)
+return
+
+}
+
+let nuevos = [...clientes]
+
+nuevos[editandoIndex]={
+
+...clienteEditar,
 nombre,
 direccion,
 referencia,
@@ -185,18 +232,17 @@ telefono,
 dia,
 ciudad,
 coords
+
 }
 
-if(editandoIndex !== null){
-data[editandoIndex]=nuevo
+setClientes(nuevos)
+
 setEditandoIndex(null)
-}else{
-data.push(nuevo)
-}
 
-localStorage.setItem("clientes",JSON.stringify(data))
-setClientes(data)
-const { error } = await supabase
+}else{
+
+// NUEVO CLIENTE
+const { data: nuevoCliente, error } = await supabase
 .from("clientes")
 .insert([
 {
@@ -208,17 +254,28 @@ dia,
 ciudad
 }
 ])
+.select()
 
 if(error){
 
 alert("ERROR SUPABASE: " + error.message)
 console.log(error)
-
-}else{
-
-console.log("GUARDADO EN SUPABASE ✅")
+return
 
 }
+
+if(nuevoCliente){
+
+setClientes([
+nuevoCliente[0],
+...clientes
+])
+
+}
+
+}
+
+// LIMPIAR
 setNombre("")
 setDireccion("")
 setReferencia("")
@@ -232,9 +289,10 @@ setMensaje("✅ CLIENTE GUARDADO EXITOSAMENTE")
 setTimeout(()=>{
 setMensaje("")
 },3000)
+
 }
 
-// ✏️ EDITAR
+// EDITAR
 function editarCliente(index:any){
 
 let c = clientes[index]
@@ -248,37 +306,54 @@ setCiudad(c.ciudad)
 setCoords(c.coords || null)
 
 setEditandoIndex(index)
+
 }
 
-// ❌ BORRAR
-function borrarCliente(index:any){
+// BORRAR
+async function borrarCliente(index:any){
 
 if(!confirm("¿Eliminar cliente?")) return
 
-let data=[...clientes]
-data.splice(index,1)
+let cliente = clientes[index]
 
-localStorage.setItem("clientes",JSON.stringify(data))
-setClientes(data)
+const { error } = await supabase
+.from("clientes")
+.delete()
+.eq("id", cliente.id)
+
+if(error){
+
+alert("ERROR AL BORRAR")
+console.log(error)
+return
+
+}
+
+setClientes(
+clientes.filter((_,i)=>i !== index)
+)
+
+alert("CLIENTE ELIMINADO ✅")
 
 }
 
 // FILTROS
-let lista=clientes
+let lista = clientes
 
 if(filtroDia!=="Todos"){
-lista=lista.filter(c=>c.dia===filtroDia)
+lista = lista.filter(c=>c.dia===filtroDia)
 }
 
 if(filtroCiudad!=="Todas"){
-lista=lista.filter(c=>c.ciudad===filtroCiudad)
+lista = lista.filter(c=>c.ciudad===filtroCiudad)
 }
 
 if(buscar!==""){
-lista=lista.filter(c=>
+lista = lista.filter(c=>
 c.nombre.toLowerCase().includes(buscar.toLowerCase())
 )
 }
+
 const animacion = `
 @keyframes zoomIn {
 0%{
@@ -291,14 +366,15 @@ opacity:1;
 }
 }
 `
-return(
 
+return(
 
 <div style={contenedor}>
 
 <style>{animacion}</style>
 
 <h1 style={titulo}>👥 CLIENTES PRO + MAPA</h1>
+
 {mensaje && (
 
 <div style={overlayMensaje}>
@@ -310,19 +386,51 @@ return(
 </div>
 
 )}
-<h2>{editandoIndex !== null ? "Editar cliente" : "Registrar cliente"}</h2>
 
-<input style={input} placeholder="Nombre" value={nombre} onChange={e=>setNombre(e.target.value)}/>
+<h2>
+{editandoIndex !== null ? "Editar cliente" : "Registrar cliente"}
+</h2>
 
-<input style={input} placeholder="Dirección automática" value={direccion} readOnly/>
+<input
+style={input}
+placeholder="Nombre"
+value={nombre}
+onChange={e=>setNombre(e.target.value)}
+/>
 
-<input style={input} placeholder="Referencia" value={referencia} onChange={e=>setReferencia(e.target.value)}/>
+<input
+style={input}
+placeholder="Dirección automática"
+value={direccion}
+readOnly
+/>
 
-<input style={input} placeholder="Teléfono" value={telefono} onChange={e=>setTelefono(e.target.value)}/>
+<input
+style={input}
+placeholder="Referencia"
+value={referencia}
+onChange={e=>setReferencia(e.target.value)}
+/>
 
-<input style={input} placeholder="Cantón automático" value={ciudad} readOnly/>
+<input
+style={input}
+placeholder="Teléfono"
+value={telefono}
+onChange={e=>setTelefono(e.target.value)}
+/>
 
-<select style={input} value={dia} onChange={e=>setDia(e.target.value)}>
+<input
+style={input}
+placeholder="Cantón automático"
+value={ciudad}
+readOnly
+/>
+
+<select
+style={input}
+value={dia}
+onChange={e=>setDia(e.target.value)}
+>
 <option>Lunes</option>
 <option>Martes</option>
 <option>Miércoles</option>
@@ -332,23 +440,27 @@ return(
 <option>Domingo</option>
 </select>
 
-<button style={botonUbicacion} onClick={usarUbicacion}>
+<button
+style={botonUbicacion}
+onClick={usarUbicacion}
+>
 📍 Usar mi ubicación
 </button>
 
 <LoadScript googleMapsApiKey="AIzaSyC38UAIuSha_SbHHMK_Jf0pnsNDOM7WaH8">
 
 <GoogleMap
-mapContainerStyle={{width:"100%",height:"300px",marginTop:"10px",borderRadius:"10px"}}
+mapContainerStyle={{
+width:"100%",
+height:"300px",
+marginTop:"10px",
+borderRadius:"10px"
+}}
 center={coords || {lat:-1.67,lng:-78.65}}
 zoom={13}
-
-
 options={{
-zoomControl: true
+zoomControl:true
 }}
-
-
 onClick={async (e)=>{
 
 let lat = e.latLng?.lat()
@@ -367,7 +479,10 @@ await obtenerDatos(lat,lng)
 
 </LoadScript>
 
-<button style={botonGuardar} onClick={guardarCliente}>
+<button
+style={botonGuardar}
+onClick={guardarCliente}
+>
 {editandoIndex !== null ? "Actualizar cliente" : "Guardar cliente"}
 </button>
 
@@ -390,9 +505,18 @@ onClick={exportarExcel}
 📤 Exportar clientes a Excel
 </button>
 
-<input style={input} placeholder="Buscar por nombre" value={buscar} onChange={e=>setBuscar(e.target.value)}/>
+<input
+style={input}
+placeholder="Buscar por nombre"
+value={buscar}
+onChange={e=>setBuscar(e.target.value)}
+/>
 
-<select style={input} value={filtroDia} onChange={e=>setFiltroDia(e.target.value)}>
+<select
+style={input}
+value={filtroDia}
+onChange={e=>setFiltroDia(e.target.value)}
+>
 <option>Todos</option>
 <option>Lunes</option>
 <option>Martes</option>
@@ -403,11 +527,21 @@ onClick={exportarExcel}
 <option>Domingo</option>
 </select>
 
-<select style={input} value={filtroCiudad} onChange={e=>setFiltroCiudad(e.target.value)}>
+<select
+style={input}
+value={filtroCiudad}
+onChange={e=>setFiltroCiudad(e.target.value)}
+>
 <option>Todas</option>
-{[...new Set(clientes.map(c=>c.ciudad))].map((ci,i)=>(
-<option key={i}>{ci}</option>
+
+{[...new Set(clientes.map(c=>c.ciudad))].map((ci:any,i)=>(
+
+<option key={i}>
+{ci}
+</option>
+
 ))}
+
 </select>
 
 <div style={grid}>
@@ -426,13 +560,20 @@ onClick={exportarExcel}
 
 <div style={{marginTop:"10px"}}>
 
-<button style={botonEditar} onClick={()=>editarCliente(i)}>
+<button
+style={botonEditar}
+onClick={()=>editarCliente(i)}
+>
 Editar
 </button>
 
-<button style={botonEliminar} onClick={()=>borrarCliente(i)}>
+<button
+style={botonEliminar}
+onClick={()=>borrarCliente(i)}
+>
 Borrar
 </button>
+
 <a
 href={`https://wa.me/593${(c.telefono || "").replace(/^0/,"")}`}
 target="_blank"
@@ -443,6 +584,7 @@ WhatsApp
 </button>
 
 </a>
+
 </div>
 
 </div>
@@ -457,8 +599,17 @@ WhatsApp
 
 }
 
-const contenedor={background:"#f1f5f9",minHeight:"100vh",padding:"40px",color:"#000"}
-const titulo={fontSize:"30px",marginBottom:"20px"}
+const contenedor={
+background:"#f1f5f9",
+minHeight:"100vh",
+padding:"40px",
+color:"#000"
+}
+
+const titulo={
+fontSize:"30px",
+marginBottom:"20px"
+}
 
 const input={
 display:"block",
@@ -490,9 +641,14 @@ cursor:"pointer",
 marginTop:"10px"
 }
 
-const grid={display:"grid",gridTemplateColumns:"repeat(3,260px)",gap:"20px",marginTop:"20px"}
+const grid={
+display:"grid",
+gridTemplateColumns:"repeat(3,260px)",
+gap:"20px",
+marginTop:"20px"
+}
 
-const card: any = {
+const card:any = {
 background:"#fff",
 padding:"20px",
 borderRadius:"10px",

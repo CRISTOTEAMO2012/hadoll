@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { supabase } from "@/supabase"
 import * as XLSX from "xlsx"
 
 export default function Inventario(){
@@ -47,15 +48,30 @@ llave_botellon:0
 }
 }
 
-function cargar(){
-let data=JSON.parse(localStorage.getItem("inventario")||"null")
+async function cargar(){
 
-if(!data) data = base()
+const { data, error } = await supabase
+.from("inventario")
+.select("*")
+.limit(1)
+.single()
 
-if(!data.empresa) data.empresa=base().empresa
-if(!data.dorita) data.dorita=base().dorita
+if(error || !data){
 
-setInventario(data)
+let baseData = base()
+
+setInventario(baseData)
+
+return
+}
+
+let inventarioData = {
+empresa: data.empresa || base().empresa,
+dorita: data.dorita || base().dorita
+}
+
+setInventario(inventarioData)
+
 }
 
 // 📤 EXPORTAR A EXCEL REAL (.xlsx)

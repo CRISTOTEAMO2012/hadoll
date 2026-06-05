@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-
+import { supabase } from "@/supabase"
 export default function Productos(){
 
 const [productos,setProductos]=useState([])
@@ -10,61 +10,70 @@ const [precio,setPrecio]=useState("")
 
 useEffect(()=>{
 
-let data = JSON.parse(localStorage.getItem("productos") || "[]")
-
-if(data.length === 0){
-
-data = [
-{nombre:"Botellón 20L con llave", precio:2.5},
-{nombre:"Botellón 20L sin llave", precio:2},
-{nombre:"Paca 15 botellas 600 ml", precio:3.5},
-{nombre:"Paca 24 botellas 600 ml", precio:5},
-{nombre:"Botella 6000 ml", precio:1.5},
-{nombre:"Botella 1L", precio:1} // ✅ NUEVO PRODUCTO
-]
-
-localStorage.setItem("productos", JSON.stringify(data))
-
-}
-
-setProductos(data)
+cargarProductos()
 
 },[])
 
-function agregarProducto(){
+async function cargarProductos(){
+
+const { data, error } = await supabase
+.from("productos")
+.select("*")
+.order("id")
+
+if(error){
+console.log(error)
+return
+}
+
+setProductos(data || [])
+
+}
+
+async function agregarProducto(){
 
 if(nombre === "" || precio === ""){
 alert("Ingrese nombre y precio")
 return
 }
 
-let data = [...productos]
-
-data.push({
+const { error } = await supabase
+.from("productos")
+.insert([
+{
 nombre:nombre,
 precio:Number(precio)
-})
+}
+])
 
-localStorage.setItem("productos", JSON.stringify(data))
+if(error){
+alert(error.message)
+return
+}
 
-setProductos(data)
+cargarProductos()
 
 setNombre("")
 setPrecio("")
 
 }
 
-function eliminarProducto(index:any){
+async function eliminarProducto(id:any){
 
-let data=[...productos]
+const { error } = await supabase
+.from("productos")
+.delete()
+.eq("id", id)
 
-data.splice(index,1)
+if(error){
+alert(error.message)
+return
+}
 
-localStorage.setItem("productos", JSON.stringify(data))
-
-setProductos(data)
+cargarProductos()
 
 }
+
 
 return(
 
@@ -112,7 +121,7 @@ Precio base: <b>${p.precio}</b>
 
 <button
 style={botonEliminar}
-onClick={()=>eliminarProducto(i)}
+onClick={()=>eliminarProducto(p.id)}
 >
 Eliminar
 </button>

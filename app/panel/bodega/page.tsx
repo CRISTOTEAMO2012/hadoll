@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-
+import { supabase } from "@/supabase"
 export default function Bodega(){
 
 const[modo,setModo]=useState("compra")
@@ -158,7 +158,7 @@ return clave
 
 }
 
-function ejecutar(){
+async function ejecutar(){
 
 let inventario = obtenerInventario()
 
@@ -169,7 +169,27 @@ inventario[destino][producto]=0
 if(modo==="compra"){
 
 inventario[destino][producto] += Number(cantidad)
+const { error } = await supabase
+.from("bodega")
+.insert([
+{
+producto,
+cantidad:Number(cantidad),
+precio:Number(precio),
+destino,
+modo,
+fecha:new Date().toISOString().split("T")[0]
+}
+])
 
+if(error){
+
+alert(error.message)
+console.log(error)
+
+}else{
+
+}
 // 🔥 COMPRAS SIN GASTO
 if(NO_GASTO.includes(producto)){
 
@@ -201,18 +221,29 @@ localStorage.setItem("costosBotellas", JSON.stringify(costos))
 // 🔥 COMPRAS CON GASTO
 if(!NO_GASTO.includes(producto)){
 
-let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
+  alert("ENTRO A GASTOS")
 
-gastos.push({
+const { error } = await supabase
+.from("gastos")
+.insert([
+{
 tipo:"Compra inventario",
-producto,
-cantidad,
-precio,
+descripcion:`${producto} x ${cantidad}`,
 total:Number(cantidad)*Number(precio),
 fecha:new Date().toISOString().split("T")[0]
-})
+}
+])
 
-localStorage.setItem("gastos",JSON.stringify(gastos))
+if(error){
+alert(error.message)
+console.log(error)
+}
+
+if(error){
+alert(error.message)
+console.log(error)
+}
+
 }
 
 setMensaje("✅ COMPRA REGISTRADA")
@@ -225,7 +256,18 @@ setMensaje("")
 if(modo==="existente"){
 
 inventario[destino][producto] += Number(cantidad)
-
+await supabase
+.from("bodega")
+.insert([
+{
+producto,
+cantidad:Number(cantidad),
+precio:0,
+destino,
+modo,
+fecha:new Date().toISOString().split("T")[0]
+}
+])
 // 🔥 GUARDAR HISTORIAL
 let existentes = JSON.parse(localStorage.getItem("stockExistente")||"[]")
 
@@ -248,7 +290,18 @@ setMensaje("")
 if(modo==="danado"){
 
 inventario[destino][producto] -= Number(cantidad)
-
+await supabase
+.from("bodega")
+.insert([
+{
+producto,
+cantidad:Number(cantidad),
+precio:0,
+destino,
+modo,
+fecha:new Date().toISOString().split("T")[0]
+}
+])
 // 🔥 GUARDAR HISTORIAL DE DAÑADOS
 let danados = JSON.parse(localStorage.getItem("danados")||"[]")
 
@@ -270,7 +323,15 @@ setMensaje("")
 }
 
 localStorage.setItem("inventario",JSON.stringify(inventario))
-
+await supabase
+.from("inventario")
+.upsert([
+{
+id:1,
+empresa: inventario.empresa,
+dorita: inventario.dorita
+}
+])
 if(mostrarHistorial){
 cargarHistorial()
 }

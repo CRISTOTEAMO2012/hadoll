@@ -1,34 +1,35 @@
 "use client"
 
 import {useState,useEffect} from "react"
-
+import { supabase } from "@/supabase"
 export default function Produccion(){
 
 const [productos,setProductos]=useState([])
 const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState("")
 const [mensaje,setMensaje]=useState("")
+
 useEffect(()=>{
 
-let listaProductos = JSON.parse(localStorage.getItem("productos") || "[]")
-
-if(listaProductos.length === 0){
-
-listaProductos = [
-{nombre:"Botellón 20L con llave", precio:2.5},
-{nombre:"Botellón 20L sin llave", precio:2},
-{nombre:"Paca 15 botellas 600 ml", precio:3.5},
-{nombre:"Paca 24 botellas 600 ml", precio:5},
-{nombre:"Botella 6000 ml", precio:1.5},
-{nombre:"Botella 1L", precio:1}
-]
-
-localStorage.setItem("productos", JSON.stringify(listaProductos))
-}
-
-setProductos(listaProductos)
+cargarProductos()
 
 },[])
+
+async function cargarProductos(){
+
+const { data, error } = await supabase
+.from("productos")
+.select("*")
+.order("id")
+
+if(error){
+console.log(error)
+return
+}
+
+setProductos(data || [])
+
+}
 
 function tipoProducto(nombre){
 
@@ -50,14 +51,16 @@ return txt.toLowerCase().trim()
 }
 
 // COSTO INSUMOS
-function costoInsumo(nombre){
+async function costoInsumo(nombre){
 
-let mov = JSON.parse(localStorage.getItem("movimientosInsumos") || "[]")
+const { data = [] } = await supabase
+.from("insumos")
+.select("*")
 
-let compras = mov.filter(m =>
-normalizar(m.insumo) === normalizar(nombre) &&
-m.tipo === "compra" &&
-m.precio > 0
+let compras = data.filter(i =>
+normalizar(i.insumo) === normalizar(nombre) &&
+i.tipo === "compra" &&
+Number(i.precio) > 0
 )
 
 if(compras.length === 0) return 0
@@ -66,38 +69,54 @@ let totalDinero = 0
 let totalCantidad = 0
 
 compras.forEach(c=>{
-totalDinero += c.total
-totalCantidad += c.cantidad
+totalDinero += Number(c.total || 0)
+totalCantidad += Number(c.cantidad || 0)
 })
 
 return totalCantidad ? totalDinero / totalCantidad : 0
 }
 
-// 🔥 COSTO BOTELLAS DESDE INVENTARIO (ARREGLADO)
-function costoBotella(clave){
+async function costoBotella(clave){
 
-let inventario = JSON.parse(localStorage.getItem("inventario") || "null")
-if(!inventario) return 0
+const { data = [] } = await supabase
+.from("bodega")
+.select("*")
 
-// usamos costo guardado manualmente en inventario si existe
-let costos = JSON.parse(localStorage.getItem("costosBotellas") || "{}")
+let nombre = ""
 
-if(costos[clave]) return costos[clave]
+if(clave === "botella600") nombre = "botella600"
+if(clave === "botella1L") nombre = "botella1L"
+if(clave === "botella6000") nombre = "botella6000"
 
-// fallback = 0 si no hay costo
-return 0
+let compras = data.filter(i =>
+i.producto === nombre &&
+i.modo === "compra" &&
+Number(i.precio) > 0
+)
+
+if(compras.length === 0) return 0
+
+let totalDinero = 0
+let totalCantidad = 0
+
+compras.forEach(c=>{
+totalDinero += Number(c.precio || 0) * Number(c.cantidad || 0)
+totalCantidad += Number(c.cantidad || 0)
+})
+
+return totalCantidad ? totalDinero / totalCantidad : 0
 }
 
 // DETALLE
-function calcularCostoDetallado(tipo,cant){
+async function calcularCostoDetallado(tipo,cant){
 
 let detalle = []
 let total = 0
 let consumos = []
 
-function usar(nombre,cantidadPorUnidad){
+async function usar(nombre,cantidadPorUnidad){
 
-let costo = costoInsumo(nombre)
+let costo = await costoInsumo(nombre)
 
 let totalCantidad = cantidadPorUnidad * cant
 let totalCosto = totalCantidad * costo
@@ -118,10 +137,10 @@ cantidad:totalCantidad
 total += totalCosto
 }
 
-// 🔥 BOTELLAS
-function usarBotella(nombre,clave,cantidadPorUnidad){
+// BOTELLAS
+async function usarBotella(nombre,clave,cantidadPorUnidad){
 
-let costo = costoBotella(clave)
+let costo = await costoBotella(clave)
 
 let totalCantidad = cantidadPorUnidad * cant
 let totalCosto = totalCantidad * costo
@@ -140,41 +159,41 @@ total += totalCosto
 // REGLAS
 
 if(tipo==="botellon_llave"){
-usar("Tapa Verde",1)
-usar("Sticker Azul",1)
-usar("Sello Blanco",1)
+await usar("Tapa Verde",1)
+await usar("Sticker Azul",1)
+await usar("Sello Blanco",1)
 }
 
 if(tipo==="botellon_sin_llave"){
-usar("Tapa Azul",1)
-usar("Sticker Azul",1)
-usar("Sello Blanco",1)
+await usar("Tapa Azul",1)
+await usar("Sticker Azul",1)
+await usar("Sello Blanco",1)
 }
 
 if(tipo==="paca15"){
-usar("Fajilla 600 ml",15)
-usarBotella("Botella 600 ml","botella600",15)
+await usar("Fajilla 600 ml",15)
+await usarBotella("Botella 600 ml","botella600",15)
 }
 
 if(tipo==="paca24"){
-usar("Fajilla 600 ml",24)
-usarBotella("Botella 600 ml","botella600",24)
+await usar("Fajilla 600 ml",24)
+await usarBotella("Botella 600 ml","botella600",24)
 }
 
 if(tipo==="botella1L"){
-usar("Fajilla 1 L",1)
-usarBotella("Botella 1L","botella1L",1)
+await usar("Fajilla 1 L",1)
+await usarBotella("Botella 1L","botella1L",1)
 }
 
 if(tipo==="botella6000"){
-usar("Sticker 6000 ml",1)
-usarBotella("Botella 6000 ml","botella6000",1)
+await usar("Sticker 6000 ml",1)
+await usarBotella("Botella 6000 ml","botella6000",1)
 }
 
 return {detalle,total,consumos}
 }
 
-function registrarProduccion(){
+async function registrarProduccion(){
 
 if(producto===""){
 alert("Seleccione producto")
@@ -188,11 +207,20 @@ alert("Producto no válido")
 return
 }
 
-let inventario = JSON.parse(localStorage.getItem("inventario") || "null")
+const { data: inventarioData, error: inventarioError } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
 
-if(!inventario){
-alert("No hay inventario")
+if(inventarioError){
+alert("No se pudo leer inventario")
 return
+}
+
+let inventario = {
+empresa: inventarioData.empresa,
+dorita: inventarioData.dorita
 }
 
 let cant = Number(cantidad)
@@ -267,36 +295,49 @@ inventario.empresa.botella1L_llenos =
 (inventario.empresa.botella1L_llenos || 0) + cant
 }
 
-localStorage.setItem("inventario",JSON.stringify(inventario))
 
-let resultado = calcularCostoDetallado(tipo,cant)
 
-let mov = JSON.parse(localStorage.getItem("movimientosInsumos") || "[]")
+await supabase
+.from("inventario")
+.upsert([
+{
+id:1,
+empresa: inventario.empresa,
+dorita: inventario.dorita
+}
+])
 
-resultado.consumos.forEach(c=>{
-mov.push({
+let resultado = await calcularCostoDetallado(tipo,cant)
+
+for(const c of resultado.consumos){
+
+await supabase
+.from("insumos")
+.insert([
+{
 insumo:c.insumo,
 tipo:"consumo",
 cantidad:c.cantidad,
 precio:0,
 total:0,
-fecha:new Date().toISOString().split("T")[0]
-})
-})
+fecha:new Date().toISOString().split("T")[0],
+tipogasto:"fijo"
+}
+])
 
-localStorage.setItem("movimientosInsumos",JSON.stringify(mov))
+}
 
-let costos = JSON.parse(localStorage.getItem("produccionCostos") || "[]")
-
-costos.push({
+await supabase
+.from("produccion")
+.insert([
+{
 producto,
 cantidad:cant,
 total:resultado.total,
 detalle:resultado.detalle,
 fecha:new Date().toISOString().split("T")[0]
-})
-
-localStorage.setItem("produccionCostos",JSON.stringify(costos))
+}
+])
 
 setMensaje("✅ Producción registrada correctamente")
 

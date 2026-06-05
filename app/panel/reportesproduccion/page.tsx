@@ -1,6 +1,7 @@
 "use client"
 
 import {useEffect,useRef,useState} from "react"
+import { supabase } from "@/supabase"
 import * as XLSX from "xlsx"
 
 export default function ReporteProduccion(){
@@ -19,10 +20,17 @@ useEffect(()=>{
 filtrar()
 },[desde,hasta])
 
-function filtrar(){
+async function filtrar(){
 
 // 🔥 CAMBIO CLAVE: leer de produccionCostos
-let prod = JSON.parse(localStorage.getItem("produccionCostos")||"[]")
+const { data: prod, error } = await supabase
+.from("produccion")
+.select("*")
+
+if(error){
+console.log(error)
+return
+}
 
 let filtrado = prod.filter(p=>{
 

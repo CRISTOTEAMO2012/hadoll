@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react"
 import * as XLSX from "xlsx"
+import { supabase } from "@/supabase" 
+
 import {
+   
 PieChart, Pie, Cell, Tooltip, Legend,
 LineChart, Line, XAxis, YAxis, CartesianGrid
 } from "recharts"
@@ -22,6 +25,8 @@ const [dataGrafico,setDataGrafico]=useState<any[]>([])
 
 const [vista,setVista]=useState("")
 const [detalle,setDetalle]=useState<any[]>([])
+
+const [mensaje,setMensaje]=useState("")
 
 // 🔥 GASTOS
 const GASTOS_DEFAULT = [
@@ -61,11 +66,19 @@ calcularTodo()
 }
 },[desde,hasta])
 
-function calcularTodo(){
+async function calcularTodo(){
 
-let caja = JSON.parse(localStorage.getItem("caja")||"[]")
-let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
-let produccionCostos = JSON.parse(localStorage.getItem("produccionCostos")||"[]")
+const { data: caja = [] } = await supabase
+.from("caja")
+.select("*")
+
+const { data: gastos = [] } = await supabase
+.from("gastos")
+.select("*")
+
+const { data: produccionCostos = [] } = await supabase
+.from("produccion")
+.select("*")
 
 let movCaja = caja.filter((m:any)=> m.fecha >= desde && m.fecha <= hasta)
 let movGastos = gastos.filter((g:any)=> g.fecha >= desde && g.fecha <= hasta)
@@ -134,7 +147,7 @@ setDataGrafico(array)
 }
 
 // ✅ ABRIR / CERRAR
-function abrirDetalle(tipo:string){
+async function abrirDetalle(tipo:string){
 
 if(vista === tipo){
 setVista("")
@@ -142,45 +155,53 @@ setDetalle([])
 return
 }
 
-let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
-let produccionCostos = JSON.parse(localStorage.getItem("produccionCostos")||"[]")
-let caja = JSON.parse(localStorage.getItem("caja")||"[]")
+const { data: gastos = [] } = await supabase
+.from("gastos")
+.select("*")
 
-gastos = gastos.filter((g:any)=>
+const { data: produccionCostos = [] } = await supabase
+.from("produccion")
+.select("*")
+
+const { data: caja = [] } = await supabase
+.from("caja")
+.select("*")
+
+const cajaFiltrada = caja.filter((c:any)=>
+c.fecha >= desde && c.fecha <= hasta
+)
+
+const gastosFiltrados = gastos.filter((g:any)=>
 g.fecha >= desde && g.fecha <= hasta
 )
 
-produccionCostos = produccionCostos.filter((p:any)=>
+const produccionFiltrada = produccionCostos.filter((p:any)=>
 p.fecha >= desde && p.fecha <= hasta
-)
-
-caja = caja.filter((c:any)=>
-c.fecha >= desde && c.fecha <= hasta
 )
 
 let lista:any[] = []
 
 if(tipo==="ingresos"){
-lista = caja.filter((c:any)=> c.tipo === "ingreso")
+lista = cajaFiltrada.filter((c:any)=> c.tipo === "ingreso")
 }
 
 if(tipo==="corrientes"){
-lista = gastos.filter((g:any)=> 
+lista = gastosFiltrados.filter((g:any)=>
 g.tipo !== "Insumo" &&
 g.tipo !== "Compra inventario"
 )
 }
 
 if(tipo==="insumos"){
-lista = gastos.filter((g:any)=> g.tipo === "Insumo")
+lista = gastosFiltrados.filter((g:any)=> g.tipo === "Insumo")
 }
 
 if(tipo==="bodega"){
-lista = gastos.filter((g:any)=> g.tipo === "Compra inventario")
+lista = gastosFiltrados.filter((g:any)=> g.tipo === "Compra inventario")
 }
 
 if(tipo==="produccion"){
-lista = produccionCostos
+lista = produccionFiltrada
 }
 
 setVista(tipo)
@@ -216,27 +237,37 @@ mapa[nombre].total += Number(d.total || 0)
 return mapa
 }
 
-function guardarGasto(){
+async function guardarGasto(){
 
 if(!monto) return alert("Ingrese monto")
 
-let gastos = JSON.parse(localStorage.getItem("gastos") || "[]")
-
-gastos.push({
+const { error } = await supabase
+.from("gastos")
+.insert([
+{
 tipo: tipoGasto === "Manual" ? descripcion : tipoGasto,
 descripcion,
 total: Number(monto),
 fecha: new Date().toISOString().split("T")[0]
-})
+}
+])
 
-localStorage.setItem("gastos", JSON.stringify(gastos))
+if(error){
+alert(error.message)
+console.log(error)
+return
+}
 
 setDescripcion("")
 setMonto("")
 
-calcularTodo()
+await calcularTodo()
 
-alert("Gasto registrado")
+setMensaje("✅ GASTO GENERADO CORRECTAMENTE")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
 }
 
 function guardarAporte(){
@@ -279,6 +310,17 @@ return(
 
 <div style={contenedor}>
 
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+{mensaje}
+</div>
+
+</div>
+
+)}
 <h1 style={titulo}>📊 Finanzas</h1>
 
 <div style={filtro}>
@@ -570,4 +612,27 @@ display:"flex",
 justifyContent:"space-between",
 flexWrap:"wrap" as const,
 gap:"10px"
+}
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"35px 60px",
+borderRadius:"20px",
+fontWeight:"bold",
+fontSize:"32px",
+textAlign:"center" as const,
+boxShadow:"0 10px 40px rgba(0,0,0,0.4)"
 }

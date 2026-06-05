@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-
+import { supabase } from "@/supabase"
 export default function Insumos(){
 
 const FIJOS = [
@@ -32,21 +32,43 @@ const[verInventario,setVerInventario]=useState(true)
 
 useEffect(()=>{
 
-let cat = JSON.parse(localStorage.getItem("catalogoInsumos") || "[]")
-
-cat = cat.filter(i => i !== "Fajilla")
-
-FIJOS.forEach(f=>{
-if(!cat.includes(f)) cat.push(f)
-})
-
-localStorage.setItem("catalogoInsumos",JSON.stringify(cat))
-setInsumos(cat)
-
-let mov = JSON.parse(localStorage.getItem("movimientosInsumos") || "[]")
-if(Array.isArray(mov)) calcularInventario(mov)
+cargarCatalogo()
+cargarInventario()
 
 },[])
+
+async function cargarCatalogo(){
+
+const { data, error } = await supabase
+.from("catalogo_insumos")
+.select("*")
+.order("id")
+
+if(error){
+console.log(error)
+return
+}
+
+console.log(data)
+
+setInsumos(data.map(i => i.nombre))
+
+}
+
+async function cargarInventario(){
+
+const { data, error } = await supabase
+.from("insumos")
+.select("*")
+
+if(error){
+console.log(error)
+return
+}
+
+calcularInventario(data || [])
+
+}
 
 function calcularInventario(data){
 
@@ -71,82 +93,101 @@ inv[nombre] -= Number(item.cantidad)
 setInventario(inv)
 }
 
-function agregarInsumo(){
+async function agregarInsumo(){
 
 if(nuevoInsumo.trim()==="") return
 
-if(FIJOS.includes(nuevoInsumo)){
-alert("Este insumo ya existe en el sistema")
+const { error } = await supabase
+.from("catalogo_insumos")
+.insert([
+{
+nombre: nuevoInsumo
+}
+])
+
+if(error){
+alert(error.message)
 return
 }
 
-let data = [...insumos]
+await cargarCatalogo()
 
-if(data.includes(nuevoInsumo)) return
-
-data.push(nuevoInsumo)
-
-localStorage.setItem("catalogoInsumos",JSON.stringify(data))
-setInsumos(data)
 setNuevoInsumo("")
+
 }
 
-function eliminarInsumo(nombre){
+async function eliminarInsumo(nombre){
 
 if(FIJOS.includes(nombre)){
 alert("Este insumo es del sistema")
 return
 }
 
-let data = insumos.filter(i=>i!==nombre)
+const { error } = await supabase
+.from("catalogo_insumos")
+.delete()
+.eq("nombre", nombre)
 
-localStorage.setItem("catalogoInsumos",JSON.stringify(data))
-setInsumos(data)
-
-if(insumo===nombre) setInsumo("")
+if(error){
+alert(error.message)
+return
 }
 
-function registrar(){
+await cargarCatalogo()
+
+if(insumo===nombre) setInsumo("")
+
+}
+
+async function registrar(){
 
 if(!insumo){
 alert("Seleccione insumo")
 return
 }
 
-let data = JSON.parse(localStorage.getItem("movimientosInsumos") || "[]")
-
-let nuevo = {
+const { error } = await supabase
+.from("insumos")
+.insert([
+{
 insumo,
 tipo:modo,
 cantidad:Number(cantidad),
 precio: modo==="compra" ? Number(precio) : 0,
 total: modo==="compra" ? Number(cantidad)*Number(precio) : 0,
 fecha:new Date().toISOString().split("T")[0],
-tipoGasto // 🔥 guardamos si es fijo o variable
+tipogasto: tipoGasto
 }
+])
 
-data.push(nuevo)
+if(error){
 
-localStorage.setItem("movimientosInsumos",JSON.stringify(data))
+alert(error.message)
+console.log(error)
 
+}
 // 🔥 SOLO LOS VARIABLES VAN A FINANZAS
 if(modo === "compra" && tipoGasto === "variable"){
 
-let gastos = JSON.parse(localStorage.getItem("gastos") || "[]")
-
-gastos.push({
+const { error: errorGasto } = await supabase
+.from("gastos")
+.insert([
+{
 tipo:"Insumo",
-producto: insumo,
-cantidad:Number(cantidad),
-precio:Number(precio),
+descripcion:`${insumo} x ${cantidad}`,
 total:Number(cantidad)*Number(precio),
 fecha:new Date().toISOString().split("T")[0]
-})
+}
+])
 
-localStorage.setItem("gastos", JSON.stringify(gastos))
+if(errorGasto){
+alert(errorGasto.message)
+console.log(errorGasto)
 }
 
-calcularInventario(data)
+}
+
+await cargarInventario()
 
 setCantidad(1)
 setPrecio(0)
