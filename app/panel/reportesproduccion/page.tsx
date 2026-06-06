@@ -32,13 +32,15 @@ console.log(error)
 return
 }
 
-let filtrado = prod.filter(p=>{
+let filtrado = prod || []
 
-if(!desde || !hasta) return false
+if(desde){
+filtrado = filtrado.filter(p => p.fecha >= desde)
+}
 
-return p.fecha >= desde && p.fecha <= hasta
-
-})
+if(hasta){
+filtrado = filtrado.filter(p => p.fecha <= hasta)
+}
 
 setData(filtrado)
 

@@ -155,7 +155,7 @@ tipo:modo,
 cantidad:Number(cantidad),
 precio: modo==="compra" ? Number(precio) : 0,
 total: modo==="compra" ? Number(cantidad)*Number(precio) : 0,
-fecha:new Date().toISOString().split("T")[0],
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"}),
 tipogasto: tipoGasto
 }
 ])
@@ -176,7 +176,7 @@ const { error: errorGasto } = await supabase
 tipo:"Insumo",
 descripcion:`${insumo} x ${cantidad}`,
 total:Number(cantidad)*Number(precio),
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 

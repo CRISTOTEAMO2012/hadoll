@@ -55,7 +55,7 @@ const [socio,setSocio]=useState(SOCIOS_DEFAULT[0])
 const [montoAporte,setMontoAporte]=useState("")
 
 useEffect(()=>{
-let hoy = new Date().toISOString().split("T")[0]
+let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 setDesde(hoy)
 setHasta(hoy)
 },[])
@@ -248,7 +248,7 @@ const { error } = await supabase
 tipo: tipoGasto === "Manual" ? descripcion : tipoGasto,
 descripcion,
 total: Number(monto),
-fecha: new Date().toISOString().split("T")[0]
+fecha: new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 
@@ -280,7 +280,7 @@ caja.push({
 tipo:"ingreso",
 detalle:`Aporte socio: ${socio === "Manual" ? descripcion : socio}`,
 monto:Number(montoAporte),
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 })
 
 localStorage.setItem("caja", JSON.stringify(caja))

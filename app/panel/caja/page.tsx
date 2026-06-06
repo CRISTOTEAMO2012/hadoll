@@ -14,7 +14,7 @@ const [cobroEfectivo,setCobroEfectivo]=useState(0)
 const [cobroTransferencia,setCobroTransferencia]=useState(0)
 
 useEffect(()=>{
-let hoy = new Date().toISOString().split("T")[0]
+let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 setFecha(hoy)
 },[])
 

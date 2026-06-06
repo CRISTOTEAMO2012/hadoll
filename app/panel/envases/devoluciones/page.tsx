@@ -52,7 +52,7 @@ movimientos.push({
 cliente,
 envase:producto,
 cantidad:Number(cantidad),
-fecha:new Date().toISOString().split("T")[0],
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"}),
 tipo:"devuelto"
 })
 

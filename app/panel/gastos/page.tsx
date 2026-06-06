@@ -60,7 +60,7 @@ return
 
 let gastos=JSON.parse(localStorage.getItem("gastos")||"[]")
 
-let hoy = new Date().toISOString().split("T")[0]
+let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 
 // 🔥 definir origen real
 let origenFinal = origen === "caja" ? "caja" : origen

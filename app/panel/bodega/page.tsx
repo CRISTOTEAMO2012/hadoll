@@ -39,38 +39,54 @@ const NO_GASTO = ["botella600","botella6000","botella1L"]
 
 useEffect(()=>{cargarHistorial()},[])
 
-function cargarHistorial(){
+async function cargarHistorial(){
 
 // 🔥 COMPRAS CON GASTO
-let gastos = JSON.parse(localStorage.getItem("gastos")||"[]")
+const { data: gastosData = [] } = await supabase
+.from("gastos")
+.select("*")
 
-let compras = gastos
+let compras = gastosData
 .filter((g:any) => g.tipo === "Compra inventario")
 .map((c:any) => ({
 ...c,
+producto: c.descripcion || "",
 movimiento:"Compra con gasto"
 }))
 
 // 🔥 DAÑADOS
-let danados = JSON.parse(localStorage.getItem("danados")||"[]")
+const { data: danadosData = [] } = await supabase
+.from("bodega")
+.select("*")
+.eq("modo","danado")
 
-danados = danados.map((d:any) => ({
+let danados = danadosData.map((d:any)=>({
 ...d,
 movimiento:"Dañado"
 }))
 
 // 🔥 STOCK EXISTENTE
-let existentes = JSON.parse(localStorage.getItem("stockExistente")||"[]")
+const { data: existentesData = [] } = await supabase
+.from("bodega")
+.select("*")
+.eq("modo","existente")
 
-existentes = existentes.map((e:any) => ({
+let existentes = existentesData.map((e:any)=>({
 ...e,
 movimiento:"Stock existente"
 }))
 
 // 🔥 COMPRAS SIN GASTO
-let comprasSinGasto = JSON.parse(localStorage.getItem("comprasSinGasto")||"[]")
+const { data: comprasSinGastoData = [] } = await supabase
+.from("bodega")
+.select("*")
 
-comprasSinGasto = comprasSinGasto.map((c:any) => ({
+let comprasSinGasto = comprasSinGastoData
+.filter((c:any)=>
+NO_GASTO.includes(c.producto) &&
+c.modo === "compra"
+)
+.map((c:any)=>({
 ...c,
 movimiento:"Compra sin gasto"
 }))
@@ -132,18 +148,6 @@ function base(){
 return{empresa:{},dorita:{}}
 }
 
-function obtenerInventario(){
-let inv = JSON.parse(localStorage.getItem("inventario")||"null")
-if(!inv) return base()
-
-let baseInv = base()
-
-inv.empresa = {...baseInv.empresa, ...inv.empresa}
-inv.dorita = {...baseInv.dorita, ...inv.dorita}
-
-return inv
-}
-
 // 🔥 NOMBRE BONITO
 function nombreBonito(clave: string){
 
@@ -160,7 +164,42 @@ return clave
 
 async function ejecutar(){
 
-let inventario = obtenerInventario()
+let { data: inventarioData } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
+
+// SI NO EXISTE INVENTARIO, CREARLO
+if(!inventarioData){
+
+const { error: crearError } = await supabase
+.from("inventario")
+.insert([
+{
+id:1,
+empresa:{},
+dorita:{}
+}
+])
+
+if(crearError){
+alert("No se pudo crear inventario")
+console.log(crearError)
+return
+}
+
+inventarioData = {
+empresa:{},
+dorita:{}
+}
+
+}
+
+let inventario = {
+empresa: inventarioData.empresa || {},
+dorita: inventarioData.dorita || {}
+}
 
 if(!inventario[destino][producto]){
 inventario[destino][producto]=0
@@ -178,7 +217,7 @@ cantidad:Number(cantidad),
 precio:Number(precio),
 destino,
 modo,
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 
@@ -193,35 +232,10 @@ console.log(error)
 // 🔥 COMPRAS SIN GASTO
 if(NO_GASTO.includes(producto)){
 
-let comprasSinGasto = JSON.parse(localStorage.getItem("comprasSinGasto") || "[]")
-
-comprasSinGasto.push({
-producto,
-cantidad,
-precio,
-destino,
-fecha:new Date().toISOString().split("T")[0]
-})
-
-localStorage.setItem("comprasSinGasto", JSON.stringify(comprasSinGasto))
-
-let costos = JSON.parse(localStorage.getItem("costosBotellas") || "{}")
-
-let prevCosto = costos[producto] || 0
-
-let nuevoCosto = prevCosto === 0
-? Number(precio)
-: (prevCosto + Number(precio)) / 2
-
-costos[producto] = nuevoCosto
-
-localStorage.setItem("costosBotellas", JSON.stringify(costos))
 }
 
 // 🔥 COMPRAS CON GASTO
 if(!NO_GASTO.includes(producto)){
-
-  alert("ENTRO A GASTOS")
 
 const { error } = await supabase
 .from("gastos")
@@ -230,7 +244,7 @@ const { error } = await supabase
 tipo:"Compra inventario",
 descripcion:`${producto} x ${cantidad}`,
 total:Number(cantidad)*Number(precio),
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 
@@ -265,20 +279,10 @@ cantidad:Number(cantidad),
 precio:0,
 destino,
 modo,
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 // 🔥 GUARDAR HISTORIAL
-let existentes = JSON.parse(localStorage.getItem("stockExistente")||"[]")
-
-existentes.push({
-producto,
-cantidad,
-destino,
-fecha:new Date().toISOString().split("T")[0]
-})
-
-localStorage.setItem("stockExistente",JSON.stringify(existentes))
 
 setMensaje("✅ STOCK EXISTENTE AGREGADO")
 
@@ -299,21 +303,10 @@ cantidad:Number(cantidad),
 precio:0,
 destino,
 modo,
-fecha:new Date().toISOString().split("T")[0]
+fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 }
 ])
 // 🔥 GUARDAR HISTORIAL DE DAÑADOS
-let danados = JSON.parse(localStorage.getItem("danados")||"[]")
-
-danados.push({
-producto,
-cantidad,
-destino,
-fecha:new Date().toISOString().split("T")[0],
-tipo:"dañado"
-})
-
-localStorage.setItem("danados",JSON.stringify(danados))
 
 setMensaje("✅ STOCK DAÑADO DESCONTADO")
 
@@ -322,7 +315,6 @@ setMensaje("")
 },3000)
 }
 
-localStorage.setItem("inventario",JSON.stringify(inventario))
 await supabase
 .from("inventario")
 .upsert([

@@ -123,7 +123,7 @@ function crearHoja(nombre, d){
  XLSX.utils.book_append_sheet(wb, hojaEmpresa, "EMPRESA")
  XLSX.utils.book_append_sheet(wb, hojaDorita, "LOCAL DORITA")
 
- let fecha = new Date().toISOString().split("T")[0]
+ let fecha = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 
  XLSX.writeFile(wb, "Inventario_" + fecha + ".xlsx")
 }

@@ -49,6 +49,14 @@ return null
 function normalizar(txt){
 return txt.toLowerCase().trim()
 }
+function fechaEcuador(){
+return new Date().toLocaleDateString(
+"en-CA",
+{
+timeZone:"America/Guayaquil"
+}
+)
+}
 
 // COSTO INSUMOS
 async function costoInsumo(nombre){
@@ -320,7 +328,7 @@ tipo:"consumo",
 cantidad:c.cantidad,
 precio:0,
 total:0,
-fecha:new Date().toISOString().split("T")[0],
+fecha:fechaEcuador(),
 tipogasto:"fijo"
 }
 ])
@@ -335,7 +343,7 @@ producto,
 cantidad:cant,
 total:resultado.total,
 detalle:resultado.detalle,
-fecha:new Date().toISOString().split("T")[0]
+fecha:fechaEcuador()
 }
 ])
 

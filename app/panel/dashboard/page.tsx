@@ -34,7 +34,7 @@ return ()=>clearInterval(i)
 
 function cargar(){
 
-let hoy=new Date().toISOString().split("T")[0]
+let hoy=new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 let mesActual=hoy.slice(0,7)
 
 // 🔥 VENTAS
