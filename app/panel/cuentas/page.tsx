@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { supabase } from "../../../supabase"
 export default function Cuentas(){
 
 const [deudas,setDeudas]=useState<any[]>([])
@@ -16,17 +16,30 @@ useEffect(()=>{
 cargar()
 },[])
 
-function cargar(){
+async function cargar(){
 
-let data = JSON.parse(localStorage.getItem("deudas")||"[]")
+const { data, error } = await supabase
+.from("deudas")
+.select("*")
+.order("id",{ascending:false})
 
-data = data.map((d:any) => ({
+if(error){
+
+console.log(error)
+
+alert("Error cargando deudas")
+
+return
+
+}
+
+const deudasFormateadas = (data || []).map((d:any)=>({
 ...d,
 producto: d.producto || "Producto",
 cantidad: d.cantidad || 1
 }))
 
-setDeudas(data)
+setDeudas(deudasFormateadas)
 
 }
 
@@ -67,57 +80,70 @@ setMostrarMetodo(true)
 }
 
 // REGISTRAR EN CAJA
-function registrarEnCaja(descripcion:any,monto:any,metodo:any){
+async function registrarEnCaja(descripcion:any,monto:any,metodo:any){
 
-let caja = JSON.parse(localStorage.getItem("caja") || "[]")
+let hoy = new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
 
-caja.push({
+const { data, error } = await supabase
+.from("caja")
+.insert([
+{
 tipo:"ingreso",
-origen:"cobro",
-descripcion,
-monto:Number(monto),
-metodo,
-fecha:new Date().toISOString().split("T")[0]
-})
+detalle: descripcion,
+monto: Number(monto),
+fecha: hoy,
+metodo: metodo
+}
+])
+.select()
 
-localStorage.setItem("caja",JSON.stringify(caja))
+if(error){
 
+console.log(error)
+
+alert("Error guardando en caja")
+
+return
+
+}
+console.log("CAJA OK",data)
 }
 
 // COBRAR TODO
-function cobrarTodo(cliente:any,metodo:any){
+async function cobrarTodo(cliente:any,metodo:any){
 
-let data=[...deudas]
+let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 
-let hoy = new Date().toISOString().split("T")[0]
+const pendientesCliente = deudas.filter(
+(d:any)=>
+d.cliente===cliente &&
+d.estado==="pendiente"
+)
+let totalCobro = 0
 
-let totalCobro=0
-
-data.forEach((d:any,i:number)=>{
-
-if(d.cliente===cliente && d.estado==="pendiente"){
-
+pendientesCliente.forEach((d:any)=>{
 totalCobro += Number(d.monto)
-
-data[i]={
-...d,
-estado:"pagado",
-fechaCobro:hoy
-}
-
-}
-
 })
+for(const deuda of pendientesCliente){
 
-localStorage.setItem("deudas",JSON.stringify(data))
+await supabase
+.from("deudas")
+.update({
+estado:"pagado"
+})
+.eq("id",deuda.id)
 
-registrarEnCaja(
+}
+await registrarEnCaja(
 `Cobro total deuda ${cliente}`,
 totalCobro,
 metodo
 )
 
-cargar()
+await cargar()
 
 setClienteActivo(null)
 
@@ -130,29 +156,35 @@ setMensaje("")
 }
 
 // COBRAR ITEM
-function cobrarItem(index:any,metodo:any){
+async function cobrarItem(index:any,metodo:any){
 
-let data=[...deudas]
+let deuda:any = deudas[index]
 
-let deuda:any = data[index]
+let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 
-let hoy = new Date().toISOString().split("T")[0]
+const { error } = await supabase
+.from("deudas")
+.update({
+estado:"pagado"
+})
+.eq("id",deuda.id)
 
-data[index]={
-...deuda,
-estado:"pagado",
-fechaCobro:hoy
+if(error){
+
+alert("Error actualizando deuda")
+
+console.log(error)
+
+return
+
 }
-
-localStorage.setItem("deudas",JSON.stringify(data))
-
-registrarEnCaja(
+await registrarEnCaja(
 `Cobro deuda ${deuda.cliente}`,
 deuda.monto,
 metodo
 )
 
-cargar()
+await cargar()
 
 setMensaje("✅ Cobro registrado correctamente")
 
@@ -163,7 +195,7 @@ setMensaje("")
 }
 
 // ABONAR
-function abonarDeuda(index:any,metodo:any){
+async function abonarDeuda(index:any,metodo:any){
 
 let monto:any = prompt("Ingrese valor a abonar")
 
@@ -172,42 +204,58 @@ if(!monto) return
 let montoNumero = Number(monto)
 
 if(isNaN(montoNumero) || montoNumero <= 0){
+
 alert("Valor inválido")
+
 return
+
 }
 
-let data=[...deudas]
-
-let deuda:any = data[index]
+let deuda:any = deudas[index]
 
 if(montoNumero > Number(deuda.monto)){
+
 alert("No puede abonar más de la deuda")
+
 return
+
 }
 
-let hoy = new Date().toISOString().split("T")[0]
-
-// RESTAR
-data[index].monto =
+let nuevoSaldo =
 Number(deuda.monto) - montoNumero
 
-if(data[index].monto === 0){
+const datosActualizar:any = {
+monto: nuevoSaldo
+}
 
-data[index].estado = "pagado"
+if(nuevoSaldo === 0){
 
-data[index].fechaCobro = hoy
+datosActualizar.estado = "pagado"
 
 }
 
-localStorage.setItem("deudas",JSON.stringify(data))
+const { error } = await supabase
+.from("deudas")
+.update(datosActualizar)
+.eq("id",deuda.id)
 
-registrarEnCaja(
+if(error){
+
+console.log(error)
+
+alert(error.message)
+
+return
+
+}
+
+await registrarEnCaja(
 `Abono deuda ${deuda.cliente}`,
 montoNumero,
 metodo
 )
 
-cargar()
+await cargar()
 
 setMensaje("✅ Cobro registrado correctamente")
 

@@ -1,15 +1,31 @@
 "use client"
 
 import {useEffect,useState} from "react"
+import { supabase } from "@/supabase"
 
 export default function InventarioVehiculo2(){
 
 const [inventario,setInventario]=useState({})
 
 useEffect(()=>{
-let data = JSON.parse(localStorage.getItem("inventario") || "{}")
-setInventario(data.vehiculo2 || {})
+cargarInventario()
 },[])
+
+async function cargarInventario(){
+
+const { data, error } = await supabase
+.from("inventario")
+.select("vehiculo2")
+.single()
+
+if(error){
+console.log(error)
+return
+}
+
+setInventario(data?.vehiculo2 || {})
+
+}
 
 function nombreBonito(clave){
 
@@ -20,7 +36,7 @@ if(clave === "botellon20sin_llave_vacios") return "Botellón vacío sin llave"
 if(clave === "paca15") return "Paca 15 botellas"
 if(clave === "paca24") return "Paca 24 botellas"
 if(clave === "botella6000_llenos") return "Botella 6000 ml"
-
+if(clave === "botella1L_llenos") return "Botella 1L"
 return clave
 }
 

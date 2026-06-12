@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { supabase } from "@/supabase"
 export default function PedidoQR(){
 
 const [productos,setProductos]=useState<any[]>([])
@@ -21,40 +21,23 @@ const numeroEmpresa = "593981143243"
 
 useEffect(()=>{
 
-function cargarDatos(){
+async function cargarDatos(){
 
-let p = JSON.parse(localStorage.getItem("productos") || "[]")
-let c = JSON.parse(localStorage.getItem("clientes") || "[]")
+const { data: clientesData } = await supabase
+.from("clientes")
+.select("*")
 
-if(p.length === 0){
+setClientes(clientesData || [])
 
-p = [
+const { data: productosData } = await supabase
+.from("productos")
+.select("*")
 
-{nombre:"Botellón 20L con llave", precio:2.5},
-{nombre:"Botellón 20L sin llave", precio:2},
-{nombre:"Paca 15 botellas 600 ml", precio:3.5},
-{nombre:"Paca 24 botellas 600 ml", precio:5},
-{nombre:"Botella 6000 ml", precio:1.5},
-{nombre:"Botella 1L", precio:1}
-
-]
-
-}
-
-setProductos(p)
-setClientes(c)
+setProductos(productosData || [])
 
 }
 
 cargarDatos()
-
-window.addEventListener("storage", cargarDatos)
-
-return ()=>{
-
-window.removeEventListener("storage", cargarDatos)
-
-}
 
 },[])
 
@@ -86,9 +69,22 @@ setCantidad("")
 // 📅 DIAS
 function diasCiudad(){
 
-if(ciudad==="GUARANDA") return [1,2,3]
-if(["CHIMBO","SAN MIGUEL","CHILLANES"].includes(ciudad)) return [4]
-if(ciudad==="RIOBAMBA") return [5]
+let c = ciudad.toUpperCase()
+
+if(c === "GUARANDA")
+return [1,2,5] // lunes martes viernes
+
+if(c === "CHIMBO")
+return [4] // jueves
+
+if(c === "SAN MIGUEL")
+return [4] // jueves
+
+if(c === "RIOBAMBA")
+return [0] // domingo
+
+if(c === "CHILLANES")
+return [4] // jueves (luego validamos quincenal)
 
 return []
 
@@ -96,7 +92,39 @@ return []
 
 // 📅 FECHA
 function calcularFecha(){
+if(ciudad.toUpperCase() === "CHILLANES"){
 
+const fechasChillanes = [
+"2026-06-18",
+"2026-07-02",
+"2026-07-16",
+"2026-07-30",
+"2026-08-13",
+"2026-08-27",
+"2026-09-10",
+"2026-09-24"
+]
+
+let hoy = new Date()
+
+let hoyTexto =
+`${hoy.getFullYear()}-${
+String(hoy.getMonth()+1).padStart(2,"0")
+}-${
+String(hoy.getDate()).padStart(2,"0")
+}`
+
+let siguiente = fechasChillanes.find(f => f >= hoyTexto)
+
+if(siguiente){
+
+setFechaSugerida(siguiente)
+
+return
+
+}
+
+}
 let dias = diasCiudad()
 
 if(!dias.length) return
@@ -111,7 +139,11 @@ f.setDate(hoy.getDate()+i)
 
 if(dias.includes(f.getDay())){
 
-let iso = f.toISOString().split("T")[0]
+let anio = f.getFullYear()
+let mes = String(f.getMonth()+1).padStart(2,"0")
+let diaMes = String(f.getDate()).padStart(2,"0")
+
+let iso = `${anio}-${mes}-${diaMes}`
 
 setFechaSugerida(iso)
 
@@ -143,7 +175,7 @@ day:"numeric"
 }
 
 // 💾 GUARDAR
-function enviar(){
+async function enviar(){
 
 if(!nombre || !telefono || !producto || !ciudad || !cantidad){
 
@@ -153,41 +185,31 @@ return
 
 }
 
-let pedidos = JSON.parse(localStorage.getItem("pedidos")||"[]")
-
-let existente = pedidos.find((p:any)=>
-
-p.telefono === telefono &&
-p.producto === producto &&
-p.estado === "pendiente"
-
-)
-
-if(existente){
-
-existente.cantidad = Number(existente.cantidad) + Number(cantidad)
-
-}else{
-
-pedidos.push({
-
+const { error } = await supabase
+.from("pedidos")
+.insert([
+{
 cliente:nombre,
 telefono,
 ciudad,
 direccion,
 producto,
-precio:0,
-cantidad,
-total:0,
+cantidad:Number(cantidad),
 fecha:fechaSugerida,
 estado:"pendiente",
 origen:"qr"
+}
+])
 
-})
+if(error){
+
+alert("ERROR GUARDANDO PEDIDO")
+
+console.log(error)
+
+return
 
 }
-
-localStorage.setItem("pedidos",JSON.stringify(pedidos))
 
 // ✅ MENSAJE BONITO
 setMensaje("✅ PEDIDO REALIZADO CORRECTAMENTE")
@@ -277,7 +299,7 @@ boxShadow:"0 10px 30px rgba(0,0,0,0.2)",
 zIndex:1
 }}>
 
-<h2 style={{textAlign:"center"}}>💧 PEDIDOS HADOLL WATER</h2>
+<h2 style={{textAlign:"center"}}>   CENTRO DE PEDIDOS HADOLL WATER 🚚 </h2>
 
 <input
 placeholder="Teléfono"
@@ -342,7 +364,7 @@ onChange={e=>seleccionarProducto(e.target.value)}
 style={input}
 >
 
-<option value="">🚰 SELECCIONA TU PRODUCTO</option>
+<option value="">🚰 ELIGE TU PRODUCTO</option>
 
 {productos.map((p:any,i:number)=>(
 
@@ -414,8 +436,9 @@ marginBottom:"10px",
 border:"1px solid #ccc",
 borderRadius:"8px",
 background:"#fff",
-color:"#000",
-fontWeight:"bold"
+color:"#4338ca",
+fontWeight:"700",
+fontSize:"16px"
 
 }
 
@@ -469,4 +492,14 @@ fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,0.4)"
 
+}
+
+const titulo={
+fontSize:"30px",
+fontWeight:"bold",
+textAlign:"center",
+color:"#4f46e5",
+marginBottom:"20px",
+textTransform:"uppercase",
+letterSpacing:"1px"
 }

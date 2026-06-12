@@ -1,6 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
+import { supabase } from "@/supabase"
 
 export default function DevolucionVehiculo(){
 
@@ -13,10 +14,26 @@ const [cantidadEnvase,setCantidadEnvase]=useState("")
 
 const [destino,setDestino]=useState("empresa")
 const [mensaje,setMensaje]=useState("")
+
 useEffect(()=>{
-let data = JSON.parse(localStorage.getItem("inventario") || "{}")
-setInventario(data.vehiculo1 || {})
+cargarInventario()
 },[])
+
+async function cargarInventario(){
+
+const { data, error } = await supabase
+.from("inventario")
+.select("vehiculo1")
+.single()
+
+if(error){
+console.log(error)
+return
+}
+
+setInventario(data?.vehiculo1 || {})
+
+}
 
 // 🔥 TRADUCTOR
 function traducir(nombre){
@@ -43,9 +60,14 @@ return null
 }
 
 // 🔵 DEVOLVER PRODUCTO
-function devolverProducto(){
+async function devolverProducto(){
 
-let inv = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data } = await supabase
+.from("inventario")
+.select("*")
+.single()
+
+let inv = data
 let clave = traducir(producto)
 let cant = Number(cantidad)
 
@@ -64,7 +86,15 @@ if(!inv[destino][clave]) inv[destino][clave]=0
 
 inv[destino][clave] += cant
 
-localStorage.setItem("inventario",JSON.stringify(inv))
+await supabase
+.from("inventario")
+.update({
+empresa: inv.empresa,
+dorita: inv.dorita,
+vehiculo1: inv.vehiculo1,
+vehiculo2: inv.vehiculo2
+})
+.eq("id", data.id)
 setInventario(inv.vehiculo1)
 
 setMensaje("✅ Producto devuelto exitosamente")
@@ -79,9 +109,14 @@ setDestino("empresa")
 }
 
 // 🟠 DEVOLVER ENVASE
-function registrarEnvase(){
+async function registrarEnvase(){
 
-let inv = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data } = await supabase
+.from("inventario")
+.select("*")
+.single()
+
+let inv = data
 let clave = traducirVacio(envase)
 let cant = Number(cantidadEnvase)
 
@@ -101,7 +136,15 @@ if(!inv[destino][clave]) inv[destino][clave]=0
 
 inv[destino][clave] += cant
 
-localStorage.setItem("inventario",JSON.stringify(inv))
+await supabase
+.from("inventario")
+.update({
+empresa: inv.empresa,
+dorita: inv.dorita,
+vehiculo1: inv.vehiculo1,
+vehiculo2: inv.vehiculo2
+})
+.eq("id", data.id)
 setInventario(inv.vehiculo1)
 
 setMensaje("✅ Envase devuelto exitosamente")

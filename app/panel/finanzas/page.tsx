@@ -270,27 +270,46 @@ setMensaje("")
 },3000)
 }
 
-function guardarAporte(){
+async function guardarAporte(){
 
-if(!montoAporte) return alert("Ingrese monto")
+if(!montoAporte){
+alert("Ingrese monto")
+return
+}
 
-let caja = JSON.parse(localStorage.getItem("caja") || "[]")
-
-caja.push({
+const { error } = await supabase
+.from("caja")
+.insert([
+{
 tipo:"ingreso",
 detalle:`Aporte socio: ${socio === "Manual" ? descripcion : socio}`,
 monto:Number(montoAporte),
-fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
-})
+fecha:new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+}
+])
 
-localStorage.setItem("caja", JSON.stringify(caja))
+if(error){
+
+alert(error.message)
+console.log(error)
+return
+
+}
 
 setMontoAporte("")
 setDescripcion("")
 
-calcularTodo()
+await calcularTodo()
 
-alert("Aporte registrado")
+setMensaje("✅ APORTE REGISTRADO")
+
+setTimeout(()=>{
+setMensaje("")
+},3000)
+
 }
 
 const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega + gastosProduccion

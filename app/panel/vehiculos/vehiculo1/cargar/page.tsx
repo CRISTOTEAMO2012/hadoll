@@ -1,6 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
+import { supabase } from "@/supabase"
 
 export default function CargarVehiculo(){
 
@@ -11,9 +12,26 @@ const [origen,setOrigen]=useState("")
 const [mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
-let listaProductos = JSON.parse(localStorage.getItem("productos") || "[]")
-setProductos(listaProductos)
+
+cargarProductos()
+
 },[])
+
+async function cargarProductos(){
+
+const { data, error } = await supabase
+.from("productos")
+.select("*")
+.order("nombre")
+
+if(error){
+console.log(error)
+return
+}
+
+setProductos(data || [])
+
+}
 
 // 🔥 TRADUCTOR
 function tipoProducto(nombre){
@@ -30,14 +48,30 @@ if(nombre.includes("sin llave")) return "botellon20sin_llave_llenos"
 return null
 }
 
-function cargarVehiculo(){
+async function cargarVehiculo(){
 
 if(producto===""){
 alert("Seleccione producto")
 return
 }
 
-let inventario = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data, error } = await supabase
+.from("inventario")
+.select("*")
+.limit(1)
+.single()
+
+if(error){
+alert(error.message)
+return
+}
+
+let inventario = {
+empresa: data.empresa || {},
+dorita: data.dorita || {},
+vehiculo1: data.vehiculo1 || {},
+vehiculo2: data.vehiculo2 || {}
+}
 
 let clave = tipoProducto(producto)
 
@@ -75,7 +109,24 @@ inventario.vehiculo1[clave]=0
 
 inventario.vehiculo1[clave] += Number(cantidad)
 
-localStorage.setItem("inventario",JSON.stringify(inventario))
+const { error: errorGuardar } = await supabase
+.from("inventario")
+.update({
+empresa: inventario.empresa,
+dorita: inventario.dorita,
+vehiculo1: inventario.vehiculo1,
+vehiculo2: inventario.vehiculo2
+})
+.eq("id", data.id)
+
+if(errorGuardar){
+
+alert(errorGuardar.message)
+console.log(errorGuardar)
+
+return
+
+}
 
 setMensaje("✅ Producto cargado exitosamente")
 

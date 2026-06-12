@@ -2,6 +2,7 @@
 
 import {useState,useEffect} from "react"
 import * as XLSX from "xlsx"
+import { supabase } from "../../../../supabase"
 
 export default function Inicial(){
 
@@ -12,22 +13,52 @@ const [clientes, setClientes] = useState<any[]>([])
 const [data,setData]=useState([])
 const [verTabla,setVerTabla]=useState(false)
 const [mensaje,setMensaje]=useState("")
+
 useEffect(()=>{
-
-let c=JSON.parse(localStorage.getItem("clientes")||"[]")
-setClientes(c)
-
+cargarClientes()
 cargar()
-
 },[])
 
-function cargar(){
+async function cargarClientes(){
 
-let prestados=JSON.parse(localStorage.getItem("envasesprestados")||"[]")
+const { data, error } = await supabase
+.from("clientes")
+.select("*")
+.order("nombre")
 
-let iniciales = prestados.filter(p=>p.tipo==="inicial")
+if(error){
 
-setData(iniciales)
+console.log(error)
+
+alert("Error cargando clientes")
+
+return
+
+}
+
+setClientes(data || [])
+
+}
+
+async function cargar(){
+
+const { data, error } = await supabase
+.from("envases_prestados")
+.select("*")
+.eq("tipo","inicial")
+.order("id",{ascending:false})
+
+if(error){
+
+console.log(error)
+
+alert("Error cargando registros")
+
+return
+
+}
+
+setData(data || [])
 
 }
 
@@ -46,7 +77,7 @@ return clave
 
 }
 
-function guardar(){
+async function guardar(){
 
 if(!cliente || cliente==="Seleccionar cliente"){
 alert("Seleccione cliente")
@@ -62,38 +93,32 @@ if(!cantidad || Number(cantidad)<=0){
 alert("Ingrese cantidad válida")
 return
 }
-
-let prestados=JSON.parse(localStorage.getItem("envasesprestados")||"[]")
-
-// 🔥 USAR NOMBRE BONITO
 let nombreEnvase = nombreBonito(tipo)
 
-// 🔥 BUSCAR SI YA EXISTE
-let index:any = prestados.findIndex((p:any) =>
-
-p.cliente===cliente &&
-p.tipo==="inicial" &&
-p.envase===nombreEnvase
-
-)
-
-if(index !== -1){
-
-prestados[index].cantidad += Number(cantidad)
-
-}else{
-
-prestados.push({
+const { error } = await supabase
+.from("envases_prestados")
+.insert([
+{
 cliente,
 envase:nombreEnvase,
 cantidad:Number(cantidad),
-fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"}),
+fecha:new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+),
 tipo:"inicial"
-})
+}
+])
+
+if(error){
+
+console.log(error)
+
+alert("Error guardando registro")
+
+return
 
 }
-
-localStorage.setItem("envasesprestados",JSON.stringify(prestados))
 
 cargar()
 

@@ -24,34 +24,34 @@ const [metodoMixto,setMetodoMixto]=useState("efectivo")
 const [tipoEnvase,setTipoEnvase]=useState("cambio")
 const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
+cargarDatos()
+},[])
 
-let c = JSON.parse(localStorage.getItem("clientes")||"[]")
-let v = JSON.parse(localStorage.getItem("vehiculos")||"[]")
-let p = JSON.parse(localStorage.getItem("productos")||"[]")
+async function cargarDatos(){
 
-// 🔥 SI NO EXISTEN PRODUCTOS CARGAR LOS PRINCIPALES
-if(!Array.isArray(p) || p.length === 0){
+// CLIENTES
+const { data: clientesData } = await supabase
+.from("clientes")
+.select("*")
+.order("nombre")
 
-p = [
+// VEHICULOS
+const { data: vehiculosData } = await supabase
+.from("vehiculos")
+.select("*")
+.order("codigo")
 
-{nombre:"Botellón 20L con llave", precio:2.5},
-{nombre:"Botellón 20L sin llave", precio:2},
-{nombre:"Paca 15 botellas 600 ml", precio:3.5},
-{nombre:"Paca 24 botellas 600 ml", precio:5},
-{nombre:"Botella 6000 ml", precio:1.5},
-{nombre:"Botella 1L", precio:1}
+// PRODUCTOS
+const { data: productosData } = await supabase
+.from("productos")
+.select("*")
+.order("nombre")
 
-]
-
-localStorage.setItem("productos", JSON.stringify(p))
+setClientes(clientesData || [])
+setVehiculos(vehiculosData || [])
+setProductos(productosData || [])
 
 }
-
-setClientes(c)
-setVehiculos(v)
-setProductos(p)
-
-},[])
 
 let clientesFiltrados = clientes.filter((c:any)=>
 (c.nombre || "").toLowerCase().includes(busqueda.toLowerCase())
@@ -98,7 +98,7 @@ return ecuador.toISOString().split("T")[0]
 
 }
 
-function guardarVenta(){
+async function guardarVenta(){
 
 if(cliente==""||producto==""){
 alert("Complete los datos")
@@ -116,9 +116,23 @@ return
 let totalVenta = cant * prec
 
 let hoy = obtenerFechaEcuador()
+const { data: inventarioData, error: inventarioError } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
 
+if(inventarioError){
+
+alert("Error cargando inventario")
+console.log(inventarioError)
+return
+
+}
+
+let inventario = inventarioData
 let ventas = JSON.parse(localStorage.getItem("ventas")||"[]")
-let inventario = JSON.parse(localStorage.getItem("inventario")||"{}")
+
 
 let clave:any = obtenerClave(producto)
 
@@ -149,85 +163,168 @@ inventario[origen][claveVacio] += cant
 }
 
 // 🫙 ENVASE PRESTADO
-if(producto.toLowerCase().includes("20l") && tipoEnvase==="prestado"){
 
-let prestados = JSON.parse(localStorage.getItem("envasesprestados")||"[]")
+if(
+producto.toLowerCase().includes("20l") &&
+tipoEnvase==="prestado"
+){
 
-prestados.push({
+const { error } = await supabase
+.from("envases_prestados")
+.insert([
+{
 cliente: cliente.trim().toUpperCase(),
 envase: obtenerClaveVacio(producto),
-cantidad:cant,
-fecha:hoy,
-tipo:"prestado"
-})
+cantidad: cant,
+fecha: hoy,
+tipo: "prestado"
+}
+])
 
-localStorage.setItem("envasesprestados",JSON.stringify(prestados))
+if(error){
+
+console.log(error)
+
+alert("Error guardando envase prestado")
+
+return
+
+}
+
 }
 
 // 🫙 ENVASE VENDIDO
-if(producto.toLowerCase().includes("20l") && tipoEnvase==="vendido"){
 
-let vendidos = JSON.parse(localStorage.getItem("envasesvendidos")||"[]")
+if(
+producto.toLowerCase().includes("20l") &&
+tipoEnvase==="vendido"
+){
 
-vendidos.push({
+const { error } = await supabase
+.from("envases_vendidos")
+.insert([
+{
 cliente,
 producto,
-cantidad:cant,
-fecha:hoy
-})
+cantidad: cant,
+fecha: hoy
+}
+])
 
-localStorage.setItem("envasesvendidos",JSON.stringify(vendidos))
+if(error){
+
+console.log(error)
+
+alert("Error guardando envase vendido")
+
+return
+
+}
+
 }
 
 // 💾 INVENTARIO
-localStorage.setItem("inventario",JSON.stringify(inventario))
+const { error: errorInventario } = await supabase
+.from("inventario")
+.update({
+[origen]: inventario[origen]
+})
+.eq("id",1)
 
+if(errorInventario){
+
+alert("Error actualizando inventario")
+
+console.log(errorInventario)
+
+return
+
+}
 // 🧾 VENTAS
-ventas.push({
-fecha:hoy,
+
+// 🧾 GUARDAR VENTA EN SUPABASE
+
+const { error: errorVenta } = await supabase
+.from("ventas")
+.insert([
+{
+fecha: hoy,
 cliente,
 producto,
-cantidad:cant,
-precio:prec,
-total:totalVenta,
+cantidad: cant,
+precio: prec,
+total: totalVenta,
 origen,
 pago,
-tipoEnvase
-})
+tipo_envase: tipoEnvase
+}
+])
 
-localStorage.setItem("ventas",JSON.stringify(ventas))
+if(errorVenta){
+
+console.log(errorVenta)
+
+alert("Error guardando venta")
+
+return
+
+}
 
 // 💳 FIADO TOTAL
+
 if(pago === "fiado"){
 
-let deudas = JSON.parse(localStorage.getItem("deudas")||"[]")
-
-deudas.push({
+const { error } = await supabase
+.from("deudas")
+.insert([
+{
 cliente,
 producto,
-cantidad:cant,
+cantidad: cant,
 monto: totalVenta,
 fecha: hoy,
 estado: "pendiente"
-})
+}
+])
 
-localStorage.setItem("deudas",JSON.stringify(deudas))
+if(error){
+
+console.log(error)
+
+alert("Error guardando deuda")
+
+return
+
+}
+
 }
 
 // 💰 EFECTIVO O TRANSFERENCIA TOTAL
+
 if(pago === "efectivo" || pago === "transferencia"){
 
-let caja = JSON.parse(localStorage.getItem("caja") || "[]")
-
-caja.push({
+const { error: errorCaja } = await supabase
+.from("caja")
+.insert([
+{
 tipo:"ingreso",
-descripcion:`Venta de ${producto}`,
+detalle:`Venta de ${producto}`,
 monto: totalVenta,
-metodo:pago,
-fecha:hoy
-})
+fecha:hoy,
+metodo:pago
+}
+])
 
-localStorage.setItem("caja", JSON.stringify(caja))
+if(errorCaja){
+
+console.log(errorCaja)
+
+alert("Error guardando ingreso en caja")
+
+return
+
+}
+
 }
 
 // 🔥 PAGO MIXTO
@@ -247,32 +344,54 @@ return
 
 let restante = totalVenta - valorAbono
 
-// 💰 GUARDAR EN CAJA
-let caja = JSON.parse(localStorage.getItem("caja") || "[]")
+// 💰 GUARDAR ABONO EN CAJA
 
-caja.push({
+const { error: errorCajaMixto } = await supabase
+.from("caja")
+.insert([
+{
 tipo:"ingreso",
-descripcion:`Abono venta ${producto}`,
+detalle:`Abono venta ${producto}`,
 monto: valorAbono,
-metodo:metodoMixto,
-fecha:hoy
-})
+fecha:hoy,
+metodo:metodoMixto
+}
+])
 
-localStorage.setItem("caja", JSON.stringify(caja))
+if(errorCajaMixto){
 
-// 💳 GUARDAR DEUDA
-let deudas = JSON.parse(localStorage.getItem("deudas")||"[]")
+console.log(errorCajaMixto)
 
-deudas.push({
+alert("Error guardando abono en caja")
+
+return
+
+}
+
+// 💳 GUARDAR DEUDA EN SUPABASE
+
+const { error: errorDeuda } = await supabase
+.from("deudas")
+.insert([
+{
 cliente,
 producto,
-cantidad:cant,
+cantidad: cant,
 monto: restante,
 fecha: hoy,
 estado: "pendiente"
-})
+}
+])
 
-localStorage.setItem("deudas",JSON.stringify(deudas))
+if(errorDeuda){
+
+console.log(errorDeuda)
+
+alert("Error guardando deuda")
+
+return
+
+}
 
 }
 
@@ -329,11 +448,9 @@ onChange={(e)=>setCliente(e.target.value)}
 <option value="">Seleccionar cliente</option>
 
 {clientesFiltrados.map((c:any,i:number)=>(
-
 <option key={i} value={c.nombre}>
 {c.nombre}
 </option>
-
 ))}
 
 </select>
@@ -344,15 +461,18 @@ value={origen}
 onChange={(e)=>setOrigen(e.target.value)}
 >
 
-<option value="empresa">Empresa</option>
-<option value="dorita">Local Dorita</option>
-
-{vehiculos.map((v:any,i:number)=>(
-
-<option key={i} value={"vehiculo"+(i+1)}>
-{v.nombre || "Vehículo "+(i+1)}
+<option value="empresa">
+EMPRESA
 </option>
 
+<option value="dorita">
+DORITA
+</option>
+
+{vehiculos.map((v:any,i:number)=>(
+<option key={i} value={v.codigo}>
+{v.codigo} - {v.placa}
+</option>
 ))}
 
 </select>
@@ -366,11 +486,9 @@ onChange={(e)=>setProducto(e.target.value)}
 <option value="">Seleccionar producto</option>
 
 {productos.map((p:any,i:number)=>(
-
 <option key={i} value={p.nombre}>
 {p.nombre}
 </option>
-
 ))}
 
 </select>

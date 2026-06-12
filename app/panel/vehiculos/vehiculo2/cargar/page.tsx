@@ -1,6 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
+import { supabase } from "@/supabase"
 
 export default function CargarVehiculo2(){
 
@@ -11,9 +12,24 @@ const [origen,setOrigen]=useState("")
 const [mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
-let listaProductos = JSON.parse(localStorage.getItem("productos") || "[]")
-setProductos(listaProductos)
+cargarProductos()
 },[])
+
+async function cargarProductos(){
+
+const { data, error } = await supabase
+.from("productos")
+.select("*")
+.order("nombre")
+
+if(error){
+console.log(error)
+return
+}
+
+setProductos(data || [])
+
+}
 
 function claveProducto(nombre){
 
@@ -29,14 +45,24 @@ if(nombre.includes("sin llave")) return "botellon20sin_llave_llenos"
 return null
 }
 
-function cargar(){
+async function cargar(){
 
 if(producto===""){
 alert("Seleccione producto")
 return
 }
 
-let inventario = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data, error } = await supabase
+.from("inventario")
+.select("*")
+.single()
+
+if(error){
+alert("Error al leer inventario")
+return
+}
+
+let inventario = data
 
 let clave = claveProducto(producto)
 
@@ -45,31 +71,37 @@ alert("Producto no válido")
 return
 }
 
-if(!inventario[origen]){
-alert("No existe inventario en origen")
-return
-}
-
-if(inventario[origen][clave] === undefined){
-alert("Producto no existe en origen")
-return
-}
-
-if(inventario[origen][clave] < cantidad){
+if(Number(inventario[origen]?.[clave] || 0) < Number(cantidad)){
 alert("Stock insuficiente")
 return
 }
 
-// 🔻 RESTAR
 inventario[origen][clave] -= Number(cantidad)
 
-// 🔺 VEHICULO 2
-if(!inventario.vehiculo2) inventario.vehiculo2 = {}
-if(!inventario.vehiculo2[clave]) inventario.vehiculo2[clave]=0
+if(!inventario.vehiculo2){
+inventario.vehiculo2 = {}
+}
+
+if(!inventario.vehiculo2[clave]){
+inventario.vehiculo2[clave] = 0
+}
 
 inventario.vehiculo2[clave] += Number(cantidad)
 
-localStorage.setItem("inventario",JSON.stringify(inventario))
+const { error:updateError } = await supabase
+.from("inventario")
+.update({
+empresa: inventario.empresa,
+dorita: inventario.dorita,
+vehiculo1: inventario.vehiculo1,
+vehiculo2: inventario.vehiculo2
+})
+.eq("id", inventario.id)
+
+if(updateError){
+alert("Error al actualizar inventario")
+return
+}
 
 setMensaje("✅ Producto cargado exitosamente")
 

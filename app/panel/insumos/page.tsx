@@ -80,7 +80,11 @@ let nombre = item.insumo.toLowerCase()
 
 if(!inv[nombre]) inv[nombre]=0
 
-if(item.tipo==="compra" || item.tipo==="existente"){
+if(
+item.tipo==="compra" ||
+item.tipo==="existente" ||
+item.tipo==="devolucion"
+){
 inv[nombre] += Number(item.cantidad)
 }
 

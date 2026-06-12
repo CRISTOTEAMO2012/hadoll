@@ -1,68 +1,198 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { supabase } from "../../../../supabase"
 export default function DevolucionesEnvases(){
 
 const [clientes, setClientes] = useState<any[]>([])
 const [cliente,setCliente]=useState("")
-
+const [busqueda,setBusqueda]=useState("")
 const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState("")
-
-const [historial,setHistorial]=useState([])
+const [destino,setDestino]=useState("empresa")
+const [historial,setHistorial]=useState<any[]>([])
 const [mensaje,setMensaje]=useState("")
+const [verHistorial,setVerHistorial]=useState(false)
 useEffect(()=>{
-
-let clientesGuardados = JSON.parse(localStorage.getItem("clientes") || "[]")
-setClientes(clientesGuardados)
-
-if(clientesGuardados.length > 0){
-setCliente(clientesGuardados[0].nombre || "")
-}
-
+cargarClientes()
 cargarHistorial()
-
 },[])
 
-function cargarHistorial(){
+async function cargarClientes(){
 
-// 🔥 AHORA SE LEE DESDE envasesprestados
-let data = JSON.parse(localStorage.getItem("envasesprestados") || "[]")
+const { data, error } = await supabase
+.from("clientes")
+.select("*")
+.order("nombre")
 
-// 🔥 SOLO DEVOLUCIONES
-let devoluciones = data.filter(d=>d.tipo==="devuelto")
+if(error){
 
-devoluciones.sort((a,b)=> new Date(b.fecha) - new Date(a.fecha))
+console.log(error)
 
-setHistorial(devoluciones)
+alert("Error cargando clientes")
+
+return
 
 }
 
-function guardarDevolucion(){
+setClientes(data || [])
+
+}
+
+let clientesFiltrados = clientes.filter((c:any)=>
+(c.nombre || "")
+.toLowerCase()
+.includes(busqueda.toLowerCase())
+)
+
+async function cargarHistorial(){
+    
+// 🔥 AHORA SE LEE DESDE envasesprestados
+const { data, error } = await supabase
+.from("envases_prestados")
+.select("*")
+.eq("tipo","devuelto")
+.order("id",{ascending:false})
+
+if(error){
+
+console.log(error)
+
+return
+
+}
+
+setHistorial(data || [])
+
+}
+
+async function guardarDevolucion(){
 
 if(!cliente) return alert("Seleccione cliente")
 if(!producto) return alert("Seleccione producto")
 if(!cantidad) return alert("Ingrese cantidad")
 
-// 🔥 AHORA TODO VA A envasesprestados
-let movimientos = JSON.parse(localStorage.getItem("envasesprestados") || "[]")
+const { data: movimientos, error: errorMovimientos } = await supabase
+.from("envases_prestados")
+.select("*")
+.eq("cliente",cliente)
 
-movimientos.push({
+if(errorMovimientos){
+
+console.log(errorMovimientos)
+
+alert("Error verificando saldo")
+
+return
+
+}
+
+let saldoCliente = 0
+
+movimientos?.forEach((m:any)=>{
+
+if(m.tipo==="prestado" || m.tipo==="inicial"){
+saldoCliente += Number(m.cantidad)
+}
+
+if(m.tipo==="devuelto"){
+saldoCliente -= Number(m.cantidad)
+}
+
+})
+
+if(Number(cantidad) > saldoCliente){
+
+alert(`El cliente solo tiene ${saldoCliente} envases pendientes`)
+
+return
+
+}
+
+let hoy = new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+
+// GUARDAR DEVOLUCION
+
+const { error: errorPrestado } = await supabase
+.from("envases_prestados")
+.insert([
+{
 cliente,
 envase:producto,
 cantidad:Number(cantidad),
-fecha:new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"}),
+fecha:hoy,
 tipo:"devuelto"
+}
+])
+
+if(errorPrestado){
+
+console.log(errorPrestado)
+
+alert("Error guardando devolución")
+
+return
+
+}
+
+// CARGAR INVENTARIO
+
+const { data: inventarioData, error: inventarioError } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
+
+if(inventarioError){
+
+console.log(inventarioError)
+
+alert("Error cargando inventario")
+
+return
+
+}
+
+let inventario:any = inventarioData
+
+let clave = ""
+
+if(producto.includes("con llave")){
+clave = "botellon20llave_vacios"
+}
+
+if(producto.includes("sin llave")){
+clave = "botellon20sin_llave_vacios"
+}
+
+inventario[destino][clave] += Number(cantidad)
+
+const { error: errorInventario } = await supabase
+.from("inventario")
+.update({
+[destino]: inventario[destino]
 })
+.eq("id",1)
 
-localStorage.setItem("envasesprestados",JSON.stringify(movimientos))
+if(errorInventario){
 
+console.log(errorInventario)
+
+alert("Error actualizando inventario")
+
+return
+
+}
+
+setBusqueda("")
 setCliente("")
 setProducto("")
 setCantidad("")
 
-cargarHistorial()
+await cargarHistorial()
 
 setMensaje("✅ Envase devuelto correctamente")
 
@@ -90,18 +220,28 @@ return(
 
 <div style={card}>
 
+<input
+type="text"
+placeholder="Buscar cliente"
+value={busqueda}
+onChange={(e)=>setBusqueda(e.target.value)}
+style={input}
+/>
+
 <select
 value={cliente}
 onChange={(e)=>setCliente(e.target.value)}
 style={input}
 >
 
-{clientes.map((c,i)=>(
-
-<option key={i}>
-{c.nombre}
+<option value="">
+Seleccionar cliente
 </option>
 
+{clientesFiltrados.map((c:any,i:number)=>(
+<option key={i} value={c.nombre}>
+{c.nombre}
+</option>
 ))}
 
 </select>
@@ -135,6 +275,30 @@ onChange={(e)=>setCantidad(Number(e.target.value))}
 style={input}
 />
 
+<select
+value={destino}
+onChange={(e)=>setDestino(e.target.value)}
+style={input}
+>
+
+<option value="empresa">
+EMPRESA
+</option>
+
+<option value="dorita">
+DORITA
+</option>
+
+<option value="vehiculo1">
+VEHICULO 1
+</option>
+
+<option value="vehiculo2">
+VEHICULO 2
+</option>
+
+</select>
+
 <button
 style={boton}
 onClick={guardarDevolucion}
@@ -142,7 +306,20 @@ onClick={guardarDevolucion}
 Guardar devolución
 </button>
 
+<button
+style={{
+...boton,
+background:"#2563eb",
+marginTop:"10px"
+}}
+onClick={()=>setVerHistorial(!verHistorial)}
+>
+{verHistorial ? "Ocultar historial" : "Ver historial"}
+</button>
+
 </div>
+
+{verHistorial && (
 
 <div style={historialBox}>
 
@@ -150,11 +327,13 @@ Guardar devolución
 📋 Historial devoluciones
 </h2>
 
-{historial.length===0 && (
-<p>No hay devoluciones registradas</p>
-)}
+{historial.length === 0 ? (
 
-{historial.map((d,i)=>(
+<p>No hay devoluciones registradas</p>
+
+) : (
+
+historial.map((d:any,i:number)=>(
 
 <div key={i} style={item}>
 
@@ -178,9 +357,13 @@ Guardar devolución
 
 </div>
 
-))}
+))
+
+)}
 
 </div>
+
+)}
 
 </div>
 

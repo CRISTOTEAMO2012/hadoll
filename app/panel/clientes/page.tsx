@@ -45,6 +45,7 @@ setClientes(data || [])
 
 }
 
+
 cargarClientes()
 
 },[])
@@ -201,14 +202,14 @@ let clienteEditar:any = clientes[editandoIndex]
 const { error } = await supabase
 .from("clientes")
 .update({
-
 nombre,
 direccion,
 referencia,
 telefono,
 dia,
-ciudad
-
+ciudad,
+lat: coords?.lat || null,
+lng: coords?.lng || null
 })
 .eq("id", clienteEditar.id)
 
@@ -251,7 +252,9 @@ direccion,
 referencia,
 telefono,
 dia,
-ciudad
+ciudad,
+lat: coords?.lat || null,
+lng: coords?.lng || null
 }
 ])
 .select()
@@ -303,7 +306,14 @@ setReferencia(c.referencia || "")
 setTelefono(c.telefono)
 setDia(c.dia)
 setCiudad(c.ciudad)
-setCoords(c.coords || null)
+if(c.lat && c.lng){
+setCoords({
+lat:c.lat,
+lng:c.lng
+})
+}else{
+setCoords(null)
+}
 
 setEditandoIndex(index)
 

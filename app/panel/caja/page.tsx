@@ -1,7 +1,7 @@
 "use client"
 
 import {useEffect,useState} from "react"
-
+import { supabase } from "@/supabase"
 export default function Caja(){
 
 const [fecha,setFecha]=useState("")
@@ -22,7 +22,23 @@ useEffect(()=>{
 
 if(!fecha) return
 
-let caja = JSON.parse(localStorage.getItem("caja")||"[]")
+cargarCaja()
+
+},[fecha])
+
+async function cargarCaja(){
+
+const { data, error } = await supabase
+.from("caja")
+.select("*")
+
+if(error){
+
+console.log(error)
+
+return
+
+}
 
 let totalDia=0
 
@@ -32,30 +48,52 @@ let vTr=0
 let cEf=0
 let cTr=0
 
-caja.forEach((m: any)=>{
+data?.forEach((m:any)=>{
 
 if(m.fecha === fecha){
 
-let monto = Number(m.monto)
+let monto = Number(m.monto || 0)
 
-// TOTAL
 if(m.tipo === "ingreso"){
+
 totalDia += monto
 
-// 🔥 CLAVE REAL
-let esCobro = m.origen === "cobro"
+let metodo = (m.metodo || "").toLowerCase()
+
+let detalle = (m.detalle || "").toLowerCase()
+
+let esCobro =
+detalle.includes("cobro") ||
+detalle.includes("abono")
 
 if(esCobro){
-if(m.metodo==="efectivo") cEf += monto
-if(m.metodo==="transferencia") cTr += monto
-}else{
-if(m.metodo==="efectivo") vEf += monto
-if(m.metodo==="transferencia") vTr += monto
+
+if(metodo === "efectivo"){
+cEf += monto
 }
+
+if(metodo === "transferencia"){
+cTr += monto
+}
+
+}else{
+
+if(metodo === "efectivo"){
+vEf += monto
+}
+
+if(metodo === "transferencia"){
+vTr += monto
+}
+
+}
+
 }
 
 if(m.tipo === "egreso"){
+
 totalDia -= monto
+
 }
 
 }
@@ -70,7 +108,7 @@ setVentaTransferencia(vTr)
 setCobroEfectivo(cEf)
 setCobroTransferencia(cTr)
 
-},[fecha])
+}
 
 return(
 <div style={contenedor}>

@@ -2,13 +2,12 @@
 
 import {useEffect,useState} from "react"
 import { LoadScript, GoogleMap, Marker, Polyline } from "@react-google-maps/api"
-
+import { supabase } from "@/supabase"
 export default function Rutas(){
 
 const[dia,setDia]=useState("Lunes")
 const[clientes,setClientes]=useState([])
-const[pedidos,setPedidos]=useState([])
-const[verPedidos,setVerPedidos]=useState(false)
+
 
 useEffect(()=>{
 cargarTodo()
@@ -16,9 +15,19 @@ const i=setInterval(cargarTodo,2000)
 return ()=>clearInterval(i)
 },[])
 
-function cargarTodo(){
-setClientes(JSON.parse(localStorage.getItem("clientes")||"[]"))
-setPedidos(JSON.parse(localStorage.getItem("pedidos")||"[]"))
+async function cargarTodo(){
+
+const { data, error } = await supabase
+.from("clientes")
+.select("*")
+
+if(error){
+console.log(error)
+return
+}
+
+setClientes(data || [])
+
 }
 
 // 📅 FECHA SEGÚN DÍA
@@ -60,7 +69,10 @@ let cercanoIndex=0
 let min=Infinity
 
 restantes.forEach((c,i)=>{
-let d = distancia(ultimo.coords,c.coords)
+let d = distancia(
+{lat:ultimo.lat,lng:ultimo.lng},
+{lat:c.lat,lng:c.lng}
+)
 if(d<min){
 min=d
 cercanoIndex=i
@@ -76,7 +88,12 @@ return ordenados
 
 // CLIENTES DEL DÍA
 let filtrados = ordenarRuta(
-clientes.filter(c=>c.dia===dia && c.coords)
+clientes.filter(
+c =>
+c.dia?.toLowerCase() === dia.toLowerCase() &&
+c.lat &&
+c.lng
+)
 )
 
 // 🖨️ IMPRIMIR RUTA (AGREGADO)
@@ -121,21 +138,7 @@ ventana.print()
 
 }
 
-// 🚨 PEDIDOS FUERA DE RUTA
-let fechaRuta = fechaPorDia(dia)
 
-let pedidosFueraRuta = pedidos.filter(p=>{
-let mismaFecha = p.fecha === fechaRuta
-let enRuta = filtrados.some(c=>c.nombre === p.cliente)
-return mismaFecha && !enRuta
-})
-
-// ✅ ATENDER PEDIDO (BORRA)
-function atenderPedido(cliente:any){
-let nuevos = pedidos.filter(p=>p.cliente !== cliente)
-localStorage.setItem("pedidos", JSON.stringify(nuevos))
-setPedidos(nuevos)
-}
 
 // 📞
 function llamar(c){
@@ -152,12 +155,19 @@ window.open(`https://wa.me/593${numero}?text=${encodeURIComponent(mensaje)}`)
 
 // 🧭
 function ir(c){
-let {lat,lng}=c.coords
-window.open(`https://www.google.com/maps?q=${lat},${lng}`)
+window.open(`https://www.google.com/maps?q=${c.lat},${c.lng}`)
 }
 
 // MAPA
-let centro = filtrados[0]?.coords || {lat:-1.67,lng:-78.65}
+let centro = filtrados.length > 0
+? {
+lat: filtrados[0].lat,
+lng: filtrados[0].lng
+}
+: {
+lat:-1.67,
+lng:-78.65
+}
 
 return(
 
@@ -183,39 +193,21 @@ return(
 
 </div>
 
-{/* 🚨 ALERTA */}
-{pedidosFueraRuta.length > 0 && (
-<div style={alerta} onClick={()=>setVerPedidos(!verPedidos)}>
-🚨 PEDIDOS FUERA DE RUTA ({pedidosFueraRuta.length})
-</div>
-)}
-
-{/* 📦 LISTA PEDIDOS */}
-{verPedidos && pedidosFueraRuta.map((p,i)=>(
-
-<div key={i} style={cardPedido}>
-
-<div>
-<b>{p.cliente}</b>
-<p>{p.producto} x{p.cantidad}</p>
-</div>
-
-<button 
-style={btnAtender}
-onClick={()=>atenderPedido(p.cliente)}
->
-✔ Atendido
-</button>
-
-</div>
-
-))}
-
 <LoadScript googleMapsApiKey="AIzaSyC38UAIuSha_SbHHMK_Jf0pnsNDOM7WaH8">
 <GoogleMap mapContainerStyle={mapa} center={centro} zoom={13}>
 
-{filtrados.map((c,i)=>(<Marker key={i} position={c.coords}/>))}
-<Polyline path={filtrados.map(c=>c.coords)} />
+{filtrados.map((c,i)=>(<Marker key={i} position={{
+lat:c.lat,
+lng:c.lng
+}}/>))}
+<Polyline
+path={
+filtrados.map(c=>({
+lat:c.lat,
+lng:c.lng
+}))
+}
+/>
 
 </GoogleMap>
 </LoadScript>
@@ -266,34 +258,6 @@ borderRadius:"6px",
 cursor:"pointer"
 }
 
-const alerta={
-background:"red",
-color:"#fff",
-padding:"10px",
-borderRadius:"8px",
-cursor:"pointer",
-marginBottom:"10px"
-}
-
-const cardPedido={
-background:"#fff",
-padding:"10px",
-border:"1px solid #ddd",
-borderRadius:"8px",
-marginBottom:"5px",
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center"
-}
-
-const btnAtender={
-background:"#16a34a",
-color:"#fff",
-border:"none",
-padding:"6px 10px",
-borderRadius:"6px",
-cursor:"pointer"
-}
 
 const mapa={width:"100%",height:"300px",marginBottom:"20px"}
 

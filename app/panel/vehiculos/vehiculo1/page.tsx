@@ -1,6 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
+import { supabase } from "@/supabase"
 import Link from "next/link"
 
 export default function Vehiculo1(){
@@ -10,38 +11,67 @@ const [placa,setPlaca]=useState("")
 const [chofer,setChofer]=useState("")
 const [mensaje,setMensaje]=useState("")
 const [editando,setEditando]=useState(false)
+const [vehiculoGuardado,setVehiculoGuardado]=useState<any>(null)
+
 useEffect(()=>{
-
-let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
-
-if(data[0]){
-setMarca(data[0].marca)
-setPlaca(data[0].placa)
-setChofer(data[0].chofer)
-setEditando(true)
-setVehiculoGuardado(data[0])
-}
-
+cargarVehiculo()
 },[])
 
-function guardar(){
+async function cargarVehiculo(){
 
-let vehiculos = JSON.parse(localStorage.getItem("vehiculos") || "[]")
+const { data, error } = await supabase
+.from("vehiculos")
+.select("*")
+.eq("codigo","vehiculo1")
+.single()
 
-vehiculos[0]={
-nombre:marca+" "+placa,
+if(error){
+console.log(error)
+return
+}
+
+if(data){
+
+setMarca(data.marca || "")
+setPlaca(data.placa || "")
+setChofer(data.chofer || "")
+
+setVehiculoGuardado(data)
+
+}
+
+}
+
+async function guardar(){
+
+const { data, error } = await supabase
+.from("vehiculos")
+.update({
 marca,
 placa,
 chofer
+})
+.eq("codigo","vehiculo1")
+.select()
+.single()
+
+if(error){
+
+alert(error.message)
+console.log(error)
+
+return
+
 }
 
-localStorage.setItem("vehiculos",JSON.stringify(vehiculos))
-setVehiculoGuardado(vehiculos[0])
+setVehiculoGuardado(data)
+
 setMensaje("✅ Vehículo registrado correctamente")
 
 setTimeout(()=>{
 setMensaje("")
 },2000)
+setEditando(false)
 
 setMarca("")
 setPlaca("")
@@ -49,7 +79,7 @@ setChofer("")
 setEditando(false)
 
 }
-const [vehiculoGuardado,setVehiculoGuardado]=useState<any>(null)
+
 return(
 
 <div style={contenedor}>
@@ -118,11 +148,9 @@ placeholder="Nombre del chofer"
 style={botonEditar}
 onClick={()=>{
 
-let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
-
-setMarca(data[0].marca)
-setPlaca(data[0].placa)
-setChofer(data[0].chofer)
+setMarca(vehiculoGuardado?.marca || "")
+setPlaca(vehiculoGuardado?.placa || "")
+setChofer(vehiculoGuardado?.chofer || "")
 
 setEditando(true)
 

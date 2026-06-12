@@ -1,19 +1,30 @@
 "use client"
 
 import {useEffect,useState} from "react"
-
+import { supabase } from "@/supabase"
 export default function Pedidos(){
 
 const [pedidos,setPedidos]=useState([])
 const [filtroDia,setFiltroDia]=useState("TODOS")
 
 useEffect(()=>{
-cargarTodo()
+cargarPedidos()
 },[])
 
-function cargarTodo(){
-let ped = JSON.parse(localStorage.getItem("pedidos")||"[]")
-setPedidos(ped)
+async function cargarPedidos(){
+
+const { data, error } = await supabase
+.from("pedidos")
+.select("*")
+.order("id",{ascending:false})
+
+if(error){
+console.log(error)
+return
+}
+
+setPedidos(data || [])
+
 }
 
 // 📅 FORMATEAR DÍA
@@ -34,26 +45,48 @@ return dia.toLowerCase() === filtroDia.toLowerCase()
 }
 
 // 🔥 ATENDER PEDIDO
-function atenderPedido(index:any){
+async function atenderPedido(id:any){
 
-let lista=[...pedidos]
-lista[index].estado="atendido"
+const { error } = await supabase
+.from("pedidos")
+.update({
+estado:"atendido"
+})
+.eq("id",id)
 
-localStorage.setItem("pedidos",JSON.stringify(lista))
-setPedidos(lista)
+if(error){
+
+alert("Error actualizando pedido")
+console.log(error)
+return
 
 }
 
+cargarPedidos()
+
+}
+
+
+
 // ❌ ELIMINAR
-function eliminarPedido(index:any){
+async function eliminarPedido(id:any){
 
 if(!confirm("¿Eliminar pedido?")) return
 
-let lista=[...pedidos]
-lista.splice(index,1)
+const { error } = await supabase
+.from("pedidos")
+.delete()
+.eq("id",id)
 
-localStorage.setItem("pedidos",JSON.stringify(lista))
-setPedidos(lista)
+if(error){
+
+alert("Error eliminando")
+console.log(error)
+return
+
+}
+
+cargarPedidos()
 
 }
 
@@ -71,6 +104,7 @@ value={filtroDia}
 onChange={(e)=>setFiltroDia(e.target.value)}
 style={filtroSelect}
 >
+
 <option value="TODOS">📅 TODOS</option>
 <option value="lunes">Lunes</option>
 <option value="martes">Martes</option>
@@ -90,6 +124,8 @@ style={filtroSelect}
 <thead style={thead}>
 <tr>
 <th>Cliente</th>
+<th>Teléfono</th>
+<th>Dirección</th>
 <th>Producto</th>
 <th>Cantidad</th>
 <th>Día</th>
@@ -107,8 +143,20 @@ style={filtroSelect}
 <tr key={i} style={fila}>
 
 <td>{p.cliente}</td>
+
+<td>
+{p.telefono || "-"}
+</td>
+
+<td>
+{p.direccion || "-"}
+</td>
+
 <td>{p.producto}</td>
-<td style={{fontWeight:"bold"}}>{p.cantidad}</td>
+
+<td style={{fontWeight:"bold"}}>
+{p.cantidad}
+</td>
 
 <td style={{textTransform:"capitalize"}}>
 {obtenerDia(p.fecha)}
@@ -133,14 +181,14 @@ fontWeight:"bold"
 <td style={{display:"flex",gap:"6px",justifyContent:"center"}}>
 
 <button
-onClick={()=>atenderPedido(i)}
+onClick={()=>atenderPedido(p.id)}
 style={botonAtender}
 >
 ✔ Atendido
 </button>
 
 <button
-onClick={()=>eliminarPedido(i)}
+onClick={()=>eliminarPedido(p.id)}
 style={botonEliminar}
 >
 ✖ Eliminar

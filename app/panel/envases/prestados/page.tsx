@@ -2,6 +2,7 @@
 
 import {useEffect,useState} from "react"
 import * as XLSX from "xlsx"
+import { supabase } from "../../../../supabase"
 
 export default function Page(){
 
@@ -15,11 +16,24 @@ useEffect(()=>{
 cargar()
 },[])
 
-function cargar(){
+async function cargar(){
 
-let prestados = JSON.parse(localStorage.getItem("envasesprestados")||"[]")
+const { data: prestados, error } = await supabase
+.from("envases_prestados")
+.select("*")
+.order("id",{ascending:false})
 
-let filtrados = prestados.filter((p:any)=>
+if(error){
+
+console.log(error)
+
+alert("Error cargando envases prestados")
+
+return
+
+}
+
+let filtrados = (prestados || []).filter((p:any)=>
 p.tipo==="inicial" ||
 p.tipo==="prestado" ||
 p.tipo==="devuelto"
@@ -35,7 +49,6 @@ if(!agrupado[p.cliente]){
 agrupado[p.cliente]=0
 }
 
-// 🔵 SUMA
 if(
 p.tipo==="prestado" ||
 p.tipo==="inicial"
@@ -43,7 +56,6 @@ p.tipo==="inicial"
 agrupado[p.cliente]+=Number(p.cantidad)
 }
 
-// 🔻 RESTA
 if(p.tipo==="devuelto"){
 agrupado[p.cliente]-=Number(p.cantidad)
 }

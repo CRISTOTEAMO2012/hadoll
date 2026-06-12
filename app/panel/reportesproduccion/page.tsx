@@ -15,6 +15,7 @@ const[hasta,setHasta]=useState("")
 const[total,setTotal]=useState(0)
 const[productoTop,setProductoTop]=useState("")
 const[verTabla,setVerTabla]=useState(false)
+const[mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
 filtrar()
@@ -32,17 +33,18 @@ console.log(error)
 return
 }
 
-let filtrado = prod || []
+let filtrado = []
 
-if(desde){
-filtrado = filtrado.filter(p => p.fecha >= desde)
-}
+if(desde && hasta){
 
-if(hasta){
-filtrado = filtrado.filter(p => p.fecha <= hasta)
+filtrado = prod.filter(p => {
+return p.fecha >= desde && p.fecha <= hasta
+})
+
 }
 
 setData(filtrado)
+console.log("Producción encontrada:", filtrado)
 
 // 🔥 CALCULOS
 let totalCantidad=0
@@ -120,7 +122,159 @@ XLSX.utils.book_append_sheet(wb, ws, "Produccion")
 XLSX.writeFile(wb, "reporte_produccion.xlsx")
 
 }
+async function eliminarProduccion(p){
 
+
+if(!confirm("¿Eliminar esta producción?")){
+return
+}
+
+const { error } = await supabase
+.from("produccion")
+.delete()
+.eq("id", p.id)
+
+if(error){
+alert(error.message)
+return
+}
+const { data: inventarioData } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
+
+let inventario = {
+empresa: inventarioData.empresa || {},
+dorita: inventarioData.dorita || {}
+}
+
+if(p.producto === "Botellón 20L con llave"){
+
+inventario.empresa.botellon20llave_llenos =
+(inventario.empresa.botellon20llave_llenos || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botellon20llave_vacios =
+(inventario.empresa.botellon20llave_vacios || 0)
++ Number(p.cantidad)
+
+}
+if(p.producto === "Botellón 20L sin llave"){
+
+inventario.empresa.botellon20sin_llave_llenos =
+(inventario.empresa.botellon20sin_llave_llenos || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botellon20sin_llave_vacios =
+(inventario.empresa.botellon20sin_llave_vacios || 0)
++ Number(p.cantidad)
+
+}
+
+if(p.producto === "Botella 1L"){
+
+inventario.empresa.botella1L_llenos =
+(inventario.empresa.botella1L_llenos || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botella1L =
+(inventario.empresa.botella1L || 0)
++ Number(p.cantidad)
+
+}
+
+if(p.producto === "Botella 600 ml"){
+
+inventario.empresa.botella600_llenos =
+(inventario.empresa.botella600_llenos || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botella600 =
+(inventario.empresa.botella600 || 0)
++ Number(p.cantidad)
+
+}
+
+if(p.producto === "Botella 6000 ml"){
+
+inventario.empresa.botella6000_llenos =
+(inventario.empresa.botella6000_llenos || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botella6000 =
+(inventario.empresa.botella6000 || 0)
++ Number(p.cantidad)
+
+}
+if(p.producto === "Paca 15 botellas 600 ml"){
+
+inventario.empresa.paca15 =
+(inventario.empresa.paca15 || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botella600 =
+(inventario.empresa.botella600 || 0)
++ (15 * Number(p.cantidad))
+
+}
+
+if(p.producto === "Paca 24 botellas 600 ml"){
+
+inventario.empresa.paca24 =
+(inventario.empresa.paca24 || 0)
+- Number(p.cantidad)
+
+inventario.empresa.botella600 =
+(inventario.empresa.botella600 || 0)
++ (24 * Number(p.cantidad))
+
+}
+if(p.detalle && Array.isArray(p.detalle)){
+
+for(const item of p.detalle){
+
+if(
+item.insumo === "Botella 1L" ||
+item.insumo === "Botella 600 ml" ||
+item.insumo === "Botella 6000 ml"
+){
+continue
+}
+
+await supabase
+.from("insumos")
+.insert([
+{
+insumo: item.insumo,
+tipo: "devolucion",
+cantidad: Number(item.cantidadTotal),
+total: 0,
+fecha: new Date().toLocaleDateString("en-CA",{
+timeZone:"America/Guayaquil"
+})
+}
+])
+
+}
+
+}
+
+await supabase
+.from("inventario")
+.update({
+empresa: inventario.empresa
+})
+.eq("id",1)
+setMensaje("✅ Producción eliminada correctamente")
+
+setTimeout(()=>{
+setMensaje("")
+},2000)
+
+filtrar()
+
+}
 // 🔥 ORDENAR
 let dataOrdenada = [...data].sort((a,b)=> b.cantidad - a.cantidad)
 
@@ -128,7 +282,7 @@ return(
 
 <div style={container}>
 
-<h1 style={titulo}>📊 REPORTE DE PRODUCCIÓN</h1>
+<h1 style={titulo}>📊 Reporte Producción</h1>
 
 <div style={filtros}>
 
@@ -146,8 +300,11 @@ onChange={e=>setHasta(e.target.value)}
 style={input}
 />
 
-<button style={boton} onClick={exportarExcel}>
-⬇ Excel
+<button
+style={boton}
+onClick={exportarExcel}
+>
+Exportar Excel
 </button>
 
 <button
@@ -159,8 +316,9 @@ onClick={()=>setVerTabla(!verTabla)}
 
 </div>
 
-<h2>🔢 Total producido: {total}</h2>
-<h3>🏆 Producto más producido: {productoTop}</h3>
+<h3>Total producido: {total}</h3>
+
+<h3>Producto más producido: {productoTop}</h3>
 
 <br/>
 
@@ -168,23 +326,33 @@ onClick={()=>setVerTabla(!verTabla)}
 ref={canvasRef}
 width={900}
 height={400}
-style={{background:"#fff",border:"1px solid #ccc"}}
+style={{
+background:"#fff",
+border:"1px solid #ccc"
+}}
 />
+{mensaje && (
 
-<br/><br/>
+<div style={overlayMensaje}>
+<div style={mensajeExito}>
+{mensaje}
+</div>
+</div>
+
+)}
 
 {verTabla && (
 
-<div style={{maxWidth:"800px"}}>
-
 <table style={tabla}>
 
-<thead style={{background:"#1e293b",color:"#fff"}}>
+<thead>
 
 <tr>
+<th>ID</th>
 <th>Fecha</th>
 <th>Producto</th>
 <th>Cantidad</th>
+<th>Total</th>
 </tr>
 
 </thead>
@@ -193,12 +361,29 @@ style={{background:"#fff",border:"1px solid #ccc"}}
 
 {dataOrdenada.map((p,i)=>(
 
-<tr key={i} style={{textAlign:"center",borderBottom:"1px solid #ddd"}}>
-
+<tr key={i}>
+<td>{p.id}</td>
 <td>{p.fecha}</td>
 <td>{p.producto}</td>
 <td>{p.cantidad}</td>
+<td>${p.total}</td>
 
+<td>
+<button
+onClick={()=>eliminarProduccion(p)}
+style={{
+background:"#dc2626",
+color:"#fff",
+border:"none",
+padding:"8px 14px",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+>
+🗑 Eliminar
+</button>
+</td>
 </tr>
 
 ))}
@@ -206,8 +391,6 @@ style={{background:"#fff",border:"1px solid #ccc"}}
 </tbody>
 
 </table>
-
-</div>
 
 )}
 
@@ -255,4 +438,26 @@ const tabla={
 width:"100%",
 borderCollapse:"collapse",
 background:"#fff"
+}
+const overlayMensaje={
+position:"fixed",
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,0.4)"
 }

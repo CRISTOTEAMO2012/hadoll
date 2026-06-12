@@ -1,6 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
+import { supabase } from "@/supabase"
 import Link from "next/link"
 
 export default function Vehiculo2(){
@@ -8,42 +9,69 @@ export default function Vehiculo2(){
 const [marca,setMarca]=useState("")
 const [placa,setPlaca]=useState("")
 const [chofer,setChofer]=useState("")
-
 const [mensaje,setMensaje]=useState("")
 const [editando,setEditando]=useState(false)
-
+const [vehiculoGuardado,setVehiculoGuardado]=useState<any>(null)
 
 useEffect(()=>{
-
-let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
-
-if(data[1]){
-setMarca(data[1].marca)
-setPlaca(data[1].placa)
-setChofer(data[1].chofer)
-setEditando(true)
-}
-
+cargarVehiculo()
 },[])
 
-function guardar(){
+async function cargarVehiculo(){
 
-let vehiculos = JSON.parse(localStorage.getItem("vehiculos") || "[]")
+const { data, error } = await supabase
+.from("vehiculos")
+.select("*")
+.eq("codigo","vehiculo2")
+.single()
 
-vehiculos[1]={
-nombre:marca+" "+placa,
+if(error){
+console.log(error)
+return
+}
+
+if(data){
+
+setMarca(data.marca || "")
+setPlaca(data.placa || "")
+setChofer(data.chofer || "")
+
+setVehiculoGuardado(data)
+
+}
+
+}
+
+async function guardar(){
+
+const { data, error } = await supabase
+.from("vehiculos")
+.update({
 marca,
 placa,
 chofer
+})
+.eq("codigo","vehiculo2")
+.select()
+.single()
+
+if(error){
+
+alert(error.message)
+console.log(error)
+
+return
+
 }
 
-localStorage.setItem("vehiculos",JSON.stringify(vehiculos))
+setVehiculoGuardado(data)
 
 setMensaje("✅ Vehículo registrado correctamente")
 
 setTimeout(()=>{
 setMensaje("")
 },2000)
+setEditando(false)
 
 setMarca("")
 setPlaca("")
@@ -51,10 +79,6 @@ setChofer("")
 setEditando(false)
 
 }
-const vehiculoGuardado =
-typeof window !== "undefined"
-? JSON.parse(localStorage.getItem("vehiculos") || "[]")[1]
-: null
 
 return(
 
@@ -77,19 +101,39 @@ return(
 <div style={formulario}>
 
 <label>Marca del vehículo</label>
-<input style={input} value={marca} onChange={(e)=>setMarca(e.target.value)} />
+
+<input
+style={input}
+value={marca}
+onChange={(e)=>setMarca(e.target.value)}
+placeholder="Ej: Hino"
+/>
 
 <label>Placa</label>
-<input style={input} value={placa} onChange={(e)=>setPlaca(e.target.value)} />
+
+<input
+style={input}
+value={placa}
+onChange={(e)=>setPlaca(e.target.value)}
+placeholder="Ej: ABC123"
+/>
 
 <label>Chofer</label>
-<input style={input} value={chofer} onChange={(e)=>setChofer(e.target.value)} />
+
+<input
+style={input}
+value={chofer}
+onChange={(e)=>setChofer(e.target.value)}
+placeholder="Nombre del chofer"
+/>
 
 <button style={botonGuardar} onClick={guardar}>
 {editando ? "Actualizar vehículo" : "Guardar vehículo"}
 </button>
 
+</div>
 {vehiculoGuardado && (
+
 <div style={tarjetaVehiculo}>
 
 <h3>🚚 Vehículo registrado</h3>
@@ -104,11 +148,9 @@ return(
 style={botonEditar}
 onClick={()=>{
 
-let data = JSON.parse(localStorage.getItem("vehiculos") || "[]")
-
-setMarca(data[1].marca)
-setPlaca(data[1].placa)
-setChofer(data[1].chofer)
+setMarca(vehiculoGuardado?.marca || "")
+setPlaca(vehiculoGuardado?.placa || "")
+setChofer(vehiculoGuardado?.chofer || "")
 
 setEditando(true)
 
@@ -120,6 +162,7 @@ setEditando(true)
 </div>
 
 )}
+<div style={botones}>
 
 <Link href="/panel/vehiculos/vehiculo2/cargar">
 <button style={botonAzul}>📦 Cargar Vehículo</button>
@@ -154,15 +197,15 @@ marginBottom:"30px"
 }
 
 const formulario={
-background:"#fff",
-padding:"20px",
+background:"#ffffff",
+padding:"25px",
 borderRadius:"10px",
+maxWidth:"420px",
 display:"flex",
 flexDirection:"column",
 gap:"10px",
-maxWidth:"420px",
-marginBottom:"30px",
-border:"1px solid #ddd"
+border:"1px solid #ddd",
+marginBottom:"40px"
 }
 
 const input={
@@ -174,18 +217,44 @@ borderRadius:"6px"
 const botonGuardar={
 background:"#16a34a",
 color:"#fff",
-padding:"10px",
+padding:"12px",
 border:"none",
-borderRadius:"6px"
+borderRadius:"6px",
+cursor:"pointer",
+marginTop:"10px"
 }
 
-const botones={display:"flex",gap:"15px"}
+const botones={
+display:"flex",
+gap:"15px"
+}
 
-const botonAzul={background:"#2563eb",color:"#fff",padding:"10px",borderRadius:"6px",border:"none"}
+const botonAzul={
+background:"#2563eb",
+color:"#fff",
+padding:"12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer"
+}
 
-const botonVerde={background:"#16a34a",color:"#fff",padding:"10px",borderRadius:"6px",border:"none"}
+const botonVerde={
+background:"#16a34a",
+color:"#fff",
+padding:"12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer"
+}
 
-const botonNaranja={background:"#f97316",color:"#fff",padding:"10px",borderRadius:"6px",border:"none"}
+const botonNaranja={
+background:"#f97316",
+color:"#fff",
+padding:"12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer"
+}
 const overlayMensaje={
 position:"fixed" as const,
 top:0,

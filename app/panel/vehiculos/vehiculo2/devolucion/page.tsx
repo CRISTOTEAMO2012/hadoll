@@ -1,7 +1,7 @@
 "use client"
 
 import {useState,useEffect} from "react"
-
+import { supabase } from "@/supabase"
 export default function DevolucionVehiculo2(){
 
 const [inventario,setInventario]=useState({})
@@ -13,10 +13,26 @@ const [cantidadEnvase,setCantidadEnvase]=useState("")
 
 const [destino,setDestino]=useState("empresa")
 const [mensaje,setMensaje]=useState("")
+
 useEffect(()=>{
-let data = JSON.parse(localStorage.getItem("inventario") || "{}")
-setInventario(data.vehiculo2 || {})
+cargarInventario()
 },[])
+
+async function cargarInventario(){
+
+const { data, error } = await supabase
+.from("inventario")
+.select("vehiculo2")
+.single()
+
+if(error){
+console.log(error)
+return
+}
+
+setInventario(data?.vehiculo2 || {})
+
+}
 
 const productosMap = [
 {label:"Botellón 20L con llave", key:"botellon20llave_llenos"},
@@ -28,9 +44,19 @@ const productosMap = [
 ]
 
 // 🔵 DEVOLVER
-function devolverProducto(){
+async function devolverProducto(){
 
-let inv = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data, error } = await supabase
+.from("inventario")
+.select("*")
+.single()
+
+if(error){
+alert("Error al leer inventario")
+return
+}
+
+let inv = data
 let cant = Number(cantidad)
 
 if(!producto) return alert("Seleccione producto")
@@ -53,7 +79,20 @@ if(!inv[destino][key]) inv[destino][key]=0
 
 inv[destino][key] += cant
 
-localStorage.setItem("inventario",JSON.stringify(inv))
+const { error: errorUpdate } = await supabase
+.from("inventario")
+.update({
+empresa: inv.empresa,
+dorita: inv.dorita,
+vehiculo2: inv.vehiculo2
+})
+.eq("id", inv.id)
+
+if(errorUpdate){
+alert("Error al guardar")
+return
+}
+
 setInventario(inv.vehiculo2)
 
 setMensaje("✅ Producto devuelto exitosamente")
@@ -68,9 +107,19 @@ setDestino("empresa")
 }
 
 // 🟡 ENVASE
-function devolverEnvase(){
+async function devolverEnvase(){
 
-let inv = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data, error } = await supabase
+.from("inventario")
+.select("*")
+.single()
+
+if(error){
+alert("Error al leer inventario")
+return
+}
+
+let inv = data
 let cant = Number(cantidadEnvase)
 
 if(!envase) return alert("Seleccione envase")
@@ -88,7 +137,20 @@ if(!inv[destino][envase]) inv[destino][envase]=0
 
 inv[destino][envase] += cant
 
-localStorage.setItem("inventario",JSON.stringify(inv))
+const { error: errorUpdate } = await supabase
+.from("inventario")
+.update({
+empresa: inv.empresa,
+dorita: inv.dorita,
+vehiculo2: inv.vehiculo2
+})
+.eq("id", inv.id)
+
+if(errorUpdate){
+alert("Error al guardar")
+return
+}
+
 setInventario(inv.vehiculo2)
 
 setMensaje("✅ Envase devuelto exitosamente")

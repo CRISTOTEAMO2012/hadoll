@@ -2,6 +2,7 @@
 
 import {useEffect,useState} from "react"
 import * as XLSX from "xlsx"
+import { supabase } from "../../../../supabase"
 
 export default function Page(){
 
@@ -14,16 +15,29 @@ useEffect(()=>{
 cargar()
 },[])
 
-function cargar(){
+async function cargar(){
 
-let vendidos = JSON.parse(localStorage.getItem("envasesvendidos")||"[]")
+const { data: vendidos, error } = await supabase
+.from("envases_vendidos")
+.select("*")
+.order("id",{ascending:false})
 
-setData(vendidos)
+if(error){
+
+console.log(error)
+
+alert("Error cargando envases vendidos")
+
+return
+
+}
+
+setData(vendidos || [])
 
 // 🔥 AGRUPAR POR CLIENTE
 let agrupado:any = {}
 
-vendidos.forEach((v:any)=>{
+;(vendidos || []).forEach((v:any)=>{
 
 if(!agrupado[v.cliente]){
 agrupado[v.cliente]=0

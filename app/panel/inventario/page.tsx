@@ -77,7 +77,7 @@ setInventario(inventarioData)
 // 📤 EXPORTAR A EXCEL REAL (.xlsx)
 function exportarExcel(){
 
-let data = JSON.parse(localStorage.getItem("inventario") || "null")
+let data = inventario
 
 if(!data) data = base()
 

@@ -1,7 +1,7 @@
 "use client"
 
 import {useState} from "react"
-
+import { supabase } from "@/supabase"
 export default function Traslados(){
 
 const [producto,setProducto]=useState("")
@@ -30,9 +30,23 @@ if(prod==="1L_vacio") return "botella1L"
 return null
 }
 
-function mover(){
+async function mover(){
 
-let inventario = JSON.parse(localStorage.getItem("inventario") || "{}")
+const { data: inventarioData, error } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
+
+if(error || !inventarioData){
+alert("No se pudo cargar inventario")
+return
+}
+
+let inventario = {
+empresa: inventarioData.empresa || {},
+dorita: inventarioData.dorita || {}
+}
 let cant = Number(cantidad)
 
 if(!producto || !origen || !destino || !cant){
@@ -79,7 +93,27 @@ inventario[destino][clave] = 0
 inventario[destino][clave] += cant
 
 // 💾 GUARDAR
-localStorage.setItem("inventario", JSON.stringify(inventario))
+await supabase
+.from("inventario")
+.update({
+empresa: inventario.empresa,
+dorita: inventario.dorita
+})
+.eq("id",1)
+
+await supabase
+.from("traslados")
+.insert([
+{
+producto,
+cantidad: Number(cantidad),
+origen,
+destino,
+fecha: new Date().toLocaleDateString("en-CA",{
+timeZone:"America/Guayaquil"
+})
+}
+])
 
 setMensaje("✅ Traslado registrado correctamente")
 
@@ -144,8 +178,6 @@ return(
 <option value="">Seleccionar</option>
 <option value="empresa">Empresa</option>
 <option value="dorita">Local Dorita</option>
-<option value="vehiculo1">Vehículo 1</option>
-<option value="vehiculo2">Vehículo 2</option>
 </select>
 
 <br/><br/>
@@ -156,8 +188,6 @@ return(
 <option value="">Seleccionar</option>
 <option value="empresa">Empresa</option>
 <option value="dorita">Local Dorita</option>
-<option value="vehiculo1">Vehículo 1</option>
-<option value="vehiculo2">Vehículo 2</option>
 </select>
 
 <br/><br/>

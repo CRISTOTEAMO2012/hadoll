@@ -2,6 +2,7 @@
 
 import {useEffect,useRef,useState} from "react"
 import * as XLSX from "xlsx"
+import { supabase } from "../../../supabase"
 import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts"
 
 export default function ReporteVentas(){
@@ -28,12 +29,23 @@ useEffect(()=>{
 generarReporte()
 },[fechaInicio,fechaFin])
 
-function generarReporte(){
+async function generarReporte(){
 
-let ventas = JSON.parse(localStorage.getItem("ventas")||"[]")
-let clientesSistema = JSON.parse(localStorage.getItem("clientes")||"[]")
-let caja = JSON.parse(localStorage.getItem("caja")||"[]")
-let deudas = JSON.parse(localStorage.getItem("deudas")||"[]")
+const { data: ventas = [] } = await supabase
+.from("ventas")
+.select("*")
+
+const { data: clientesSistema = [] } = await supabase
+.from("clientes")
+.select("*")
+
+const { data: caja = [] } = await supabase
+.from("caja")
+.select("*")
+
+const { data: deudas = [] } = await supabase
+.from("deudas")
+.select("*")
 
 let productosConteo={}
 let clientesConteo={}
@@ -76,11 +88,21 @@ totalReal += Number(c.monto)
 })
 
 // 🔹 CUENTAS POR COBRAR (PENDIENTES)
-deudas.forEach(d=>{
-if(d.estado==="pendiente"){
+if(fechaInicio && fechaFin){
+
+deudas.forEach((d:any)=>{
+
+if(
+d.estado==="pendiente" &&
+d.fecha >= fechaInicio &&
+d.fecha <= fechaFin
+){
 totalPendiente += Number(d.monto)
 }
+
 })
+
+}
 
 // SETS
 setTotalVentas(totalV)
@@ -111,7 +133,7 @@ let perdidos = clientesSistema.map(c=>{
 let ultima = ultimaCompra[c.nombre]
 if(!ultima) return null
 return {...c,dias:diasSinComprar(ultima)}
-}).filter(c=>c && c.dias >= 15)
+}).filter(c=>c && c.dias >= 8)
 
 setClientesPerdidos(perdidos)
 
@@ -132,10 +154,28 @@ setDataPastel(dataP)
 
 // EXPORTAR
 function exportarExcel(){
-let ws = XLSX.utils.json_to_sheet([])
+
+let datos = topClientes.map((c:any,index:number)=>({
+Posicion:index+1,
+Cliente:c[0],
+Monto:c[1]
+}))
+
+let ws = XLSX.utils.json_to_sheet(datos)
+
 let wb = XLSX.utils.book_new()
-XLSX.utils.book_append_sheet(wb, ws, "Ventas")
-XLSX.writeFile(wb, "reporte_ventas.xlsx")
+
+XLSX.utils.book_append_sheet(
+wb,
+ws,
+"Top Clientes"
+)
+
+XLSX.writeFile(
+wb,
+"reporte_ventas.xlsx"
+)
+
 }
 
 // UI
