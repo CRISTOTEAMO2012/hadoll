@@ -86,15 +86,12 @@ return null
 // 🔥 FECHA ECUADOR
 function obtenerFechaEcuador(){
 
-const fecha = new Date()
-
-const ecuador = new Date(
-fecha.toLocaleString("en-US", {
-timeZone: "America/Guayaquil"
-})
+return new Date().toLocaleDateString(
+"en-CA",
+{
+timeZone:"America/Guayaquil"
+}
 )
-
-return ecuador.toISOString().split("T")[0]
 
 }
 
@@ -131,8 +128,6 @@ return
 }
 
 let inventario = inventarioData
-let ventas = JSON.parse(localStorage.getItem("ventas")||"[]")
-
 
 let clave:any = obtenerClave(producto)
 
@@ -441,7 +436,12 @@ onChange={(e)=>setBusqueda(e.target.value)}
 />
 
 <select
-style={input}
+style={{
+...input,
+background:"#dbeafe",
+color:"#000",
+fontWeight:"bold"
+}}
 value={cliente}
 onChange={(e)=>setCliente(e.target.value)}
 >
@@ -455,30 +455,45 @@ onChange={(e)=>setCliente(e.target.value)}
 
 </select>
 
-<select
-style={input}
-value={origen}
-onChange={(e)=>setOrigen(e.target.value)}
+<div style={grupoIconos}>
+
+<button
+style={origen==="empresa" ? botonActivo : botonIcono}
+onClick={()=>setOrigen("empresa")}
 >
+🏢 Empresa
+</button>
 
-<option value="empresa">
-EMPRESA
-</option>
+<button
+style={origen==="dorita" ? botonActivo : botonIcono}
+onClick={()=>setOrigen("dorita")}
+>
+🏠 Dorita
+</button>
 
-<option value="dorita">
-DORITA
-</option>
+<button
+style={origen==="vehiculo1" ? botonActivo : botonIcono}
+onClick={()=>setOrigen("vehiculo1")}
+>
+🚚 Vehículo 1
+</button>
 
-{vehiculos.map((v:any,i:number)=>(
-<option key={i} value={v.codigo}>
-{v.codigo} - {v.placa}
-</option>
-))}
+<button
+style={origen==="vehiculo2" ? botonActivo : botonIcono}
+onClick={()=>setOrigen("vehiculo2")}
+>
+🚐 Vehículo 2
+</button>
 
-</select>
+</div>
 
 <select
-style={input}
+style={{
+...input,
+background:"#dbeafe",
+color:"#000",
+fontWeight:"bold"
+}}
 value={producto}
 onChange={(e)=>setProducto(e.target.value)}
 >
@@ -495,17 +510,30 @@ onChange={(e)=>setProducto(e.target.value)}
 
 {producto.toLowerCase().includes("20l") && (
 
-<select
-style={input}
-value={tipoEnvase}
-onChange={(e)=>setTipoEnvase(e.target.value)}
+<div style={grupoIconos}>
+
+<button
+style={tipoEnvase==="cambio" ? botonActivo : botonIcono}
+onClick={()=>setTipoEnvase("cambio")}
 >
+🔄 Cambio
+</button>
 
-<option value="cambio">Cambio</option>
-<option value="prestado">Envase prestado</option>
-<option value="vendido">Envase vendido</option>
+<button
+style={tipoEnvase==="prestado" ? botonActivo : botonIcono}
+onClick={()=>setTipoEnvase("prestado")}
+>
+🫙 Prestado
+</button>
 
-</select>
+<button
+style={tipoEnvase==="vendido" ? botonActivo : botonIcono}
+onClick={()=>setTipoEnvase("vendido")}
+>
+💰 Vendido
+</button>
+
+</div>
 
 )}
 
@@ -525,18 +553,37 @@ onChange={(e)=>setPrecio(e.target.value)}
 placeholder="Precio"
 />
 
-<select
-style={input}
-value={pago}
-onChange={(e)=>setPago(e.target.value)}
+<div style={grupoIconos}>
+
+<button
+style={pago==="efectivo" ? botonActivo : botonIcono}
+onClick={()=>setPago("efectivo")}
 >
+💵 Efectivo
+</button>
 
-<option value="efectivo">Efectivo</option>
-<option value="transferencia">Transferencia</option>
-<option value="fiado">Fiado</option>
-<option value="mixto">Mixto</option>
+<button
+style={pago==="transferencia" ? botonActivo : botonIcono}
+onClick={()=>setPago("transferencia")}
+>
+🏦 Transferencia
+</button>
 
-</select>
+<button
+style={pago==="fiado" ? botonActivo : botonIcono}
+onClick={()=>setPago("fiado")}
+>
+📒 Fiado
+</button>
+
+<button
+style={pago==="mixto" ? botonActivo : botonIcono}
+onClick={()=>setPago("mixto")}
+>
+⚖️ Mixto
+</button>
+
+</div>
 
 {/* 🔥 SOLO SI ES MIXTO */}
 {pago === "mixto" && (
@@ -565,6 +612,25 @@ onChange={(e)=>setMetodoMixto(e.target.value)}
 </>
 
 )}
+
+<div style={resumenVenta}>
+
+<h3>📋 Resumen</h3>
+
+<p><b>Cliente:</b> {cliente || "-"}</p>
+
+<p><b>Producto:</b> {producto || "-"}</p>
+
+<p><b>Cantidad:</b> {cantidad}</p>
+
+<p><b>Precio:</b> ${precio || 0}</p>
+
+<p>
+<b>Total:</b>
+${Number(cantidad || 0) * Number(precio || 0)}
+</p>
+
+</div>
 
 <button
 style={boton}
@@ -607,9 +673,13 @@ margin:"0 auto"
 }
 
 const input={
-padding:"10px",
-border:"1px solid #ccc",
-borderRadius:"6px"
+padding:"12px",
+border:"2px solid #2563eb",
+borderRadius:"8px",
+background:"#eff6ff",
+color:"#000",
+fontWeight:"bold",
+fontSize:"15px"
 }
 
 const boton={
@@ -641,4 +711,36 @@ borderRadius:"14px",
 fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}
+const grupoIconos={
+display:"grid",
+gridTemplateColumns:"repeat(2,1fr)",
+gap:"10px"
+}
+
+const botonIcono={
+padding:"15px",
+border:"2px solid #d1d5db",
+borderRadius:"12px",
+background:"#fff",
+cursor:"pointer",
+fontSize:"16px",
+fontWeight:"bold"
+}
+
+const botonActivo={
+padding:"15px",
+border:"2px solid #16a34a",
+borderRadius:"12px",
+background:"#dcfce7",
+cursor:"pointer",
+fontSize:"16px",
+fontWeight:"bold"
+}
+
+const resumenVenta={
+background:"#eff6ff",
+padding:"15px",
+borderRadius:"10px",
+border:"1px solid #93c5fd"
 }

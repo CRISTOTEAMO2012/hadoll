@@ -17,6 +17,7 @@ const [gastosCorrientes,setGastosCorrientes]=useState(0)
 const [gastosInsumos,setGastosInsumos]=useState(0)
 const [gastosBodega,setGastosBodega]=useState(0)
 const [gastosProduccion,setGastosProduccion]=useState(0)
+const [costoVendido,setCostoVendido]=useState(0)
 
 const [desde,setDesde]=useState("")
 const [hasta,setHasta]=useState("")
@@ -25,7 +26,7 @@ const [dataGrafico,setDataGrafico]=useState<any[]>([])
 
 const [vista,setVista]=useState("")
 const [detalle,setDetalle]=useState<any[]>([])
-
+const [detalleCostoVendido,setDetalleCostoVendido] = useState<any>({})
 const [mensaje,setMensaje]=useState("")
 
 // 🔥 GASTOS
@@ -80,9 +81,24 @@ const { data: produccionCostos = [] } = await supabase
 .from("produccion")
 .select("*")
 
+const { data: ventas = [] } = await supabase
+.from("ventas")
+.select("*")
+
+const { data: insumosTabla = [] } = await supabase
+.from("insumos")
+.select("*")
+
+const { data: bodegaTabla = [] } = await supabase
+.from("bodega")
+.select("*")
+
 let movCaja = caja.filter((m:any)=> m.fecha >= desde && m.fecha <= hasta)
 let movGastos = gastos.filter((g:any)=> g.fecha >= desde && g.fecha <= hasta)
 let movProduccion = produccionCostos.filter((p:any)=> p.fecha >= desde && p.fecha <= hasta)
+let movVentas = ventas.filter((v:any)=>
+v.fecha >= desde && v.fecha <= hasta
+)
 
 let totalIngresos = 0
 
@@ -96,6 +112,8 @@ let corrientes=0
 let insumos=0
 let bodega=0
 let produccion=0
+let costoVentas = 0
+let detalleCV:any = {}
 
 movGastos.forEach((g:any)=>{
 let valor = Number(g.total || g.valor || 0)
@@ -107,6 +125,118 @@ else corrientes += valor
 
 movProduccion.forEach((p:any)=>{
 produccion += Number(p.total || 0)
+})
+
+function sumarDetalle(nombre:string,cantidad:number,precio:number){
+
+if(!detalleCV[nombre]){
+detalleCV[nombre]={
+cantidad:0,
+precio,
+total:0
+}
+}
+
+detalleCV[nombre].cantidad += cantidad
+detalleCV[nombre].total += cantidad * precio
+
+}
+
+function ultimoCostoInsumo(nombre:string){
+
+let compras = insumosTabla
+.filter((i:any)=>
+(i.insumo || "").toLowerCase() === nombre.toLowerCase() &&
+(i.tipo || "").toLowerCase() === "compra"
+)
+.sort((a:any,b:any)=> b.id - a.id)
+
+if(compras.length===0) return 0
+
+return Number(compras[0].precio || 0)
+
+}
+
+function ultimoCostoBodega(nombre:string){
+
+let compras = bodegaTabla
+.filter((b:any)=>
+(b.producto || "").toLowerCase() === nombre.toLowerCase() &&
+(b.modo || "").toLowerCase() === "compra"
+)
+.sort((a:any,b:any)=> b.id - a.id)
+
+if(compras.length===0) return 0
+
+return Number(compras[0].precio || 0)
+
+}
+
+movVentas.forEach((v:any)=>{
+console.log("VENTA", v.producto, v.cantidad)
+let cant = Number(v.cantidad || 0)
+let producto = (v.producto || "").toLowerCase()
+
+if(producto.includes("con llave")){
+
+let tapa = ultimoCostoInsumo("Tapa Verde")
+let sticker = ultimoCostoInsumo("Sticker Azul")
+let sello = ultimoCostoInsumo("Sello Blanco")
+
+costoVentas += cant*tapa
+costoVentas += cant*sticker
+costoVentas += cant*sello
+
+sumarDetalle("Tapa Verde",cant,tapa)
+sumarDetalle("Sticker Azul",cant,sticker)
+sumarDetalle("Sello Blanco",cant,sello)
+
+}
+
+else if(producto.includes("sin llave")){
+
+let tapa = ultimoCostoInsumo("Tapa Azul")
+let sticker = ultimoCostoInsumo("Sticker Azul")
+let sello = ultimoCostoInsumo("Sello Blanco")
+
+costoVentas += cant*tapa
+costoVentas += cant*sticker
+costoVentas += cant*sello
+
+sumarDetalle("Tapa Azul",cant,tapa)
+sumarDetalle("Sticker Azul",cant,sticker)
+sumarDetalle("Sello Blanco",cant,sello)
+
+}
+
+else if(producto.includes("paca 15")){
+
+costoVentas += cant * 15 * ultimoCostoBodega("botella600")
+costoVentas += cant * 15 * ultimoCostoInsumo("Fajilla 600 ml")
+
+}
+
+else if(producto.includes("paca 24")){
+
+costoVentas += cant * 24 * ultimoCostoBodega("botella600")
+costoVentas += cant * 24 * ultimoCostoInsumo("Fajilla 600 ml")
+
+}
+
+else if(producto.includes("1l")){
+
+costoVentas += cant * ultimoCostoBodega("botella1L")
+costoVentas += cant * ultimoCostoInsumo("Fajilla 1 L")
+
+}
+
+else if(producto.includes("6000")){
+
+costoVentas += cant * ultimoCostoBodega("botella6000")
+costoVentas += cant * ultimoCostoInsumo("Sticker 6000 ml")
+
+}
+
 })
 
 let mapa:any = {}
@@ -143,6 +273,9 @@ setGastosCorrientes(corrientes)
 setGastosInsumos(insumos)
 setGastosBodega(bodega)
 setGastosProduccion(produccion)
+console.log("COSTO VENTAS =", costoVentas)
+setCostoVendido(costoVentas)
+setDetalleCostoVendido(detalleCV)
 setDataGrafico(array)
 }
 
@@ -153,6 +286,15 @@ if(vista === tipo){
 setVista("")
 setDetalle([])
 return
+}
+
+if(tipo==="costovendido"){
+
+setVista("costovendido")
+setDetalle([])
+
+return
+
 }
 
 const { data: gastos = [] } = await supabase
@@ -312,7 +454,7 @@ setMensaje("")
 
 }
 
-const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega + gastosProduccion
+const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega
 const utilidad = ingresos - totalGastos
 
 const dataPie = [
@@ -423,6 +565,14 @@ Producción
 <h2>${gastosProduccion}</h2>
 </div>
 
+<div
+style={cardBodega}
+onClick={()=>abrirDetalle("costovendido")}
+>
+📦 Costo Vendido
+<h2>${costoVendido.toFixed(2)}</h2>
+</div>
+
 <div style={cardUtilidad(utilidad)}>
 UTILIDAD
 <h1>${utilidad}</h1>
@@ -486,6 +636,36 @@ Precio Unit: ${data.precio}
 
 <div>
 Total: ${data.total.toFixed(2)}
+</div>
+
+</div>
+
+))}
+
+</div>
+
+) : vista === "costovendido" ? (
+
+<div>
+
+{Object.entries(detalleCostoVendido).map(([nombre,data]:any,i)=>(
+
+<div key={i} style={detalleItem}>
+
+<div>
+<b>{nombre}</b>
+</div>
+
+<div>
+Cantidad: {data.cantidad}
+</div>
+
+<div>
+Precio Unit: ${Number(data.precio).toFixed(2)}
+</div>
+
+<div>
+Total: ${Number(data.total).toFixed(2)}
 </div>
 
 </div>

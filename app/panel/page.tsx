@@ -44,7 +44,7 @@ style={logo}
 />
 
 <h1 style={titulo}>
-💧 AGUA HADOLL PANEL PRINCIPAL
+ AGUA HADOLL PANEL PRINCIPAL
 </h1>
 
 </div>

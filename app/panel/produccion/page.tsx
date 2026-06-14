@@ -375,15 +375,70 @@ return(
 
 <div style={formulario}>
 
-<select style={input} value={producto} onChange={(e)=>setProducto(e.target.value)}>
-<option value="">Seleccionar producto</option>
-{productos.map((p,i)=>(
-<option key={i} value={p.nombre}>{p.nombre}</option>
+<div style={gridProductos}>
+
+{productos.map((p:any,i)=>(
+
+<button
+key={i}
+type="button"
+onClick={()=>setProducto(p.nombre)}
+style={
+producto===p.nombre
+? productoActivo
+: productoCard
+}
+>
+
+{p.nombre.includes("con llave") && "🫙🔑"}
+{p.nombre.includes("sin llave") && "🫙"}
+
+{p.nombre.includes("Paca 15") && "📦15"}
+{p.nombre.includes("Paca 24") && "📦24"}
+
+{p.nombre.includes("1L") && "🥤1L"}
+
+{p.nombre.includes("6000") && "💧6L"}
+
+<br/>
+
+{p.nombre}
+
+</button>
+
 ))}
-</select>
 
-<input style={input} type="number" value={cantidad} onChange={(e)=>setCantidad(Number(e.target.value))}/>
+</div>
 
+<input
+style={{
+...input,
+fontSize:"24px",
+fontWeight:"bold",
+textAlign:"center"
+}}
+type="number"
+placeholder="Cantidad a producir"
+value={cantidad}
+onChange={(e)=>setCantidad(Number(e.target.value))}
+/>
+{producto && (
+
+<div style={resumenBox}>
+
+<h3>📋 Producción seleccionada</h3>
+
+<p>
+<b>Producto:</b> {producto}
+</p>
+
+<p>
+<b>Cantidad:</b> {cantidad || 0}
+</p>
+
+</div>
+
+)}
 <button style={boton} onClick={registrarProduccion}>
 Registrar
 </button>
@@ -419,4 +474,39 @@ borderRadius:"14px",
 fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}
+const gridProductos={
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",
+gap:"18px"
+}
+
+const productoCard={
+background:"#ffffff",
+border:"2px solid #cbd5e1",
+borderRadius:"16px",
+padding:"25px",
+cursor:"pointer",
+fontWeight:"bold",
+fontSize:"20px",
+minHeight:"130px"
+}
+
+const productoActivo={
+background:"#f97316",
+color:"#fff",
+border:"2px solid #ea580c",
+borderRadius:"16px",
+padding:"25px",
+cursor:"pointer",
+fontWeight:"bold",
+fontSize:"20px",
+minHeight:"130px"
+}
+
+const resumenBox={
+background:"#fff7ed",
+border:"2px solid #fdba74",
+padding:"15px",
+borderRadius:"12px"
 }

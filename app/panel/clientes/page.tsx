@@ -109,7 +109,12 @@ type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 }
 )
 
-let fecha = new Date().toISOString().slice(0,10)
+let fecha = new Date().toLocaleDateString(
+"en-CA",
+{
+timeZone:"America/Guayaquil"
+}
+)
 
 saveAs(
 data,
