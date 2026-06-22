@@ -69,7 +69,7 @@ style={logo}
 />
 
 <h1 style={titulo}>
-💧 AGUA HADOLL
+AGUA HADOLL
 </h1>
 
 <label style={label}>Usuario</label>
