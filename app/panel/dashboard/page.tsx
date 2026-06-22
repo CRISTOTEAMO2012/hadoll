@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
+import { supabase } from "../../../supabase"
 export default function Dashboard(){
 
 const [ventasHoy,setVentasHoy]=useState(0)
@@ -32,13 +32,15 @@ return ()=>clearInterval(i)
 
 },[])
 
-function cargar(){
+async function cargar(){
 
 let hoy=new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
 let mesActual=hoy.slice(0,7)
 
 // 🔥 VENTAS
-let ventas=JSON.parse(localStorage.getItem("ventas")||"[]")
+const { data: ventas = [] } = await supabase
+.from("ventas")
+.select("*")
 
 let ventasHoyData=ventas.filter(v=>v.fecha===hoy)
 
@@ -93,7 +95,9 @@ let clienteMas=Object.entries(clientesTop)
 setClienteTop(clienteMas[0]?.[0] || "-")
 
 // 🔥 PRODUCCION
-let produccion=JSON.parse(localStorage.getItem("produccion")||"[]")
+const { data: produccion = [] } = await supabase
+.from("produccion")
+.select("*")
 
 let produccionHoyData=produccion.filter(p=>p.fecha===hoy)
 
@@ -103,25 +107,32 @@ acc+Number(p.cantidad||0)
 
 setProduccionHoy(totalProduccion)
 
-// 🔥 ENVASES
-let prestadosData=JSON.parse(localStorage.getItem("envasesprestados")||"[]")
+// 🔥 ENVASES PRESTADOS
+const { data: prestadosData = [] } = await supabase
+.from("envases_prestados")
+.select("*")
 
-let totalPrestados=prestadosData.reduce((acc,p)=>
-acc+Number(p.cantidad||0)
+let totalPrestados = prestadosData.reduce((acc:any,p:any)=>
+acc + Number(p.cantidad || 0)
 ,0)
 
 setPrestados(totalPrestados)
 
-let vendidosData=JSON.parse(localStorage.getItem("envasesvendidos")||"[]")
+// 🔥 ENVASES VENDIDOS
+const { data: vendidosData = [] } = await supabase
+.from("envases_vendidos")
+.select("*")
 
-let totalVendidos=vendidosData.reduce((acc,v)=>
-acc+Number(v.cantidad||0)
+let totalVendidos = vendidosData.reduce((acc:any,v:any)=>
+acc + Number(v.cantidad || 0)
 ,0)
 
 setVendidos(totalVendidos)
 
 // 🔥 CLIENTES
-let clientesData=JSON.parse(localStorage.getItem("clientes")||"[]")
+const { data: clientesData = [] } = await supabase
+.from("clientes")
+.select("*")
 
 setClientes(clientesData.length)
 
@@ -156,12 +167,18 @@ return dias >= 15
 setClientesInactivos(inactivos.length)
 
 // 🔥 VEHICULOS
-let vehiculosData=JSON.parse(localStorage.getItem("vehiculos")||"[]")
+const { data: vehiculosData = [] } = await supabase
+.from("vehiculos")
+.select("*")
 
 setVehiculos(vehiculosData.length)
 
 // 🔥 INVENTARIO
-let inventario=JSON.parse(localStorage.getItem("inventario")||"{}")
+const { data: inventario } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
 
 let empresaTotal=0
 let doritaTotal=0
@@ -201,7 +218,9 @@ setDorita(doritaTotal)
 setVehiculoStock(vehiculoTotal)
 
 // 🔥 CAJA
-let cajaData=JSON.parse(localStorage.getItem("caja")||"[]")
+const { data: cajaData = [] } = await supabase
+.from("caja")
+.select("*")
 
 let totalCaja=0
 
@@ -218,16 +237,21 @@ totalCaja-=Number(c.monto||0)
 setCaja(totalCaja)
 
 // 🔥 CUENTAS POR COBRAR
-let cuentas=JSON.parse(localStorage.getItem("cuentasCobrar")||"[]")
+const { data: cuentas = [] } = await supabase
+.from("deudas")
+.select("*")
+.eq("estado","pendiente")
 
 let totalCuentas=cuentas.reduce((acc,c)=>
-acc+Number(c.saldo||0)
+acc+Number(c.monto||0)
 ,0)
 
 setCuentasCobrar(totalCuentas)
 
 // 🔥 PEDIDOS
-let pedidos=JSON.parse(localStorage.getItem("pedidos")||"[]")
+const { data: pedidos = [] } = await supabase
+.from("pedidos")
+.select("*")
 
 setPedidosPendientes(pedidos.length)
 

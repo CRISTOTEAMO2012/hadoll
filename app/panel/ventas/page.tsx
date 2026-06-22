@@ -346,7 +346,7 @@ const { error: errorCajaMixto } = await supabase
 .insert([
 {
 tipo:"ingreso",
-detalle:`Abono venta ${producto}`,
+detalle:`Venta de ${producto}`,
 monto: valorAbono,
 fecha:hoy,
 metodo:metodoMixto

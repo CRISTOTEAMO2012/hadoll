@@ -565,15 +565,31 @@ onChange={e=>setFiltroCiudad(e.target.value)}
 
 <div key={i} style={card}>
 
-<h3>{c.nombre}</h3>
+<div style={{fontWeight:"bold",minWidth:"180px"}}>
+{c.nombre}
+</div>
 
-<p>📍 {c.direccion}</p>
-<p>📝 {c.referencia}</p>
-<p>🏙 {c.ciudad}</p>
-<p>📞 {c.telefono}</p>
-<p>📅 Ruta: {c.dia}</p>
+<div style={{minWidth:"280px"}}>
+📍 {c.direccion}
+</div>
 
-<div style={{marginTop:"10px"}}>
+<div style={{minWidth:"180px"}}>
+📝 {c.referencia}
+</div>
+
+<div style={{minWidth:"120px"}}>
+🏙 {c.ciudad}
+</div>
+
+<div style={{minWidth:"140px"}}>
+📞 {c.telefono}
+</div>
+
+<div style={{minWidth:"120px"}}>
+📅 Ruta: {c.dia}
+</div>
+
+<div>
 
 <button
 style={botonEditar}
@@ -657,17 +673,22 @@ marginTop:"10px"
 }
 
 const grid={
-display:"grid",
-gridTemplateColumns:"repeat(3,260px)",
-gap:"20px",
+display:"flex",
+flexDirection:"column" as const,
+gap:"10px",
 marginTop:"20px"
 }
 
 const card:any = {
 background:"#fff",
-padding:"20px",
+padding:"12px",
 borderRadius:"10px",
-boxShadow:"0 4px 10px rgba(0,0,0,0.1)"
+boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+display:"flex",
+alignItems:"center",
+justifyContent:"space-between",
+gap:"15px",
+flexWrap:"wrap"
 }
 
 const botonEditar={

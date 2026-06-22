@@ -24,10 +24,13 @@ const[dataPastel,setDataPastel]=useState([])
 const[topClientes,setTopClientes]=useState([])
 const[clientesPerdidos,setClientesPerdidos]=useState([])
 const[rankingProductos,setRankingProductos]=useState([])
+const[ciudadFiltro,setCiudadFiltro]=useState("")
+const[ciudades,setCiudades]=useState<any[]>([])
+const[resumenCiudad,setResumenCiudad]=useState<any[]>([])
 
 useEffect(()=>{
 generarReporte()
-},[fechaInicio,fechaFin])
+},[fechaInicio,fechaFin,ciudadFiltro])
 
 async function generarReporte(){
 
@@ -38,6 +41,14 @@ const { data: ventas = [] } = await supabase
 const { data: clientesSistema = [] } = await supabase
 .from("clientes")
 .select("*")
+
+setCiudades([
+...new Set(
+clientesSistema
+.map((c:any)=>c.ciudad)
+.filter(Boolean)
+)
+])
 
 const { data: caja = [] } = await supabase
 .from("caja")
@@ -139,6 +150,42 @@ setClientesPerdidos(perdidos)
 
 // PRODUCTOS
 let rankingProd = Object.entries(productosConteo).sort((a,b)=>b[1]-a[1])
+if(ciudadFiltro){
+
+let clientesCiudad = clientesSistema
+.filter((c:any)=>
+(c.ciudad || "").trim().toLowerCase()
+===
+(ciudadFiltro || "").trim().toLowerCase()
+)
+.map((c:any)=> c.nombre)
+
+let resumen:any = {}
+
+filtradas.forEach((v:any)=>{
+
+if(clientesCiudad.includes(v.cliente)){
+
+if(!resumen[v.producto]){
+resumen[v.producto]=0
+}
+
+resumen[v.producto]+=Number(v.cantidad)
+
+}
+
+})
+
+setResumenCiudad(
+Object.entries(resumen)
+.sort((a:any,b:any)=>b[1]-a[1])
+)
+
+}else{
+
+setResumenCiudad([])
+
+}
 setRankingProductos(rankingProd)
 
 setProductoTop(rankingProd[0]?.[0] || "-")
@@ -205,11 +252,30 @@ return(
 
 <div style={contenedor}>
 
-<h1 style={titulo}>📊 Dashboard de Ventas</h1>
+<h1 style={titulo}>📊 REPORTE GENERAL DE VENTAS </h1>
 
 <div style={filtros}>
 <input type="date" value={fechaInicio} onChange={e=>setFechaInicio(e.target.value)} style={input}/>
 <input type="date" value={fechaFin} onChange={e=>setFechaFin(e.target.value)} style={input}/>
+<select
+style={input}
+value={ciudadFiltro}
+onChange={(e)=>setCiudadFiltro(e.target.value)}
+>
+
+<option value="">
+Todas las ciudades
+</option>
+
+{ciudades.map((c:any,i:number)=>(
+
+<option key={i} value={c}>
+{c}
+</option>
+
+))}
+
+</select>
 <button style={boton} onClick={exportarExcel}>⬇ Excel</button>
 </div>
 
@@ -274,6 +340,39 @@ return(
 ))}
 
 </div>
+{ciudadFiltro && (
+
+<div style={card}>
+
+<h2>
+🌎 Ventas por Ciudad: {ciudadFiltro}
+</h2>
+
+{resumenCiudad.length===0 ? (
+
+<p>No existen ventas</p>
+
+) : (
+
+resumenCiudad.map((p:any,i:number)=>(
+
+<div key={i} style={item}>
+
+<b>{p[0]}</b>
+
+<span>
+{p[1]} unidades
+</span>
+
+</div>
+
+))
+
+)}
+
+</div>
+
+)}
 
 {/* INACTIVOS */}
 <div style={card}>
