@@ -22,6 +22,13 @@ const [abono,setAbono]=useState("")
 const [metodoMixto,setMetodoMixto]=useState("efectivo")
 
 const [tipoEnvase,setTipoEnvase]=useState("cambio")
+
+const [devolucionManual,setDevolucionManual]=useState(false)
+
+const [vaciosConLlave,setVaciosConLlave]=useState(0)
+
+const [vaciosSinLlave,setVaciosSinLlave]=useState(0)
+
 const [mensaje,setMensaje]=useState("")
 useEffect(()=>{
 cargarDatos()
@@ -68,7 +75,7 @@ if(nombre.includes("paca 15")) return "paca15"
 if(nombre.includes("paca 24")) return "paca24"
 if(nombre.includes("con llave")) return "botellon20llave_llenos"
 if(nombre.includes("sin llave")) return "botellon20sin_llave_llenos"
-
+if(nombre.includes("llave")) return "llave_botellon"
 return null
 }
 
@@ -146,7 +153,12 @@ return
 inventario[origen][clave] -= cant
 
 // 🔁 CAMBIO BOTELLONES
-if(producto.toLowerCase().includes("20l") && tipoEnvase==="cambio"){
+if(
+producto.toLowerCase().includes("20l") &&
+tipoEnvase==="cambio"
+){
+
+if(!devolucionManual){
 
 let claveVacio:any = obtenerClaveVacio(producto)
 
@@ -154,7 +166,33 @@ if(!inventario[origen][claveVacio]){
 inventario[origen][claveVacio]=0
 }
 
-inventario[origen][claveVacio] += cant
+inventario[origen][claveVacio]+=cant
+
+}else{
+
+if(
+(vaciosConLlave + vaciosSinLlave) !== cant
+){
+alert(
+"La suma de vacíos debe ser igual a la cantidad vendida"
+)
+return
+}
+
+if(!inventario[origen]["botellon20llave_vacios"]){
+inventario[origen]["botellon20llave_vacios"]=0
+}
+
+if(!inventario[origen]["botellon20sin_llave_vacios"]){
+inventario[origen]["botellon20sin_llave_vacios"]=0
+}
+
+inventario[origen]["botellon20llave_vacios"] += vaciosConLlave
+
+inventario[origen]["botellon20sin_llave_vacios"] += vaciosSinLlave
+
+}
+
 }
 
 // 🫙 ENVASE PRESTADO
@@ -406,6 +444,9 @@ setPago("efectivo")
 setAbono("")
 setMetodoMixto("efectivo")
 setTipoEnvase("cambio")
+setDevolucionManual(false)
+setVaciosConLlave(0)
+setVaciosSinLlave(0)
 }
 
 return(
@@ -532,6 +573,91 @@ onClick={()=>setTipoEnvase("vendido")}
 >
 💰 Vendido
 </button>
+
+</div>
+
+)}
+
+{producto.toLowerCase().includes("20l") &&
+tipoEnvase==="cambio" && (
+
+<div
+style={{
+border:"1px solid #d1d5db",
+padding:"12px",
+borderRadius:"10px"
+}}
+>
+
+<label
+style={{
+display:"flex",
+gap:"10px",
+alignItems:"center"
+}}
+>
+
+<input
+type="checkbox"
+checked={devolucionManual}
+onChange={(e)=>setDevolucionManual(e.target.checked)}
+/>
+
+Devolución personalizada
+
+</label>
+
+{devolucionManual && (
+
+<>
+
+<div>
+
+<p
+style={{
+fontWeight:"bold",
+marginBottom:"5px"
+}}
+>
+🔵 Vacíos con llave recibidos
+</p>
+
+<input
+style={input}
+type="number"
+value={vaciosConLlave}
+onChange={(e)=>
+setVaciosConLlave(Number(e.target.value))
+}
+/>
+
+</div>
+
+<div>
+
+<p
+style={{
+fontWeight:"bold",
+marginBottom:"5px"
+}}
+>
+⚪ Vacíos sin llave recibidos
+</p>
+
+<input
+style={input}
+type="number"
+value={vaciosSinLlave}
+onChange={(e)=>
+setVaciosSinLlave(Number(e.target.value))
+}
+/>
+
+</div>
+
+</>
+
+)}
 
 </div>
 
