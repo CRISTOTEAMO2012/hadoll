@@ -63,6 +63,13 @@ setProductos(productosData || [])
 let clientesFiltrados = clientes.filter((c:any)=>
 (c.nombre || "").toLowerCase().includes(busqueda.toLowerCase())
 )
+const vehiculo1 = vehiculos.find(
+(v:any)=>v.codigo==="vehiculo1"
+)
+
+const vehiculo2 = vehiculos.find(
+(v:any)=>v.codigo==="vehiculo2"
+)
 
 // 🔥 TRADUCTOR CLAVE
 function obtenerClave(nombre:string){
@@ -516,14 +523,14 @@ onClick={()=>setOrigen("dorita")}
 style={origen==="vehiculo1" ? botonActivo : botonIcono}
 onClick={()=>setOrigen("vehiculo1")}
 >
-🚚 Vehículo 1
+🚚 {vehiculo1?.marca || "Vehículo 1"}
 </button>
 
 <button
 style={origen==="vehiculo2" ? botonActivo : botonIcono}
 onClick={()=>setOrigen("vehiculo2")}
 >
-🚐 Vehículo 2
+🚐 {vehiculo2?.marca || "Vehículo 2"}
 </button>
 
 </div>
