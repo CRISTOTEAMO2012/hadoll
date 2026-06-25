@@ -75,7 +75,9 @@ if(!cantidad) return alert("Ingrese cantidad")
 const { data: movimientos, error: errorMovimientos } = await supabase
 .from("envases_prestados")
 .select("*")
-.eq("cliente",cliente)
+
+alert(JSON.stringify(movimientos))
+.eq("envase",producto)
 
 if(errorMovimientos){
 
@@ -88,7 +90,7 @@ return
 }
 
 let saldoCliente = 0
-
+console.log(movimientos)
 movimientos?.forEach((m:any)=>{
 
 if(m.tipo==="prestado" || m.tipo==="inicial"){
@@ -160,13 +162,7 @@ let inventario:any = inventarioData
 
 let clave = ""
 
-if(producto.includes("con llave")){
-clave = "botellon20llave_vacios"
-}
-
-if(producto.includes("sin llave")){
-clave = "botellon20sin_llave_vacios"
-}
+let clave = producto
 
 inventario[destino][clave] += Number(cantidad)
 
@@ -257,11 +253,11 @@ style={input}
 Seleccione envase
 </option>
 
-<option value="Botellón 20L con llave">
+<option value="botellon20llave_vacios">
 Botellón 20L con llave
 </option>
 
-<option value="Botellón 20L sin llave">
+<option value="botellon20sin_llave_vacios">
 Botellón 20L sin llave
 </option>
 

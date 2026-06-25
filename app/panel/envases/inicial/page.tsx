@@ -100,7 +100,7 @@ const { error } = await supabase
 .insert([
 {
 cliente,
-envase:nombreEnvase,
+envase:tipo,
 cantidad:Number(cantidad),
 fecha:new Date().toLocaleDateString(
 "en-CA",
@@ -193,11 +193,11 @@ onChange={(e)=>setTipo(e.target.value)}
 Tipo de envase
 </option>
 
-<option value="Botellón 20L con llave">
+<option value="botellon20llave_vacios">
 Botellón 20L con llave
 </option>
 
-<option value="Botellón 20L sin llave">
+<option value="botellon20sin_llave_vacios">
 Botellón 20L sin llave
 </option>
 
