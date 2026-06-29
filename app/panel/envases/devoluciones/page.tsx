@@ -76,9 +76,6 @@ const { data: movimientos, error: errorMovimientos } = await supabase
 .from("envases_prestados")
 .select("*")
 
-alert(JSON.stringify(movimientos))
-.eq("envase",producto)
-
 if(errorMovimientos){
 
 console.log(errorMovimientos)
@@ -159,8 +156,6 @@ return
 }
 
 let inventario:any = inventarioData
-
-let clave = ""
 
 let clave = producto
 

@@ -211,29 +211,53 @@ sumarDetalle("Sello Blanco",cant,sello)
 
 else if(producto.includes("paca 15")){
 
-costoVentas += cant * 15 * ultimoCostoBodega("botella600")
-costoVentas += cant * 15 * ultimoCostoInsumo("Fajilla 600 ml")
+let botella = ultimoCostoBodega("botella600")
+let fajilla = ultimoCostoInsumo("Fajilla 600 ml")
+
+costoVentas += cant * 15 * botella
+costoVentas += cant * 15 * fajilla
+
+sumarDetalle("Botella 600 ml", cant * 15, botella)
+sumarDetalle("Fajilla 600 ml", cant * 15, fajilla)
 
 }
 
 else if(producto.includes("paca 24")){
 
-costoVentas += cant * 24 * ultimoCostoBodega("botella600")
-costoVentas += cant * 24 * ultimoCostoInsumo("Fajilla 600 ml")
+let botella = ultimoCostoBodega("botella600")
+let fajilla = ultimoCostoInsumo("Fajilla 600 ml")
+
+costoVentas += cant * 24 * botella
+costoVentas += cant * 24 * fajilla
+
+sumarDetalle("Botella 600 ml", cant * 24, botella)
+sumarDetalle("Fajilla 600 ml", cant * 24, fajilla)
 
 }
 
 else if(producto.includes("1l")){
 
-costoVentas += cant * ultimoCostoBodega("botella1L")
-costoVentas += cant * ultimoCostoInsumo("Fajilla 1 L")
+let botella = ultimoCostoBodega("botella1L")
+let fajilla = ultimoCostoInsumo("Fajilla 1 L")
+
+costoVentas += cant * botella
+costoVentas += cant * fajilla
+
+sumarDetalle("Botella 1 L", cant, botella)
+sumarDetalle("Fajilla 1 L", cant, fajilla)
 
 }
 
 else if(producto.includes("6000")){
 
-costoVentas += cant * ultimoCostoBodega("botella6000")
-costoVentas += cant * ultimoCostoInsumo("Sticker 6000 ml")
+let botella = ultimoCostoBodega("botella6000")
+let sticker = ultimoCostoInsumo("Sticker 6000 ml")
+
+costoVentas += cant * botella
+costoVentas += cant * sticker
+
+sumarDetalle("Botella 6000 ml", cant, botella)
+sumarDetalle("Sticker 6000 ml", cant, sticker)
 
 }
 
@@ -455,7 +479,7 @@ setMensaje("")
 }
 
 const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega
-const utilidad = ingresos - totalGastos
+const utilidad = ingresos - totalGastos - costoVendido
 
 const dataPie = [
 { name: "Ingresos", value: ingresos },

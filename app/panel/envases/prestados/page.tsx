@@ -45,27 +45,34 @@ let agrupado:any = {}
 
 filtrados.forEach((p:any)=>{
 
-if(!agrupado[p.cliente]){
-agrupado[p.cliente]=0
+console.log(p.cliente, p.tipo, p.cantidad)
+
+let cliente = (p.cliente || "").trim()
+
+if(agrupado[cliente] === undefined){
+agrupado[cliente] = 0
 }
 
 if(
 p.tipo==="prestado" ||
 p.tipo==="inicial"
 ){
-agrupado[p.cliente]+=Number(p.cantidad)
+agrupado[cliente] += Number(p.cantidad)
 }
 
 if(p.tipo==="devuelto"){
-agrupado[p.cliente]-=Number(p.cantidad)
+agrupado[cliente] -= Number(p.cantidad)
 }
 
 })
 
 let resumenArray = Object.entries(agrupado).map(([cliente,total])=>({
-cliente,
+cliente: cliente.trim(),
 total
 }))
+console.log("AGRUPADO:", agrupado)
+console.log("RESUMEN:", resumenArray)
+console.log(resumenArray)
 
 setResumen(resumenArray)
 

@@ -7,7 +7,7 @@ export default function Rutas(){
 
 const[dia,setDia]=useState("Lunes")
 const[clientes,setClientes]=useState([])
-
+const [ventas,setVentas]=useState<any[]>([])
 
 useEffect(()=>{
 cargarTodo()
@@ -27,6 +27,17 @@ return
 }
 
 setClientes(data || [])
+
+const { data: ventasData, error: errorVentas } = await supabase
+.from("ventas")
+.select("cliente,fecha")
+
+if(errorVentas){
+console.log(errorVentas)
+return
+}
+
+setVentas(ventasData || [])
 
 }
 
@@ -157,7 +168,35 @@ window.open(`https://wa.me/593${numero}?text=${encodeURIComponent(mensaje)}`)
 function ir(c){
 window.open(`https://www.google.com/maps?q=${c.lat},${c.lng}`)
 }
+// 🔥 CLIENTES RECOMENDADOS POR ÚLTIMA COMPRA
 
+let recomendados = clientes.filter((c:any)=>{
+
+const ventasCliente = ventas.filter(
+(v:any)=>v.cliente === c.nombre
+)
+
+if(ventasCliente.length === 0){
+return false
+}
+
+let ultimaFecha = ventasCliente
+.sort((a:any,b:any)=>
+new Date(b.fecha).getTime() -
+new Date(a.fecha).getTime()
+)[0]
+
+let dias = Math.floor(
+(
+new Date().getTime() -
+new Date(ultimaFecha.fecha).getTime()
+)
+/(1000*60*60*24)
+)
+
+return dias >= 8
+
+})
 // MAPA
 let centro = filtrados.length > 0
 ? {
@@ -237,7 +276,138 @@ lng:c.lng
 ))}
 
 </div>
+<h2
+style={{
+marginTop:"40px",
+color:"#b91c1c",
+fontSize:"28px",
+fontWeight:"bold",
+textAlign:"center"
+}}
+>
+🚨 CLIENTES PRIORITARIOS PARA REABASTECIMIENTO 🚨
+</h2>
 
+<div style={lista}>
+
+{recomendados.length===0 ? (
+
+<p>Todos los clientes han comprado recientemente.</p>
+
+) : (
+
+recomendados.map((c:any,i:number)=>(
+
+<div key={i} style={cardCliente}>
+
+<div>
+
+<b>{c.nombre}</b>
+
+{(() => {
+
+const ventasCliente = ventas.filter(
+(v:any)=>v.cliente === c.nombre
+)
+
+const ultima = ventasCliente
+.sort((a:any,b:any)=>
+new Date(b.fecha).getTime() -
+new Date(a.fecha).getTime()
+)[0]
+
+const dias = Math.floor(
+(
+new Date().getTime() -
+new Date(ultima.fecha).getTime()
+)
+/(1000*60*60*24)
+)
+
+let estado = ""
+let color = ""
+
+if(dias >= 15){
+estado = "🔴 VISITA URGENTE"
+color = "#dc2626"
+}
+else if(dias >= 11){
+estado = "🟠 VISITA PRIORITARIA"
+color = "#ea580c"
+}
+else{
+estado = "🟡 RECOMENDADO VISITAR"
+color = "#ca8a04"
+}
+
+return (
+
+<>
+
+<p>
+📅 Última compra hace <b>{dias}</b> días
+</p>
+
+<p
+style={{
+color,
+fontWeight:"bold"
+}}
+>
+{estado}
+</p>
+
+<p>{c.ciudad}</p>
+
+<p
+style={{
+fontSize:"12px",
+color:"#555"
+}}
+>
+{c.direccion}
+</p>
+
+</>
+
+)
+
+})()}
+
+</div>
+
+<div style={acciones}>
+
+<button
+style={btnW}
+onClick={()=>whatsapp(c)}
+>
+💬
+</button>
+
+<button
+style={btnC}
+onClick={()=>llamar(c)}
+>
+📞
+</button>
+
+<button
+style={btnM}
+onClick={()=>ir(c)}
+>
+🧭
+</button>
+
+</div>
+
+</div>
+
+))
+
+)}
+
+</div>
 </div>
 )
 }

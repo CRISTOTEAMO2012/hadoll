@@ -213,7 +213,7 @@ const { error } = await supabase
 .from("envases_prestados")
 .insert([
 {
-cliente: cliente.trim().toUpperCase(),
+cliente,
 envase: obtenerClaveVacio(producto),
 cantidad: cant,
 fecha: hoy,
