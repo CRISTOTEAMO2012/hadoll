@@ -119,7 +119,8 @@ ${filtrados.map((c,i)=>`
 <li style="margin-bottom:10px;">
 <b>${i+1}. ${c.nombre}</b><br/>
 ${c.ciudad || ""}<br/>
-${c.direccion || ""}
+${c.direccion || ""}<br/>
+<b>Referencia:</b> ${c.referencia || "Sin referencia"}
 </li>
 `).join("")}
 </ol>
@@ -258,9 +259,25 @@ lng:c.lng
 <div key={i} style={cardCliente}>
 
 <div>
+
 <b>{i+1}. {c.nombre}</b>
-<p>{c.ciudad}</p>
-<p style={{fontSize:"12px",color:"#555"}}>{c.direccion}</p>
+
+<p><b>🏙 Ciudad:</b> {c.ciudad}</p>
+
+<p style={{fontSize:"12px",color:"#555"}}>
+📍 {c.direccion}
+</p>
+
+<p
+style={{
+fontSize:"13px",
+color:"#dc2626",
+fontWeight:"bold"
+}}
+>
+📝 Referencia: {c.referencia || "Sin referencia"}
+</p>
+
 </div>
 
 <div style={acciones}>
@@ -357,7 +374,7 @@ fontWeight:"bold"
 {estado}
 </p>
 
-<p>{c.ciudad}</p>
+<p><b>🏙 Ciudad:</b> {c.ciudad}</p>
 
 <p
 style={{
@@ -365,7 +382,17 @@ fontSize:"12px",
 color:"#555"
 }}
 >
-{c.direccion}
+📍 {c.direccion}
+</p>
+
+<p
+style={{
+fontSize:"13px",
+color:"#dc2626",
+fontWeight:"bold"
+}}
+>
+📝 Referencia: {c.referencia || "Sin referencia"}
 </p>
 
 </>

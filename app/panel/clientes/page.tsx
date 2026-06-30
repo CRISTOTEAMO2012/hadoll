@@ -260,6 +260,7 @@ dia,
 ciudad,
 lat: coords?.lat || null,
 lng: coords?.lng || null
+
 }
 ])
 .select()
