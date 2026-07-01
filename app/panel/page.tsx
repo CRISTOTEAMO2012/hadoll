@@ -131,6 +131,13 @@ style={logo}
 🧪 Insumos
 </Link>
 
+<Link
+href="/panel/control-planta"
+style={{...boton,background:"#0891b2"}}
+>
+🏭 Control de Planta
+</Link>
+
 </>
 )}
 
