@@ -250,28 +250,7 @@ setEditandoIndex(null)
 // NUEVO CLIENTE
 const { data: nuevoCliente, error } = await supabase
 .from("clientes")
-.insert([
-{
-nombre,
-direccion,
-referencia,
-telefono,
-dia,
-ciudad,
-lat: coords?.lat || null,
-lng: coords?.lng || null
-
-}
-])
-.select()
-
-if(error){
-
-alert("ERROR SUPABASE: " + error.message)
-console.log(error)
-return
-
-}
+   
 
 if(nuevoCliente){
 

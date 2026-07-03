@@ -4,19 +4,40 @@ import {useEffect,useState} from "react"
 import { LoadScript, GoogleMap, Marker, Polyline } from "@react-google-maps/api"
 import { supabase } from "@/supabase"
 export default function Rutas(){
+const fechaEcuador = () => {
+  return new Date()
+    .toLocaleString("sv-SE", { timeZone: "America/Guayaquil" })
+    .replace(" ", "T")
+}
+
+function ahoraEcuadorISO(){
+  const ahora = new Date()
+  const ecuador = new Date(
+    ahora.toLocaleString("en-US", { timeZone: "America/Guayaquil" })
+  )
+  return ecuador.toISOString()
+}
 
 const[dia,setDia]=useState("Lunes")
 const[clientes,setClientes]=useState([])
-const [ventas,setVentas]=useState<any[]>([])
+const [visitas,setVisitas]=useState<any[]>([])
+const [ventas, setVentas] = useState<any[]>([])
+const [clienteSeleccionado,setClienteSeleccionado]=useState<any>(null)
+const [mostrarVisita,setMostrarVisita]=useState(false)
+const [diasReprogramar,setDiasReprogramar]=useState(3)
+const [actualizando,setActualizando]=useState(false)
 
-useEffect(()=>{
-cargarTodo()
-const i=setInterval(cargarTodo,2000)
-return ()=>clearInterval(i)
-},[])
+useEffect(() => {
+  cargarTodo()
+}, [])
 
 async function cargarTodo(){
+setActualizando(true)    
+const { data: visitasData } = await supabase
+.from("visitas_ruta")
+.select("*")
 
+setVisitas(visitasData || [])
 const { data, error } = await supabase
 .from("clientes")
 .select("*")
@@ -38,6 +59,7 @@ return
 }
 
 setVentas(ventasData || [])
+setActualizando(false)
 
 }
 
@@ -98,13 +120,30 @@ return ordenados
 }
 
 // CLIENTES DEL DÍA
+let hoy = new Date().toISOString().substring(0,10)
+
 let filtrados = ordenarRuta(
-clientes.filter(
-c =>
-c.dia?.toLowerCase() === dia.toLowerCase() &&
-c.lat &&
-c.lng
+
+clientes.filter((c:any)=>{
+
+if(
+c.dia?.toLowerCase()!==dia.toLowerCase()
+)return false
+
+if(!c.lat || !c.lng)
+return false
+
+const visitaHoy = visitas.find((v:any)=>
+
+v.cliente_id===c.id &&
+v.fecha_visita===hoy
+
 )
+
+return !visitaHoy
+
+})
+
 )
 
 // 🖨️ IMPRIMIR RUTA (AGREGADO)
@@ -149,7 +188,6 @@ ventana.document.close()
 ventana.print()
 
 }
-
 
 
 // 📞
@@ -208,7 +246,99 @@ lng: filtrados[0].lng
 lat:-1.67,
 lng:-78.65
 }
+async function registrarVisita(vendido:boolean){
 
+if(!clienteSeleccionado) return
+
+const hoy = new Date()
+
+const proxima = new Date()
+
+if(!vendido){
+proxima.setDate(proxima.getDate()+diasReprogramar)
+}
+
+const fechaHoy = fechaEcuador()
+
+const fechaProxima = proxima.toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+
+const { error } = await supabase
+.from("visitas_ruta")
+
+.insert({
+
+  cliente_id: clienteSeleccionado.id,
+  fecha_visita: fechaHoy,
+  fecha_ecuador: fechaEcuador(),   // 🔥 AGREGA ESTO
+  estado: vendido ? "VENDIDO" : "NO VENDIDO",
+  motivo_no_venta: vendido ? null : "Reprogramado",
+  revisitar_el: vendido ? null : fechaProxima,
+  observaciones: null
+
+})
+
+if(error){
+
+console.log(error)
+alert("Error al registrar")
+return
+
+}
+
+setMostrarVisita(false)
+
+setClienteSeleccionado(null)
+
+await cargarTodo()
+
+alert("✅ Visita registrada")
+
+}
+async function registrarVisitaRapida(
+  cliente:any,
+  vendido:boolean,
+  dias:number
+){
+
+  const hoy = new Date()
+
+const fechaVisita = fechaEcuador()
+
+  const proxima = new Date()
+
+  proxima.setDate(proxima.getDate()+dias)
+
+  const revisarEl = new Date(proxima).toLocaleString("sv-SE", {
+  timeZone: "America/Guayaquil"
+}).replace(" ", "T")
+
+  const { error } = await supabase
+  .from("visitas_ruta")
+ .insert({
+
+  cliente_id: cliente.id,
+  fecha_visita: fechaVisita,
+  fecha_ecuador: fechaEcuador(),   // 🔥 AGREGA ESTO
+  estado: vendido ? "VENDIDO" : "NO VENDIDO",
+  motivo_no_venta: vendido ? null : "Reprogramado",
+  revisitar_el: vendido ? null : revisarEl,
+  observaciones: null
+
+})
+
+  if(error){
+    console.log(error)
+    alert(error.message)
+    return
+  }
+
+  await cargarTodo()
+
+  alert("✅ Visita registrada")
+}
 return(
 
 <div style={container}>
@@ -229,6 +359,22 @@ return(
 {/* 🖨️ BOTÓN */}
 <button onClick={imprimirRuta} style={btnPrint}>
 🖨️ Imprimir Ruta
+</button>
+
+<button
+onClick={cargarTodo}
+disabled={actualizando}
+style={{
+background:"#16a34a",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+opacity:actualizando ? 0.7 : 1
+}}
+>
+{actualizando ? "🔄 Actualizando..." : "🔄 Actualizar"}
 </button>
 
 </div>
@@ -258,9 +404,17 @@ lng:c.lng
 
 <div key={i} style={cardCliente}>
 
-<div>
+<div style={{flex:1}}>
 
-<b>{i+1}. {c.nombre}</b>
+<div
+style={{
+fontSize:"18px",
+fontWeight:"700",
+marginBottom:"10px"
+}}
+>
+{i+1}. {c.nombre}
+</div>
 
 <p><b>🏙 Ciudad:</b> {c.ciudad}</p>
 
@@ -282,9 +436,92 @@ fontWeight:"bold"
 
 <div style={acciones}>
 
-<button style={btnW} onClick={()=>whatsapp(c)}>💬</button>
-<button style={btnC} onClick={()=>llamar(c)}>📞</button>
-<button style={btnM} onClick={()=>ir(c)}>🧭</button>
+<button style={btnW} onClick={()=>whatsapp(c)}>
+💬 WhatsApp
+</button>
+
+<button style={btnC} onClick={()=>llamar(c)}>
+📞 Llamar
+</button>
+
+<button style={btnM} onClick={()=>ir(c)}>
+🧭 Mapa
+</button>
+
+<button
+style={{
+background:"#16a34a",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+onClick={()=>registrarVisitaRapida(c,true,0)}
+>
+✅ Vendido
+</button>
+
+<button
+style={{
+background:"#ea580c",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+onClick={()=>registrarVisitaRapida(c,false,2)}
+>
+🔁2
+</button>
+
+<button
+style={{
+background:"#ea580c",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+onClick={()=>registrarVisitaRapida(c,false,3)}
+>
+🔁3
+</button>
+
+<button
+style={{
+background:"#ea580c",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+onClick={()=>registrarVisitaRapida(c,false,5)}
+>
+🔁5
+</button>
+
+<button
+style={{
+background:"#ea580c",
+color:"#fff",
+padding:"8px 12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"bold"
+}}
+onClick={()=>registrarVisitaRapida(c,false,7)}
+>
+🔁7
+</button>
 
 </div>
 
@@ -409,21 +646,38 @@ fontWeight:"bold"
 style={btnW}
 onClick={()=>whatsapp(c)}
 >
-💬
+💬 WhatsApp
 </button>
 
 <button
 style={btnC}
 onClick={()=>llamar(c)}
 >
-📞
+📞 Llamar
 </button>
 
 <button
 style={btnM}
 onClick={()=>ir(c)}
 >
-🧭
+🧭 Mapa
+</button>
+<button
+style={{
+background:"#2563eb",
+color:"#fff",
+padding:"6px 10px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+marginTop:"5px"
+}}
+onClick={()=>{
+setClienteSeleccionado(c)
+setMostrarVisita(true)
+}}
+>
+✅ Visita
 </button>
 
 </div>
@@ -433,14 +687,139 @@ onClick={()=>ir(c)}
 ))
 
 )}
+{mostrarVisita && clienteSeleccionado && (
 
+<div
+style={{
+position:"fixed",
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}}
+>
+
+<div
+style={{
+background:"#fff",
+padding:"30px",
+borderRadius:"15px",
+width:"500px"
+}}
+>
+
+<h2>🚚 Registrar Visita</h2>
+
+<hr/>
+
+<p>
+
+<b>Cliente:</b> {clienteSeleccionado.nombre}
+
+</p>
+
+<p>
+
+¿Se realizó la venta?
+
+</p>
+
+<button
+onClick={()=>registrarVisita(true)}
+style={{
+background:"#16a34a",
+color:"#fff",
+border:"none",
+padding:"12px 18px",
+borderRadius:"8px",
+cursor:"pointer",
+width:"100%",
+marginBottom:"15px"
+}}
+>
+✅ Visitado y Vendido
+</button>
+
+<p>
+
+Si no compró...
+
+</p>
+
+<select
+value={diasReprogramar}
+onChange={(e)=>setDiasReprogramar(Number(e.target.value))}
+style={{
+width:"100%",
+padding:"10px",
+marginBottom:"15px"
+}}
+>
+
+<option value={2}>Volver en 2 días</option>
+
+<option value={3}>Volver en 3 días</option>
+
+<option value={5}>Volver en 5 días</option>
+
+<option value={7}>Volver en 7 días</option>
+
+</select>
+
+<button
+onClick={()=>registrarVisita(false)}
+style={{
+background:"#ea580c",
+color:"#fff",
+border:"none",
+padding:"12px 18px",
+borderRadius:"8px",
+cursor:"pointer",
+width:"100%",
+marginBottom:"15px"
+}}
+>
+❌ Visitado pero NO compró
+</button>
+
+<button
+onClick={()=>setMostrarVisita(false)}
+style={{
+background:"#dc2626",
+color:"#fff",
+border:"none",
+padding:"12px 18px",
+borderRadius:"8px",
+cursor:"pointer",
+width:"100%"
+}}
+>
+Cerrar
+</button>
+
+</div>
+
+</div>
+
+)}
 </div>
 </div>
 )
 }
 
 // 🎨 ESTILOS
-const container={background:"#fff",padding:"30px",color:"#000"}
+const container={
+background:"#f8fafc",
+padding:"25px",
+color:"#111827",
+maxWidth:"1300px",
+margin:"0 auto"
+}
 const titulo={fontSize:"26px",marginBottom:"10px"}
 const top={marginBottom:"10px",display:"flex",gap:"10px",alignItems:"center"}
 
@@ -455,21 +834,67 @@ borderRadius:"6px",
 cursor:"pointer"
 }
 
-
-const mapa={width:"100%",height:"300px",marginBottom:"20px"}
-
+const mapa={
+  width:"100%",
+  height:"420px",
+  marginBottom:"20px"
+}
 const lista={display:"flex",flexDirection:"column",gap:"10px"}
 
 const cardCliente={
-padding:"12px",
-borderRadius:"10px",
+padding:"18px",
+borderRadius:"14px",
 display:"flex",
 justifyContent:"space-between",
-border:"1px solid #ddd"
+alignItems:"center",
+border:"1px solid #e5e7eb",
+background:"#fff",
+boxShadow:"0 3px 10px rgba(0,0,0,0.08)",
+marginBottom:"12px"
 }
 
-const acciones={display:"flex",gap:"6px"}
+const acciones={
+display:"flex",
+flexWrap:"wrap",
+justifyContent:"flex-end",
+alignItems:"center",
+gap:"6px",
+width:"360px"
+}
 
-const btnW={background:"#25D366",color:"#fff",padding:"6px",border:"none"}
-const btnC={background:"#2563eb",color:"#fff",padding:"6px",border:"none"}
-const btnM={background:"#f59e0b",color:"#fff",padding:"6px",border:"none"}
+const btnW={
+background:"#25D366",
+color:"#fff",
+padding:"6px 10px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"600",
+fontSize:"13px",
+minWidth:"90px"
+}
+
+const btnC={
+background:"#2563eb",
+color:"#fff",
+padding:"6px 10px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"600",
+fontSize:"13px",
+minWidth:"90px"
+}
+
+const btnM={
+background:"#f59e0b",
+color:"#fff",
+padding:"6px 10px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+fontWeight:"600",
+fontSize:"13px",
+minWidth:"90px"
+}
+

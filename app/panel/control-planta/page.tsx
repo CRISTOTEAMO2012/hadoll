@@ -9,12 +9,48 @@ const [pestana,setPestana]=useState("equipos")
 const [equipos,setEquipos]=useState<any[]>([])
 const [equipoSeleccionado,setEquipoSeleccionado]=useState<any>(null)
 const [mostrarFicha,setMostrarFicha]=useState(false)
+const [observaciones,setObservaciones]=useState("")
+const [estado,setEstado]=useState("")
+const [horasTrabajadas,setHorasTrabajadas]=useState("")
+const [ultimoMantenimiento,setUltimoMantenimiento]=useState("")
+const [proximoMantenimiento,setProximoMantenimiento]=useState("")
 useEffect(()=>{
 
 cargarEquipos()
 
 },[])
+async function guardarCambios(){
 
+if(!equipoSeleccionado) return
+
+const { error } = await supabase
+.from("equipos_planta")
+.update({
+
+estado,
+horas_trabajadas: horasTrabajadas,
+ultimo_mantenimiento: ultimoMantenimiento,
+proximo_mantenimiento: proximoMantenimiento,
+observaciones
+
+})
+.eq("id",equipoSeleccionado.id)
+
+if(error){
+
+alert("Error al guardar")
+console.log(error)
+return
+
+}
+
+alert("✅ Cambios guardados")
+
+setMostrarFicha(false)
+
+cargarEquipos()
+
+}
 async function cargarEquipos(){
 
 const { data, error } = await supabase
@@ -137,8 +173,17 @@ e.estado==="OPERATIVO"
 
 <button
 onClick={()=>{
+
 setEquipoSeleccionado(e)
+
+setEstado(e.estado ?? "BUENO")
+setHorasTrabajadas(e.horas_trabajadas ?? 0)
+setUltimoMantenimiento(e.ultimo_mantenimiento ?? "")
+setProximoMantenimiento(e.proximo_mantenimiento ?? "")
+setObservaciones(e.observaciones ?? "")
+
 setMostrarFicha(true)
+
 }}
 style={{
 background:"#2563eb",
@@ -204,52 +249,102 @@ overflow:"auto"
 
 <p><b>Tipo:</b> {equipoSeleccionado.tipo}</p>
 
-<p><b>Estado:</b> {equipoSeleccionado.estado}</p>
+<p><b>Estado</b></p>
 
-<p><b>Horas trabajadas:</b> {equipoSeleccionado.horas_trabajadas}</p>
+<select
+value={estado}
+onChange={(e)=>setEstado(e.target.value)}
+style={{width:"100%",padding:"10px",marginBottom:"12px"}}
+>
+<option>BUENO</option>
+<option>MANTENIMIENTO</option>
+<option>DAÑADO</option>
+</select>
 
-<p><b>Último mantenimiento:</b> {equipoSeleccionado.ultimo_mantenimiento}</p>
+<p><b>Horas trabajadas</b></p>
 
-<p><b>Próximo mantenimiento:</b> {equipoSeleccionado.proximo_mantenimiento}</p>
+<input
+type="number"
+value={horasTrabajadas}
+onChange={(e)=>setHorasTrabajadas(e.target.value)}
+style={{width:"100%",padding:"10px",marginBottom:"12px"}}
+/>
+
+<p><b>Último mantenimiento</b></p>
+
+<input
+type="date"
+value={ultimoMantenimiento}
+onChange={(e)=>setUltimoMantenimiento(e.target.value)}
+style={{width:"100%",padding:"10px",marginBottom:"12px"}}
+/>
+
+<p><b>Próximo mantenimiento</b></p>
+
+<input
+type="date"
+value={proximoMantenimiento}
+onChange={(e)=>setProximoMantenimiento(e.target.value)}
+style={{width:"100%",padding:"10px",marginBottom:"12px"}}
+/>
 
 <p><b>Observaciones:</b></p>
 
 <textarea
 style={{
 width:"100%",
-height:"120px"
+height:"120px",
+padding:"10px",
+borderRadius:"8px",
+border:"1px solid #999",
+fontSize:"16px"
 }}
-defaultValue={equipoSeleccionado.observaciones}
+value={observaciones}
+onChange={(e)=>{
+console.log("Escribiendo:",e.target.value)
+setObservaciones(e.target.value)
+}}
 />
 
 <br/><br/>
+
+<div
+style={{
+display:"flex",
+justifyContent:"space-between",
+marginTop:"20px"
+}}
+>
+
+<button
+onClick={guardarCambios}
+style={{
+background:"#16a34a",
+color:"#fff",
+padding:"12px 18px",
+border:"none",
+borderRadius:"10px",
+cursor:"pointer"
+}}
+>
+💾 Guardar Cambios
+</button>
 
 <button
 onClick={()=>setMostrarFicha(false)}
 style={{
 background:"#dc2626",
 color:"#fff",
-padding:"10px 20px",
+padding:"12px 18px",
 border:"none",
 borderRadius:"10px",
 cursor:"pointer"
 }}
 >
-<button
-style={{
-background:"#2563eb",
-color:"#fff",
-padding:"12px 18px",
-border:"none",
-borderRadius:"10px",
-cursor:"pointer",
-marginRight:"15px"
-}}
->
-🛠 Registrar mantenimiento
-</button>   
 Cerrar
 </button>
+
+</div>
 
 </div>
 
