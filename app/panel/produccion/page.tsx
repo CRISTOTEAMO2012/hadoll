@@ -7,6 +7,10 @@ export default function Produccion(){
 const [productos,setProductos]=useState([])
 const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState("")
+
+const [sellosUsados,setSellosUsados]=useState("")
+const [stickersUsados,setStickersUsados]=useState("")
+
 const [mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
@@ -167,15 +171,43 @@ total += totalCosto
 // REGLAS
 
 if(tipo==="botellon_llave"){
+
 await usar("Tapa Verde",1)
-await usar("Sticker Azul",1)
-await usar("Sello Blanco",1)
+
+await usar(
+"Sello de Seguridad",
+Number(sellosUsados || cant * 2) / cant
+)
+
+if(Number(stickersUsados)>0){
+
+await usar(
+"Sticker Azul",
+Number(stickersUsados) / cant
+)
+
+}
+
 }
 
 if(tipo==="botellon_sin_llave"){
+
 await usar("Tapa Azul",1)
-await usar("Sticker Azul",1)
-await usar("Sello Blanco",1)
+
+await usar(
+"Sello de Seguridad",
+Number(sellosUsados || cant) / cant
+)
+
+if(Number(stickersUsados)>0){
+
+await usar(
+"Sticker Azul",
+Number(stickersUsados) / cant
+)
+
+}
+
 }
 
 if(tipo==="paca15"){
@@ -382,7 +414,16 @@ return(
 <button
 key={i}
 type="button"
-onClick={()=>setProducto(p.nombre)}
+onClick={()=>{
+
+setProducto(p.nombre)
+
+setCantidad("")
+
+setSellosUsados("")
+setStickersUsados("")
+
+}}
 style={
 producto===p.nombre
 ? productoActivo
@@ -420,7 +461,37 @@ textAlign:"center"
 type="number"
 placeholder="Cantidad a producir"
 value={cantidad}
-onChange={(e)=>setCantidad(Number(e.target.value))}
+onChange={(e)=>{
+
+const valor = e.target.value
+
+setCantidad(valor)
+
+if(producto.toLowerCase().includes("con llave")){
+
+setSellosUsados(
+valor===""
+? ""
+: String(Number(valor)*2)
+)
+
+setStickersUsados("0")
+
+}
+
+else if(producto.toLowerCase().includes("sin llave")){
+
+setSellosUsados(
+valor===""
+? ""
+: valor
+)
+
+setStickersUsados("0")
+
+}
+
+}}
 />
 {producto && (
 
@@ -435,6 +506,74 @@ onChange={(e)=>setCantidad(Number(e.target.value))}
 <p>
 <b>Cantidad:</b> {cantidad || 0}
 </p>
+
+{producto.toLowerCase().includes("con llave") && (
+
+<>
+
+<hr/>
+
+<p>
+<b>Sellos sugeridos:</b> {(Number(cantidad)||0)*2}
+</p>
+
+<input
+style={input}
+type="number"
+placeholder="Sellos utilizados"
+value={sellosUsados}
+onChange={(e)=>setSellosUsados(e.target.value)}
+/>
+
+<p style={{color:"#777"}}>
+Stickers sugeridos: 0
+</p>
+
+<input
+style={input}
+type="number"
+placeholder="Stickers utilizados"
+value={stickersUsados}
+onChange={(e)=>setStickersUsados(e.target.value)}
+/>
+
+</>
+
+)}
+
+{producto.toLowerCase().includes("sin llave") && (
+
+<>
+
+<hr/>
+
+<p>
+<b>Sellos sugeridos:</b> {Number(cantidad)||0}
+</p>
+
+<input
+style={input}
+type="number"
+placeholder="Sellos utilizados"
+value={sellosUsados}
+onChange={(e)=>setSellosUsados(e.target.value)}
+/>
+
+<p style={{color:"#777"}}>
+Stickers sugeridos: 0
+</p>
+
+<input
+style={input}
+type="number"
+placeholder="Stickers utilizados"
+value={stickersUsados}
+onChange={(e)=>setStickersUsados(e.target.value)}
+/>
+
+</>
+
+)}
 
 </div>
 

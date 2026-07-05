@@ -107,10 +107,6 @@ style={logo}
 💵 Caja
 </Link>
 
-<Link href="/panel/gastos" style={{...boton,background:"#ef4444"}}>
-💸 Gastos Corrientes
-</Link>
-
 <Link href="/panel/finanzas" style={{...boton,background:"#0ea5e9"}}>
 📊 Finanzas
 </Link>

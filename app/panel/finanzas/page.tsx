@@ -17,7 +17,7 @@ const [gastosCorrientes,setGastosCorrientes]=useState(0)
 const [gastosInsumos,setGastosInsumos]=useState(0)
 const [gastosBodega,setGastosBodega]=useState(0)
 const [gastosProduccion,setGastosProduccion]=useState(0)
-const [costoVendido,setCostoVendido]=useState(0)
+
 
 const [desde,setDesde]=useState("")
 const [hasta,setHasta]=useState("")
@@ -26,7 +26,6 @@ const [dataGrafico,setDataGrafico]=useState<any[]>([])
 
 const [vista,setVista]=useState("")
 const [detalle,setDetalle]=useState<any[]>([])
-const [detalleCostoVendido,setDetalleCostoVendido] = useState<any>({})
 const [mensaje,setMensaje]=useState("")
 
 // 🔥 GASTOS
@@ -112,8 +111,6 @@ let corrientes=0
 let insumos=0
 let bodega=0
 let produccion=0
-let costoVentas = 0
-let detalleCV:any = {}
 
 movGastos.forEach((g:any)=>{
 let valor = Number(g.total || g.valor || 0)
@@ -125,142 +122,6 @@ else corrientes += valor
 
 movProduccion.forEach((p:any)=>{
 produccion += Number(p.total || 0)
-})
-
-function sumarDetalle(nombre:string,cantidad:number,precio:number){
-
-if(!detalleCV[nombre]){
-detalleCV[nombre]={
-cantidad:0,
-precio,
-total:0
-}
-}
-
-detalleCV[nombre].cantidad += cantidad
-detalleCV[nombre].total += cantidad * precio
-
-}
-
-function ultimoCostoInsumo(nombre:string){
-
-let compras = insumosTabla
-.filter((i:any)=>
-(i.insumo || "").toLowerCase() === nombre.toLowerCase() &&
-(i.tipo || "").toLowerCase() === "compra"
-)
-.sort((a:any,b:any)=> b.id - a.id)
-
-if(compras.length===0) return 0
-
-return Number(compras[0].precio || 0)
-
-}
-
-function ultimoCostoBodega(nombre:string){
-
-let compras = bodegaTabla
-.filter((b:any)=>
-(b.producto || "").toLowerCase() === nombre.toLowerCase() &&
-(b.modo || "").toLowerCase() === "compra"
-)
-.sort((a:any,b:any)=> b.id - a.id)
-
-if(compras.length===0) return 0
-
-return Number(compras[0].precio || 0)
-
-}
-
-movVentas.forEach((v:any)=>{
-console.log("VENTA", v.producto, v.cantidad)
-let cant = Number(v.cantidad || 0)
-let producto = (v.producto || "").toLowerCase()
-
-if(producto.includes("con llave")){
-
-let tapa = ultimoCostoInsumo("Tapa Verde")
-let sticker = ultimoCostoInsumo("Sticker Azul")
-let sello = ultimoCostoInsumo("Sello Blanco")
-
-costoVentas += cant*tapa
-costoVentas += cant*sticker
-costoVentas += cant*sello
-
-sumarDetalle("Tapa Verde",cant,tapa)
-sumarDetalle("Sticker Azul",cant,sticker)
-sumarDetalle("Sello Blanco",cant,sello)
-
-}
-
-else if(producto.includes("sin llave")){
-
-let tapa = ultimoCostoInsumo("Tapa Azul")
-let sticker = ultimoCostoInsumo("Sticker Azul")
-let sello = ultimoCostoInsumo("Sello Blanco")
-
-costoVentas += cant*tapa
-costoVentas += cant*sticker
-costoVentas += cant*sello
-
-sumarDetalle("Tapa Azul",cant,tapa)
-sumarDetalle("Sticker Azul",cant,sticker)
-sumarDetalle("Sello Blanco",cant,sello)
-
-}
-
-else if(producto.includes("paca 15")){
-
-let botella = ultimoCostoBodega("botella600")
-let fajilla = ultimoCostoInsumo("Fajilla 600 ml")
-
-costoVentas += cant * 15 * botella
-costoVentas += cant * 15 * fajilla
-
-sumarDetalle("Botella 600 ml", cant * 15, botella)
-sumarDetalle("Fajilla 600 ml", cant * 15, fajilla)
-
-}
-
-else if(producto.includes("paca 24")){
-
-let botella = ultimoCostoBodega("botella600")
-let fajilla = ultimoCostoInsumo("Fajilla 600 ml")
-
-costoVentas += cant * 24 * botella
-costoVentas += cant * 24 * fajilla
-
-sumarDetalle("Botella 600 ml", cant * 24, botella)
-sumarDetalle("Fajilla 600 ml", cant * 24, fajilla)
-
-}
-
-else if(producto.includes("1l")){
-
-let botella = ultimoCostoBodega("botella1L")
-let fajilla = ultimoCostoInsumo("Fajilla 1 L")
-
-costoVentas += cant * botella
-costoVentas += cant * fajilla
-
-sumarDetalle("Botella 1 L", cant, botella)
-sumarDetalle("Fajilla 1 L", cant, fajilla)
-
-}
-
-else if(producto.includes("6000")){
-
-let botella = ultimoCostoBodega("botella6000")
-let sticker = ultimoCostoInsumo("Sticker 6000 ml")
-
-costoVentas += cant * botella
-costoVentas += cant * sticker
-
-sumarDetalle("Botella 6000 ml", cant, botella)
-sumarDetalle("Sticker 6000 ml", cant, sticker)
-
-}
-
 })
 
 let mapa:any = {}
@@ -297,9 +158,6 @@ setGastosCorrientes(corrientes)
 setGastosInsumos(insumos)
 setGastosBodega(bodega)
 setGastosProduccion(produccion)
-console.log("COSTO VENTAS =", costoVentas)
-setCostoVendido(costoVentas)
-setDetalleCostoVendido(detalleCV)
 setDataGrafico(array)
 }
 
@@ -310,15 +168,6 @@ if(vista === tipo){
 setVista("")
 setDetalle([])
 return
-}
-
-if(tipo==="costovendido"){
-
-setVista("costovendido")
-setDetalle([])
-
-return
-
 }
 
 const { data: gastos = [] } = await supabase
@@ -405,7 +254,15 @@ return mapa
 
 async function guardarGasto(){
 
-if(!monto) return alert("Ingrese monto")
+if(!monto){
+alert("Ingrese monto")
+return
+}
+
+if(tipoGasto==="Manual" && !descripcion.trim()){
+alert("Ingrese el nombre del gasto")
+return
+}
 
 const { error } = await supabase
 .from("gastos")
@@ -479,8 +336,7 @@ setMensaje("")
 }
 
 const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega
-const utilidad = ingresos - totalGastos - costoVendido
-
+const utilidad = ingresos - totalGastos
 const dataPie = [
 { name: "Ingresos", value: ingresos },
 { name: "Corrientes", value: gastosCorrientes },
@@ -522,6 +378,17 @@ return(
 {GASTOS_DEFAULT.map((g,i)=>(<option key={i}>{g}</option>))}
 <option>Manual</option>
 </select>
+{tipoGasto === "Manual" && (
+
+<input
+type="text"
+placeholder="Nombre del gasto"
+value={descripcion}
+onChange={(e)=>setDescripcion(e.target.value)}
+style={input}
+/>
+
+)}
 
 <input
 type="number"
@@ -589,14 +456,6 @@ Producción
 <h2>${gastosProduccion}</h2>
 </div>
 
-<div
-style={cardBodega}
-onClick={()=>abrirDetalle("costovendido")}
->
-📦 Costo Vendido
-<h2>${costoVendido.toFixed(2)}</h2>
-</div>
-
 <div style={cardUtilidad(utilidad)}>
 UTILIDAD
 <h1>${utilidad}</h1>
@@ -660,36 +519,6 @@ Precio Unit: ${data.precio}
 
 <div>
 Total: ${data.total.toFixed(2)}
-</div>
-
-</div>
-
-))}
-
-</div>
-
-) : vista === "costovendido" ? (
-
-<div>
-
-{Object.entries(detalleCostoVendido).map(([nombre,data]:any,i)=>(
-
-<div key={i} style={detalleItem}>
-
-<div>
-<b>{nombre}</b>
-</div>
-
-<div>
-Cantidad: {data.cantidad}
-</div>
-
-<div>
-Precio Unit: ${Number(data.precio).toFixed(2)}
-</div>
-
-<div>
-Total: ${Number(data.total).toFixed(2)}
 </div>
 
 </div>

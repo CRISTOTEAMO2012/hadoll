@@ -9,7 +9,7 @@ const FIJOS = [
 "Tapa Verde",
 "Sticker Azul",
 "Sticker 6000 ml",
-"Sello Blanco",
+"Sello de Seguridad",
 "Fajilla 600 ml",
 "Fajilla 1 L"
 ]
@@ -222,7 +222,7 @@ return(
 </div>
 
 )}
-<h2 style={titulo}>🧪 INSUMOS</h2>
+<h2 style={titulo}>🧪 INSUMOS Y MATERIALES</h2>
 
 <div style={filaPrincipal}>
 
