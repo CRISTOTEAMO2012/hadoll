@@ -17,6 +17,7 @@ const [gastosCorrientes,setGastosCorrientes]=useState(0)
 const [gastosInsumos,setGastosInsumos]=useState(0)
 const [gastosBodega,setGastosBodega]=useState(0)
 const [gastosProduccion,setGastosProduccion]=useState(0)
+const [aportesSocios,setAportesSocios]=useState(0)
 
 
 const [desde,setDesde]=useState("")
@@ -92,12 +93,29 @@ const { data: bodegaTabla = [] } = await supabase
 .from("bodega")
 .select("*")
 
+const { data: aportes = [] } = await supabase
+.from("aportes_socios")
+.select("*")
+
+let movAportes = aportes.filter((a:any)=>
+  a.fecha >= desde && a.fecha <= hasta
+)
+
+let totalAportes = 0
+
+movAportes.forEach((a:any)=>{
+  totalAportes += Number(a.monto || 0)
+})
+
+console.log("APORTES:", aportes)
+
 let movCaja = caja.filter((m:any)=> m.fecha >= desde && m.fecha <= hasta)
 let movGastos = gastos.filter((g:any)=> g.fecha >= desde && g.fecha <= hasta)
 let movProduccion = produccionCostos.filter((p:any)=> p.fecha >= desde && p.fecha <= hasta)
 let movVentas = ventas.filter((v:any)=>
 v.fecha >= desde && v.fecha <= hasta
 )
+
 
 let totalIngresos = 0
 
@@ -111,6 +129,7 @@ let corrientes=0
 let insumos=0
 let bodega=0
 let produccion=0
+
 
 movGastos.forEach((g:any)=>{
 let valor = Number(g.total || g.valor || 0)
@@ -157,7 +176,7 @@ setIngresos(totalIngresos)
 setGastosCorrientes(corrientes)
 setGastosInsumos(insumos)
 setGastosBodega(bodega)
-setGastosProduccion(produccion)
+setAportesSocios(totalAportes || 0)
 setDataGrafico(array)
 }
 
@@ -180,6 +199,9 @@ const { data: produccionCostos = [] } = await supabase
 
 const { data: caja = [] } = await supabase
 .from("caja")
+.select("*")
+const { data: aportes = [] } = await supabase
+.from("aportes_socios")
 .select("*")
 
 const cajaFiltrada = caja.filter((c:any)=>
@@ -217,6 +239,10 @@ lista = gastosFiltrados.filter((g:any)=> g.tipo === "Compra inventario")
 
 if(tipo==="produccion"){
 lista = produccionFiltrada
+}
+
+if(tipo==="aportes"){
+lista = aportesFiltrados || []
 }
 
 setVista(tipo)
@@ -301,16 +327,16 @@ return
 }
 
 const { error } = await supabase
-.from("caja")
+.from("aportes_socios")
 .insert([
 {
-tipo:"ingreso",
-detalle:`Aporte socio: ${socio === "Manual" ? descripcion : socio}`,
+socio: socio,
 monto:Number(montoAporte),
 fecha:new Date().toLocaleDateString(
 "en-CA",
 {timeZone:"America/Guayaquil"}
-)
+),
+observacion:null
 }
 ])
 
@@ -336,7 +362,7 @@ setMensaje("")
 }
 
 const totalGastos = gastosCorrientes + gastosInsumos + gastosBodega
-const utilidad = ingresos - totalGastos
+const utilidad = (ingresos + aportesSocios) - totalGastos
 const dataPie = [
 { name: "Ingresos", value: ingresos },
 { name: "Corrientes", value: gastosCorrientes },
@@ -456,6 +482,11 @@ Producción
 <h2>${gastosProduccion}</h2>
 </div>
 
+<div style={cardAportes} onClick={()=>abrirDetalle("aportes")}>
+🤝 Aporte Socios
+<h2>${aportesSocios}</h2>
+</div>
+
 <div style={cardUtilidad(utilidad)}>
 UTILIDAD
 <h1>${utilidad}</h1>
@@ -536,11 +567,17 @@ Total: ${data.total.toFixed(2)}
 <div key={i} style={detalleItem}>
 
 <div>
-<b>{d.tipo || d.detalle || d.producto || "Movimiento"}</b>
+<b>
+{d.socio ||
+d.tipo ||
+d.detalle ||
+d.producto ||
+"Movimiento"}
+</b>
 </div>
 
 <div>
-${d.total || d.valor || d.monto || 0}
+${d.monto || d.total || d.valor || 0}
 </div>
 
 <div>
@@ -636,6 +673,7 @@ const cardCorriente={...base,background:"#dc2626"}
 const cardInsumo={...base,background:"#f97316"}
 const cardBodega={...base,background:"#2563eb"}
 const cardProduccion={...base,background:"#7c3aed"}
+const cardAportes={...base,background:"#0891b2"}
 
 const cardUtilidad=(u:number)=>({
 ...base,
