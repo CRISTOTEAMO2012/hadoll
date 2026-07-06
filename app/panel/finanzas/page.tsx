@@ -176,6 +176,7 @@ setIngresos(totalIngresos)
 setGastosCorrientes(corrientes)
 setGastosInsumos(insumos)
 setGastosBodega(bodega)
+setGastosProduccion(produccion)
 setAportesSocios(totalAportes || 0)
 setDataGrafico(array)
 }
