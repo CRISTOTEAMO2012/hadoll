@@ -9,8 +9,10 @@ export default function ReporteVentas(){
 
 const canvasRef = useRef(null)
 
-const[fechaInicio,setFechaInicio]=useState("")
-const[fechaFin,setFechaFin]=useState("")
+const hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
+
+const[fechaInicio,setFechaInicio]=useState(hoy)
+const[fechaFin,setFechaFin]=useState(hoy)
 
 const[totalCaja,setTotalCaja]=useState(0)
 const[totalVentas,setTotalVentas]=useState(0)
@@ -26,11 +28,20 @@ const[clientesPerdidos,setClientesPerdidos]=useState([])
 const[rankingProductos,setRankingProductos]=useState([])
 const[ciudadFiltro,setCiudadFiltro]=useState("")
 const[ciudades,setCiudades]=useState<any[]>([])
+const [ventasDia,setVentasDia]=useState<any[]>([])
+const [mostrarVentas,setMostrarVentas]=useState(false)
+const [mostrarConfirmacion,setMostrarConfirmacion]=useState(false)
+const [ventaSeleccionada,setVentaSeleccionada]=useState<any>(null)
 const[resumenCiudad,setResumenCiudad]=useState<any[]>([])
+const [mensaje,setMensaje]=useState("")
 
 useEffect(()=>{
 generarReporte()
 },[fechaInicio,fechaFin,ciudadFiltro])
+
+useEffect(()=>{
+console.log(ventasDia)
+},[ventasDia])
 
 async function generarReporte(){
 
@@ -71,6 +82,8 @@ if(!fechaInicio || !fechaFin) return false
 return v.fecha >= fechaInicio && v.fecha <= fechaFin
 })
 
+setVentasDia(filtradas)
+console.log("VENTAS DEL DIA:", filtradas)
 // 🔹 RECORRER VENTAS
 filtradas.forEach(v=>{
 
@@ -199,6 +212,257 @@ value:valor
 setDataPastel(dataP)
 }
 
+async function revertirVenta(){
+
+console.log("REVERTIR INICIADO")
+console.log(ventaSeleccionada)
+
+if(!ventaSeleccionada) return
+
+const { data: inventarioData, error } = await supabase
+.from("inventario")
+.select("*")
+.eq("id",1)
+.single()
+
+if(error){
+
+alert("Error cargando inventario")
+
+return
+
+}
+
+let inventario = inventarioData
+
+let origen = ventaSeleccionada.origen
+
+let clave = obtenerClaveInventario(
+ventaSeleccionada.producto
+)
+
+let cantidad = Number(ventaSeleccionada.cantidad)
+
+if(
+!inventario[origen] ||
+inventario[origen][clave] === undefined
+){
+
+alert("No se encontró el producto en el inventario.")
+
+return
+
+}
+
+// DEVOLVER PRODUCTO AL INVENTARIO
+
+inventario[origen][clave] += cantidad
+
+// GUARDAR EL INVENTARIO ACTUALIZADO SIEMPRE
+
+const { error: errorInventario } = await supabase
+.from("inventario")
+.update({
+  [origen]: inventario[origen]
+})
+.eq("id",1)
+
+if(errorInventario){
+
+  alert("Error actualizando inventario")
+
+  return
+
+}
+
+// DEVOLVER ENVASES VACÍOS SI ERA CAMBIO
+
+if(
+ventaSeleccionada.producto.toLowerCase().includes("20l") &&
+ventaSeleccionada.tipo_envase==="cambio"
+){
+
+if(ventaSeleccionada.devolucion_manual){
+
+inventario[origen]["botellon20llave_vacios"] -= Number(ventaSeleccionada.vacios_con_llave)
+
+inventario[origen]["botellon20sin_llave_vacios"] -= Number(ventaSeleccionada.vacios_sin_llave)
+
+}else{
+
+if(
+ventaSeleccionada.producto
+.toLowerCase()
+.includes("con llave")
+){
+
+inventario[origen]["botellon20llave_vacios"] -= cantidad
+
+}else{
+
+inventario[origen]["botellon20sin_llave_vacios"] -= cantidad
+
+}
+
+}
+
+const { error:errorInventario2 } = await supabase
+.from("inventario")
+.update({
+[origen]: inventario[origen]
+})
+.eq("id",1)
+
+if(errorInventario2){
+
+alert("Error devolviendo envases")
+
+return
+
+}
+
+}
+
+// SI ERA CAMBIO, ELIMINAR EL MOVIMIENTO DE DEVOLUCIÓN
+
+if(ventaSeleccionada.tipo_envase==="cambio"){
+
+await supabase
+.from("envases_prestados")
+.delete()
+.eq("venta_id",ventaSeleccionada.id)
+
+}
+
+// ELIMINAR ENVASE PRESTADO
+
+if(ventaSeleccionada.tipo_envase==="prestado"){
+
+const { error } = await supabase
+.from("envases_prestados")
+.delete()
+.eq("venta_id",ventaSeleccionada.id)
+
+if(error){
+
+alert("Error eliminando envase prestado")
+
+return
+
+}
+
+}
+
+// ELIMINAR ENVASE VENDIDO
+
+if(ventaSeleccionada.tipo_envase==="vendido"){
+
+const { error } = await supabase
+.from("envases_vendidos")
+.delete()
+.eq("venta_id",ventaSeleccionada.id)
+
+if(error){
+
+alert("Error eliminando envase vendido")
+
+return
+
+}
+
+}
+
+if(
+ventaSeleccionada.pago==="efectivo" ||
+ventaSeleccionada.pago==="transferencia" ||
+ventaSeleccionada.pago==="mixto"
+){
+
+await supabase
+.from("caja")
+.delete()
+.eq("venta_id",ventaSeleccionada.id)
+
+}
+
+if(
+ventaSeleccionada.pago==="fiado" ||
+ventaSeleccionada.pago==="mixto"
+){
+
+await supabase
+.from("deudas")
+.delete()
+.eq("venta_id",ventaSeleccionada.id)
+
+}
+
+// ELIMINAR LA VENTA
+
+const { error:errorVenta } = await supabase
+.from("ventas")
+.delete()
+.eq("id",ventaSeleccionada.id)
+
+if(errorVenta){
+
+alert("Error eliminando la venta")
+
+console.log(errorVenta)
+
+return
+
+}
+
+setMensaje("✅ Venta revertida correctamente")
+
+setTimeout(()=>{
+
+setMensaje("")
+setMostrarConfirmacion(false)
+setVentaSeleccionada(null)
+generarReporte()
+
+},2000)
+
+}
+
+function obtenerClaveVacio(nombre:string){
+
+nombre = nombre.toLowerCase()
+
+if(nombre.includes("con llave"))
+return "botellon20llave_vacios"
+
+if(nombre.includes("sin llave"))
+return "botellon20sin_llave_vacios"
+
+return null
+
+}
+
+function obtenerClaveInventario(nombre:string){
+
+nombre = nombre.toLowerCase()
+
+if(nombre.includes("6000")) return "botella6000_llenos"
+
+if(nombre.includes("1l")) return "botella1L_llenos"
+
+if(nombre.includes("paca 15")) return "paca15"
+
+if(nombre.includes("paca 24")) return "paca24"
+
+if(nombre.includes("con llave")) return "botellon20llave_llenos"
+
+if(nombre.includes("sin llave")) return "botellon20sin_llave_llenos"
+
+if(nombre.includes("llave")) return "llave_botellon"
+
+return null
+
+}
+
 // EXPORTAR
 function exportarExcel(){
 
@@ -252,6 +516,20 @@ return(
 
 <div style={contenedor}>
 
+{mensaje && (
+
+<div style={overlayMensaje}>
+
+<div style={mensajeExito}>
+
+{mensaje}
+
+</div>
+
+</div>
+
+)}
+
 <h1 style={titulo}>📊 REPORTE GENERAL DE VENTAS </h1>
 
 <div style={filtros}>
@@ -277,6 +555,15 @@ Todas las ciudades
 
 </select>
 <button style={boton} onClick={exportarExcel}>⬇ Excel</button>
+<button
+style={boton}
+onClick={()=>{
+console.log("BOTON FUNCIONA")
+setMostrarVentas(!mostrarVentas)
+}}
+>
+🧾 Ver Ventas
+</button>
 </div>
 
 {/* KPI */}
@@ -400,7 +687,110 @@ resumenCiudad.map((p:any,i:number)=>(
 <Legend />
 </PieChart>
 </div>
+{mostrarVentas && (
 
+<div style={card}>
+
+<h2>🧾 Ventas encontradas</h2>
+
+{ventasDia.length===0 ? (
+
+<p>No existen ventas en ese rango de fechas.</p>
+
+) : (
+
+ventasDia.map((v:any,i:number)=>(
+
+<div key={i} style={detalleVenta}>
+
+<div>
+<b>{v.cliente}</b>
+</div>
+
+<div>{v.producto}</div>
+
+<div>
+Cantidad: {v.cantidad}
+</div>
+
+<div>
+${v.total}
+</div>
+
+<div>
+{v.fecha}
+</div>
+
+<button
+style={botonEliminar}
+onClick={()=>{
+setVentaSeleccionada(v)
+setMostrarConfirmacion(true)
+}}
+>
+🔄 Revertir venta
+</button>
+
+</div>
+
+))
+
+)}
+
+</div>
+
+)}
+{mostrarConfirmacion && (
+
+<div style={overlay}>
+
+<div style={ventana}>
+
+<h2>⚠️ Confirmar reversión</h2>
+
+<p><b>Cliente:</b> {ventaSeleccionada?.cliente}</p>
+
+<p><b>Producto:</b> {ventaSeleccionada?.producto}</p>
+
+<p><b>Cantidad:</b> {ventaSeleccionada?.cantidad}</p>
+
+<p><b>Total:</b> ${ventaSeleccionada?.total}</p>
+
+<p><b>Origen:</b> {ventaSeleccionada?.origen}</p>
+
+<p><b>Forma de pago:</b> {ventaSeleccionada?.pago}</p>
+
+<p><b>Tipo envase:</b> {ventaSeleccionada?.tipo_envase}</p>
+
+<p style={{color:"red",fontWeight:"bold"}}>
+
+Esta operación revertirá completamente esta venta.
+
+</p>
+
+<div style={{display:"flex",gap:"15px",marginTop:"20px"}}>
+
+<button
+style={boton}
+onClick={()=>setMostrarConfirmacion(false)}
+>
+Cancelar
+</button>
+
+<button
+style={botonEliminar}
+onClick={revertirVenta}
+>
+🔄 Revertir venta
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+)}
 </div>
 )
 }
@@ -427,3 +817,67 @@ const valor={color:"#111"}
 const card: any = {background:"#fff",padding:"20px",borderRadius:"12px",marginTop:"20px"}
 
 const item={display:"flex",justifyContent:"space-between",marginBottom:"10px",gap:"10px"}
+
+const detalleVenta={
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+padding:"12px",
+borderBottom:"1px solid #e5e7eb",
+gap:"15px",
+flexWrap:"wrap" as const
+}
+
+const botonEliminar={
+background:"#dc2626",
+color:"#fff",
+border:"none",
+padding:"8px 14px",
+borderRadius:"8px",
+cursor:"pointer",
+fontWeight:"bold"
+}
+
+const overlay={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.55)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:9999
+}
+
+const ventana={
+background:"#fff",
+padding:"30px",
+borderRadius:"14px",
+width:"520px",
+boxShadow:"0 0 25px rgba(0,0,0,.35)"
+}
+
+const overlayMensaje={
+position:"fixed" as const,
+top:0,
+left:0,
+width:"100%",
+height:"100%",
+background:"rgba(0,0,0,0.45)",
+display:"flex",
+justifyContent:"center",
+alignItems:"center",
+zIndex:99999
+}
+
+const mensajeExito={
+background:"#16a34a",
+color:"#fff",
+padding:"30px 45px",
+borderRadius:"14px",
+fontSize:"26px",
+fontWeight:"bold",
+boxShadow:"0 0 25px rgba(0,0,0,.4)"
+}

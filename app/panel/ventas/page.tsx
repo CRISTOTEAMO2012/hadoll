@@ -11,9 +11,10 @@ const [productos,setProductos]=useState<any[]>([])
 const [busqueda,setBusqueda]=useState("")
 const [cliente,setCliente]=useState("")
 
-const [origen,setOrigen]=useState("empresa")
+const [origen,setOrigen]=useState("vehiculo1")
+const [mostrarOtrosOrigenes,setMostrarOtrosOrigenes]=useState(false)
 const [producto,setProducto]=useState("")
-const [cantidad,setCantidad]=useState(1)
+const [cantidad,setCantidad]=useState("")
 const [precio,setPrecio]=useState("")
 const [pago,setPago]=useState("efectivo")
 
@@ -30,6 +31,9 @@ const [vaciosConLlave,setVaciosConLlave]=useState(0)
 const [vaciosSinLlave,setVaciosSinLlave]=useState(0)
 
 const [mensaje,setMensaje]=useState("")
+
+const [guardando,setGuardando]=useState(false)
+
 useEffect(()=>{
 cargarDatos()
 },[])
@@ -111,8 +115,13 @@ timeZone:"America/Guayaquil"
 
 async function guardarVenta(){
 
+if(guardando) return
+
+setGuardando(true)
+
 if(cliente==""||producto==""){
 alert("Complete los datos")
+setGuardando(false)
 return
 }
 
@@ -202,6 +211,67 @@ inventario[origen]["botellon20sin_llave_vacios"] += vaciosSinLlave
 
 }
 
+// 💾 INVENTARIO
+const { error: errorInventario } = await supabase
+.from("inventario")
+.update({
+[origen]: inventario[origen]
+})
+.eq("id",1)
+
+if(errorInventario){
+
+alert("Error actualizando inventario")
+
+console.log(errorInventario)
+
+return
+
+}
+// 🧾 VENTAS
+
+// 🧾 GUARDAR VENTA EN SUPABASE
+
+const { data: ventaCreada, error: errorVenta } = await supabase
+.from("ventas")
+.insert([
+{
+fecha: hoy,
+cliente,
+producto,
+cantidad: cant,
+precio: prec,
+total: totalVenta,
+origen,
+pago,
+tipo_envase: tipoEnvase,
+
+devolucion_manual: devolucionManual,
+vacios_con_llave: vaciosConLlave,
+vacios_sin_llave: vaciosSinLlave,
+abono: pago==="mixto" ? Number(abono) : 0,
+restante: pago==="mixto"
+? totalVenta-Number(abono)
+: pago==="fiado"
+? totalVenta
+: 0
+}
+])
+.select()
+.single()
+
+if(errorVenta){
+
+console.log(errorVenta)
+
+alert("Error guardando venta")
+
+return
+
+}
+
+const ventaId = ventaCreada.id
+
 // 🫙 ENVASE PRESTADO
 
 if(
@@ -217,7 +287,8 @@ cliente,
 envase: obtenerClaveVacio(producto),
 cantidad: cant,
 fecha: hoy,
-tipo: "prestado"
+tipo: "prestado",
+venta_id: ventaId
 }
 ])
 
@@ -247,7 +318,8 @@ const { error } = await supabase
 cliente,
 producto,
 cantidad: cant,
-fecha: hoy
+fecha: hoy,
+venta_id: ventaId
 }
 ])
 
@@ -263,52 +335,6 @@ return
 
 }
 
-// 💾 INVENTARIO
-const { error: errorInventario } = await supabase
-.from("inventario")
-.update({
-[origen]: inventario[origen]
-})
-.eq("id",1)
-
-if(errorInventario){
-
-alert("Error actualizando inventario")
-
-console.log(errorInventario)
-
-return
-
-}
-// 🧾 VENTAS
-
-// 🧾 GUARDAR VENTA EN SUPABASE
-
-const { error: errorVenta } = await supabase
-.from("ventas")
-.insert([
-{
-fecha: hoy,
-cliente,
-producto,
-cantidad: cant,
-precio: prec,
-total: totalVenta,
-origen,
-pago,
-tipo_envase: tipoEnvase
-}
-])
-
-if(errorVenta){
-
-console.log(errorVenta)
-
-alert("Error guardando venta")
-
-return
-
-}
 
 // 💳 FIADO TOTAL
 
@@ -323,7 +349,8 @@ producto,
 cantidad: cant,
 monto: totalVenta,
 fecha: hoy,
-estado: "pendiente"
+estado: "pendiente",
+venta_id: ventaId
 }
 ])
 
@@ -351,7 +378,8 @@ tipo:"ingreso",
 detalle:`Venta de ${producto}`,
 monto: totalVenta,
 fecha:hoy,
-metodo:pago
+metodo:pago,
+venta_id: ventaId
 }
 ])
 
@@ -394,7 +422,8 @@ tipo:"ingreso",
 detalle:`Venta de ${producto}`,
 monto: valorAbono,
 fecha:hoy,
-metodo:metodoMixto
+metodo:metodoMixto,
+venta_id: ventaId
 }
 ])
 
@@ -419,7 +448,8 @@ producto,
 cantidad: cant,
 monto: restante,
 fecha: hoy,
-estado: "pendiente"
+estado: "pendiente",
+venta_id: ventaId
 }
 ])
 
@@ -443,9 +473,9 @@ setMensaje("")
 
 setBusqueda("")
 setCliente("")
-setOrigen("empresa")
+setOrigen("vehiculo1")
 setProducto("")
-setCantidad(1)
+setCantidad("")
 setPrecio("")
 setPago("efectivo")
 setAbono("")
@@ -454,6 +484,7 @@ setTipoEnvase("cambio")
 setDevolucionManual(false)
 setVaciosConLlave(0)
 setVaciosSinLlave(0)
+setGuardando(false)
 }
 
 return(
@@ -503,35 +534,67 @@ onChange={(e)=>setCliente(e.target.value)}
 
 </select>
 
+<div style={{display:"flex",flexDirection:"column",gap:"10px"}}>
+
+<button
+style={origen==="vehiculo1" ? botonActivo : botonIcono}
+onClick={()=>{
+setOrigen("vehiculo1")
+setMostrarOtrosOrigenes(false)
+}}
+>
+🚚 {vehiculo1?.marca || "Vehículo 1"}
+</button>
+
+<button
+style={{
+...botonIcono,
+background:"#f8fafc"
+}}
+onClick={()=>
+setMostrarOtrosOrigenes(!mostrarOtrosOrigenes)
+}
+>
+📍 Escoger otro lugar de origen
+</button>
+
+{mostrarOtrosOrigenes && (
+
 <div style={grupoIconos}>
 
 <button
 style={origen==="empresa" ? botonActivo : botonIcono}
-onClick={()=>setOrigen("empresa")}
+onClick={()=>{
+setOrigen("empresa")
+setMostrarOtrosOrigenes(false)
+}}
 >
 🏢 Empresa
 </button>
 
 <button
 style={origen==="dorita" ? botonActivo : botonIcono}
-onClick={()=>setOrigen("dorita")}
+onClick={()=>{
+setOrigen("dorita")
+setMostrarOtrosOrigenes(false)
+}}
 >
 🏠 Dorita
 </button>
 
 <button
-style={origen==="vehiculo1" ? botonActivo : botonIcono}
-onClick={()=>setOrigen("vehiculo1")}
->
-🚚 {vehiculo1?.marca || "Vehículo 1"}
-</button>
-
-<button
 style={origen==="vehiculo2" ? botonActivo : botonIcono}
-onClick={()=>setOrigen("vehiculo2")}
+onClick={()=>{
+setOrigen("vehiculo2")
+setMostrarOtrosOrigenes(false)
+}}
 >
 🚐 {vehiculo2?.marca || "Vehículo 2"}
 </button>
+
+</div>
+
+)}
 
 </div>
 
@@ -674,7 +737,7 @@ setVaciosSinLlave(Number(e.target.value))
 style={input}
 type="number"
 value={cantidad}
-onChange={(e)=>setCantidad(Number(e.target.value))}
+onChange={(e)=>setCantidad(e.target.value)}
 placeholder="Cantidad"
 />
 
@@ -766,10 +829,15 @@ ${Number(cantidad || 0) * Number(precio || 0)}
 </div>
 
 <button
-style={boton}
+style={{
+...boton,
+opacity: guardando ? 0.6 : 1,
+cursor: guardando ? "not-allowed" : "pointer"
+}}
 onClick={guardarVenta}
+disabled={guardando}
 >
-Guardar Venta
+{guardando ? "⏳ Guardando venta..." : "Guardar Venta"}
 </button>
 
 </div>
