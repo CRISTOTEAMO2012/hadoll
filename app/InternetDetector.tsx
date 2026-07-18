@@ -25,26 +25,50 @@ export default function InternetDetector() {
 
   if (online) return null;
 
-  return (
+ return (
+
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      background: "rgba(0,0,0,0.75)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 999999
+    }}
+  >
 
     <div
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        background: "#dc2626",
-        color: "white",
+        background: "#ffffff",
+        padding: "40px",
+        borderRadius: "15px",
         textAlign: "center",
-        padding: "15px",
-        fontWeight: "bold",
-        fontSize: "18px",
-        zIndex: 999999
+        minWidth: "350px",
+        boxShadow: "0 0 25px rgba(0,0,0,0.4)"
       }}
     >
-      📡 Sin conexión a Internet
+
+      <h1 style={{color:"#dc2626",marginBottom:"20px"}}>
+        📡 Sin conexión a Internet
+      </h1>
+
+      <p style={{fontSize:"18px",marginBottom:"15px"}}>
+        Revise su conexión para continuar.
+      </p>
+
+      <p style={{color:"#2563eb",fontWeight:"bold"}}>
+        ⏳ Esperando conexión...
+      </p>
+
     </div>
 
-  );
+  </div>
+
+);
 
 }
