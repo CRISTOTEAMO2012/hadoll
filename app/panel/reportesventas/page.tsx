@@ -45,9 +45,32 @@ console.log(ventasDia)
 
 async function generarReporte(){
 
-const { data: ventas = [] } = await supabase
+let ventas:any[] = []
+let desde = 0
+const bloque = 1000
+
+while(true){
+
+const { data, error } = await supabase
 .from("ventas")
 .select("*")
+.order("id",{ascending:true})
+.range(desde,desde + bloque - 1)
+
+if(error){
+console.error("ERROR CARGANDO VENTAS:",error)
+break
+}
+
+if(!data || data.length===0) break
+
+ventas = [...ventas,...data]
+
+if(data.length < bloque) break
+
+desde += bloque
+
+}
 
 const { data: clientesSistema = [] } = await supabase
 .from("clientes")
