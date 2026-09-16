@@ -23,11 +23,37 @@ useEffect(()=>{
 
 async function cargarDatos(){
 
-const { data: clientesData } = await supabase
+let clientesData:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error: errorClientes } = await supabase
 .from("clientes")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
 
-setClientes(clientesData || [])
+if(errorClientes){
+
+console.log(errorClientes)
+
+return
+
+}
+
+if(!loteClientes || loteClientes.length === 0) break
+
+clientesData = [...clientesData, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
+
+setClientes(clientesData)
 
 const { data: productosData } = await supabase
 .from("productos")

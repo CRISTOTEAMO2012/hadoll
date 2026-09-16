@@ -65,9 +65,32 @@ timeZone:"America/Guayaquil"
 // COSTO INSUMOS
 async function costoInsumo(nombre){
 
-const { data = [] } = await supabase
+let data:any[] = []
+let desde = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
 .from("insumos")
 .select("*")
+.order("id",{ascending:true})
+.range(desde, desde + bloque - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!lote || lote.length === 0) break
+
+data = [...data, ...lote]
+
+if(lote.length < bloque) break
+
+desde += bloque
+
+}
 
 let compras = data.filter(i =>
 normalizar(i.insumo) === normalizar(nombre) &&
@@ -90,9 +113,32 @@ return totalCantidad ? totalDinero / totalCantidad : 0
 
 async function costoBotella(clave){
 
-const { data = [] } = await supabase
+let data:any[] = []
+let desde = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
 .from("bodega")
 .select("*")
+.order("id",{ascending:true})
+.range(desde, desde + bloque - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!lote || lote.length === 0) break
+
+data = [...data, ...lote]
+
+if(lote.length < bloque) break
+
+desde += bloque
+
+}
 
 let nombre = ""
 
@@ -589,7 +635,14 @@ Registrar
 
 const contenedor={background:"#f1f5f9",minHeight:"100vh",padding:"40px",color:"#000"}
 const titulo={fontSize:"30px",marginBottom:"30px"}
-const formulario={display:"flex",flexDirection:"column",gap:"15px",maxWidth:"400px"}
+const formulario={
+display:"flex",
+flexDirection:"column",
+gap:"20px",
+width:"100%",
+maxWidth:"1400px",
+margin:"0 auto"
+}
 const input={padding:"10px",borderRadius:"6px",border:"1px solid #ccc"}
 const boton={background:"#f97316",color:"#fff",border:"none",padding:"12px",borderRadius:"6px"}
 const overlayMensaje={

@@ -18,10 +18,17 @@ cargar()
 
 async function cargar(){
 
-const { data: prestados, error } = await supabase
+let prestados:any[] = []
+let desdePrestados = 0
+const bloquePrestados = 1000
+
+while(true){
+
+const { data: lotePrestados, error } = await supabase
 .from("envases_prestados")
 .select("*")
 .order("id",{ascending:false})
+.range(desdePrestados, desdePrestados + bloquePrestados - 1)
 
 if(error){
 
@@ -30,6 +37,16 @@ console.log(error)
 alert("Error cargando envases prestados")
 
 return
+
+}
+
+if(!lotePrestados || lotePrestados.length === 0) break
+
+prestados = [...prestados, ...lotePrestados]
+
+if(lotePrestados.length < bloquePrestados) break
+
+desdePrestados += bloquePrestados
 
 }
 

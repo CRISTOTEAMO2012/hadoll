@@ -24,13 +24,31 @@ filtrar()
 async function filtrar(){
 
 // 🔥 CAMBIO CLAVE: leer de produccionCostos
-const { data: prod, error } = await supabase
+let prod:any[] = []
+let desdeRegistro = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
 .from("produccion")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeRegistro, desdeRegistro + bloque - 1)
 
 if(error){
 console.log(error)
 return
+}
+
+if(!lote || lote.length === 0) break
+
+prod = [...prod, ...lote]
+
+if(lote.length < bloque) break
+
+desdeRegistro += bloque
+
 }
 
 let filtrado = []

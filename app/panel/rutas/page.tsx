@@ -33,32 +33,106 @@ useEffect(() => {
 
 async function cargarTodo(){
 setActualizando(true)    
-const { data: visitasData } = await supabase
+let visitasData:any[] = []
+let desdeVisitas = 0
+const bloqueVisitas = 1000
+
+while(true){
+
+const { data: loteVisitas, error: errorVisitas } = await supabase
 .from("visitas_ruta")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeVisitas, desdeVisitas + bloqueVisitas - 1)
 
-setVisitas(visitasData || [])
-const { data, error } = await supabase
+if(errorVisitas){
+
+console.log(errorVisitas)
+
+setActualizando(false)
+
+return
+
+}
+
+if(!loteVisitas || loteVisitas.length === 0) break
+
+visitasData = [...visitasData, ...loteVisitas]
+
+if(loteVisitas.length < bloqueVisitas) break
+
+desdeVisitas += bloqueVisitas
+
+}
+
+setVisitas(visitasData)
+let data:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error } = await supabase
 .from("clientes")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
 
 if(error){
+
 console.log(error)
+
+setActualizando(false)
+
 return
+
 }
 
-setClientes(data || [])
+if(!loteClientes || loteClientes.length === 0) break
 
-const { data: ventasData, error: errorVentas } = await supabase
+data = [...data, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
+
+setClientes(data)
+
+let ventasData:any[] = []
+let desdeVentas = 0
+const bloqueVentas = 1000
+
+while(true){
+
+const { data: loteVentas, error: errorVentas } = await supabase
 .from("ventas")
-.select("cliente,fecha")
+.select("id,cliente,fecha")
+.order("id",{ascending:true})
+.range(desdeVentas, desdeVentas + bloqueVentas - 1)
 
 if(errorVentas){
+
 console.log(errorVentas)
+
+setActualizando(false)
+
 return
+
 }
 
-setVentas(ventasData || [])
+if(!loteVentas || loteVentas.length === 0) break
+
+ventasData = [...ventasData, ...loteVentas]
+
+if(loteVentas.length < bloqueVentas) break
+
+desdeVentas += bloqueVentas
+
+}
+
+setVentas(ventasData)
 setActualizando(false)
 
 }

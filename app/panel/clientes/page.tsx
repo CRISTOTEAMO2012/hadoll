@@ -31,14 +31,31 @@ useEffect(()=>{
 
 async function cargarClientes(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desde = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
 .from("clientes")
 .select("*")
 .order("id",{ascending:false})
+.range(desde, desde + bloque - 1)
 
 if(error){
 console.log(error)
 return
+}
+
+if(!lote || lote.length === 0) break
+
+data = [...data, ...lote]
+
+if(lote.length < bloque) break
+
+desde += bloque
+
 }
 
 setClientes(data || [])

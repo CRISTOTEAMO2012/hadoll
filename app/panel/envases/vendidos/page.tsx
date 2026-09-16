@@ -17,10 +17,17 @@ cargar()
 
 async function cargar(){
 
-const { data: vendidos, error } = await supabase
+let vendidos:any[] = []
+let desdeVendidos = 0
+const bloqueVendidos = 1000
+
+while(true){
+
+const { data: loteVendidos, error } = await supabase
 .from("envases_vendidos")
 .select("*")
 .order("id",{ascending:false})
+.range(desdeVendidos, desdeVendidos + bloqueVendidos - 1)
 
 if(error){
 
@@ -29,6 +36,16 @@ console.log(error)
 alert("Error cargando envases vendidos")
 
 return
+
+}
+
+if(!loteVendidos || loteVendidos.length === 0) break
+
+vendidos = [...vendidos, ...loteVendidos]
+
+if(loteVendidos.length < bloqueVendidos) break
+
+desdeVendidos += bloqueVendidos
 
 }
 

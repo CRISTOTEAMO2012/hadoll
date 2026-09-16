@@ -42,9 +42,32 @@ useEffect(()=>{cargarHistorial()},[])
 async function cargarHistorial(){
 
 // 🔥 COMPRAS CON GASTO
-const { data: gastosData = [] } = await supabase
+let gastosData:any[] = []
+let desdeGastos = 0
+const bloqueGastos = 1000
+
+while(true){
+
+const { data: loteGastos, error } = await supabase
 .from("gastos")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeGastos, desdeGastos + bloqueGastos - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteGastos || loteGastos.length === 0) break
+
+gastosData = [...gastosData, ...loteGastos]
+
+if(loteGastos.length < bloqueGastos) break
+
+desdeGastos += bloqueGastos
+
+}
 
 let compras = gastosData
 .filter((g:any) => g.tipo === "Compra inventario")
@@ -55,10 +78,33 @@ movimiento:"Compra con gasto"
 }))
 
 // 🔥 DAÑADOS
-const { data: danadosData = [] } = await supabase
+let danadosData:any[] = []
+let desdeDanados = 0
+const bloqueDanados = 1000
+
+while(true){
+
+const { data: loteDanados, error } = await supabase
 .from("bodega")
 .select("*")
 .eq("modo","danado")
+.order("id",{ascending:true})
+.range(desdeDanados, desdeDanados + bloqueDanados - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteDanados || loteDanados.length === 0) break
+
+danadosData = [...danadosData, ...loteDanados]
+
+if(loteDanados.length < bloqueDanados) break
+
+desdeDanados += bloqueDanados
+
+}
 
 let danados = danadosData.map((d:any)=>({
 ...d,
@@ -66,10 +112,33 @@ movimiento:"Dañado"
 }))
 
 // 🔥 STOCK EXISTENTE
-const { data: existentesData = [] } = await supabase
+let existentesData:any[] = []
+let desdeExistentes = 0
+const bloqueExistentes = 1000
+
+while(true){
+
+const { data: loteExistentes, error } = await supabase
 .from("bodega")
 .select("*")
 .eq("modo","existente")
+.order("id",{ascending:true})
+.range(desdeExistentes, desdeExistentes + bloqueExistentes - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteExistentes || loteExistentes.length === 0) break
+
+existentesData = [...existentesData, ...loteExistentes]
+
+if(loteExistentes.length < bloqueExistentes) break
+
+desdeExistentes += bloqueExistentes
+
+}
 
 let existentes = existentesData.map((e:any)=>({
 ...e,
@@ -77,9 +146,32 @@ movimiento:"Stock existente"
 }))
 
 // 🔥 COMPRAS SIN GASTO
-const { data: comprasSinGastoData = [] } = await supabase
+let comprasSinGastoData:any[] = []
+let desdeCompras = 0
+const bloqueCompras = 1000
+
+while(true){
+
+const { data: loteCompras, error } = await supabase
 .from("bodega")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeCompras, desdeCompras + bloqueCompras - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteCompras || loteCompras.length === 0) break
+
+comprasSinGastoData = [...comprasSinGastoData, ...loteCompras]
+
+if(loteCompras.length < bloqueCompras) break
+
+desdeCompras += bloqueCompras
+
+}
 
 let comprasSinGasto = comprasSinGastoData
 .filter((c:any)=>

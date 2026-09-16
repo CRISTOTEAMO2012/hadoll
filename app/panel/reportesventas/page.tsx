@@ -72,9 +72,32 @@ desde += bloque
 
 }
 
-const { data: clientesSistema = [] } = await supabase
+let clientesSistema:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error } = await supabase
 .from("clientes")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteClientes || loteClientes.length === 0) break
+
+clientesSistema = [...clientesSistema, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
 
 setCiudades([
 ...new Set(
@@ -84,13 +107,59 @@ clientesSistema
 )
 ])
 
-const { data: caja = [] } = await supabase
+let caja:any[] = []
+let desdeCaja = 0
+const bloqueCaja = 1000
+
+while(true){
+
+const { data: loteCaja, error } = await supabase
 .from("caja")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeCaja, desdeCaja + bloqueCaja - 1)
 
-const { data: deudas = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteCaja || loteCaja.length === 0) break
+
+caja = [...caja, ...loteCaja]
+
+if(loteCaja.length < bloqueCaja) break
+
+desdeCaja += bloqueCaja
+
+}
+
+let deudas:any[] = []
+let desdeDeudas = 0
+const bloqueDeudas = 1000
+
+while(true){
+
+const { data: loteDeudas, error } = await supabase
 .from("deudas")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeDeudas, desdeDeudas + bloqueDeudas - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteDeudas || loteDeudas.length === 0) break
+
+deudas = [...deudas, ...loteDeudas]
+
+if(loteDeudas.length < bloqueDeudas) break
+
+desdeDeudas += bloqueDeudas
+
+}
 
 let productosConteo={}
 let clientesConteo={}

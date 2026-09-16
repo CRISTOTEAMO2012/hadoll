@@ -41,10 +41,32 @@ cargarDatos()
 async function cargarDatos(){
 
 // CLIENTES
-const { data: clientesData } = await supabase
+let clientesData:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error } = await supabase
 .from("clientes")
 .select("*")
-.order("nombre")
+.order("nombre",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteClientes || loteClientes.length === 0) break
+
+clientesData = [...clientesData, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
 
 // VEHICULOS
 const { data: vehiculosData } = await supabase

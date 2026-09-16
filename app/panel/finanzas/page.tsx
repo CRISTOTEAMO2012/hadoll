@@ -69,33 +69,194 @@ calcularTodo()
 
 async function calcularTodo(){
 
-const { data: caja = [] } = await supabase
+let caja:any[] = []
+let desdeCaja = 0
+const bloqueCaja = 1000
+
+while(true){
+
+const { data: loteCaja, error } = await supabase
 .from("caja")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeCaja, desdeCaja + bloqueCaja - 1)
 
-const { data: gastos = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteCaja || loteCaja.length === 0) break
+
+caja = [...caja, ...loteCaja]
+
+if(loteCaja.length < bloqueCaja) break
+
+desdeCaja += bloqueCaja
+
+}
+
+let gastos:any[] = []
+let desdeGastos = 0
+const bloqueGastos = 1000
+
+while(true){
+
+const { data: loteGastos, error } = await supabase
 .from("gastos")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeGastos, desdeGastos + bloqueGastos - 1)
 
-const { data: produccionCostos = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteGastos || loteGastos.length === 0) break
+
+gastos = [...gastos, ...loteGastos]
+
+if(loteGastos.length < bloqueGastos) break
+
+desdeGastos += bloqueGastos
+
+}
+
+let produccionCostos:any[] = []
+let desdeProduccion = 0
+const bloqueProduccion = 1000
+
+while(true){
+
+const { data: loteProduccion, error } = await supabase
 .from("produccion")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeProduccion, desdeProduccion + bloqueProduccion - 1)
 
-const { data: ventas = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteProduccion || loteProduccion.length === 0) break
+
+produccionCostos = [...produccionCostos, ...loteProduccion]
+
+if(loteProduccion.length < bloqueProduccion) break
+
+desdeProduccion += bloqueProduccion
+
+}
+
+let ventas:any[] = []
+let desdeVentas = 0
+const bloqueVentas = 1000
+
+while(true){
+
+const { data: loteVentas, error } = await supabase
 .from("ventas")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeVentas, desdeVentas + bloqueVentas - 1)
 
-const { data: insumosTabla = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteVentas || loteVentas.length === 0) break
+
+ventas = [...ventas, ...loteVentas]
+
+if(loteVentas.length < bloqueVentas) break
+
+desdeVentas += bloqueVentas
+
+}
+
+let insumosTabla:any[] = []
+let desdeInsumos = 0
+const bloqueInsumos = 1000
+
+while(true){
+
+const { data: loteInsumos, error } = await supabase
 .from("insumos")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeInsumos, desdeInsumos + bloqueInsumos - 1)
 
-const { data: bodegaTabla = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteInsumos || loteInsumos.length === 0) break
+
+insumosTabla = [...insumosTabla, ...loteInsumos]
+
+if(loteInsumos.length < bloqueInsumos) break
+
+desdeInsumos += bloqueInsumos
+
+}
+
+let bodegaTabla:any[] = []
+let desdeBodega = 0
+const bloqueBodega = 1000
+
+while(true){
+
+const { data: loteBodega, error } = await supabase
 .from("bodega")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeBodega, desdeBodega + bloqueBodega - 1)
 
-const { data: aportes = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteBodega || loteBodega.length === 0) break
+
+bodegaTabla = [...bodegaTabla, ...loteBodega]
+
+if(loteBodega.length < bloqueBodega) break
+
+desdeBodega += bloqueBodega
+
+}
+
+let aportes:any[] = []
+let desdeAportes = 0
+const bloqueAportes = 1000
+
+while(true){
+
+const { data: loteAportes, error } = await supabase
 .from("aportes_socios")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeAportes, desdeAportes + bloqueAportes - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteAportes || loteAportes.length === 0) break
+
+aportes = [...aportes, ...loteAportes]
+
+if(loteAportes.length < bloqueAportes) break
+
+desdeAportes += bloqueAportes
+
+}
 
 let movAportes = aportes.filter((a:any)=>
   a.fecha >= desde && a.fecha <= hasta
@@ -190,20 +351,116 @@ setDetalle([])
 return
 }
 
-const { data: gastos = [] } = await supabase
+let gastos:any[] = []
+let desdeGastosDetalle = 0
+const bloqueGastosDetalle = 1000
+
+while(true){
+
+const { data: loteGastosDetalle, error } = await supabase
 .from("gastos")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeGastosDetalle, desdeGastosDetalle + bloqueGastosDetalle - 1)
 
-const { data: produccionCostos = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteGastosDetalle || loteGastosDetalle.length === 0) break
+
+gastos = [...gastos, ...loteGastosDetalle]
+
+if(loteGastosDetalle.length < bloqueGastosDetalle) break
+
+desdeGastosDetalle += bloqueGastosDetalle
+
+}
+
+let produccionCostos:any[] = []
+let desdeProduccionDetalle = 0
+const bloqueProduccionDetalle = 1000
+
+while(true){
+
+const { data: loteProduccionDetalle, error } = await supabase
 .from("produccion")
 .select("*")
+.order("id",{ascending:true})
+.range(
+desdeProduccionDetalle,
+desdeProduccionDetalle + bloqueProduccionDetalle - 1
+)
 
-const { data: caja = [] } = await supabase
+if(error){
+console.log(error)
+break
+}
+
+if(!loteProduccionDetalle || loteProduccionDetalle.length === 0) break
+
+produccionCostos = [...produccionCostos, ...loteProduccionDetalle]
+
+if(loteProduccionDetalle.length < bloqueProduccionDetalle) break
+
+desdeProduccionDetalle += bloqueProduccionDetalle
+
+}
+
+let caja:any[] = []
+let desdeCajaDetalle = 0
+const bloqueCajaDetalle = 1000
+
+while(true){
+
+const { data: loteCajaDetalle, error } = await supabase
 .from("caja")
 .select("*")
-const { data: aportes = [] } = await supabase
+.order("id",{ascending:true})
+.range(desdeCajaDetalle, desdeCajaDetalle + bloqueCajaDetalle - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteCajaDetalle || loteCajaDetalle.length === 0) break
+
+caja = [...caja, ...loteCajaDetalle]
+
+if(loteCajaDetalle.length < bloqueCajaDetalle) break
+
+desdeCajaDetalle += bloqueCajaDetalle
+
+}
+
+let aportes:any[] = []
+let desdeAportesDetalle = 0
+const bloqueAportesDetalle = 1000
+
+while(true){
+
+const { data: loteAportesDetalle, error } = await supabase
 .from("aportes_socios")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeAportesDetalle, desdeAportesDetalle + bloqueAportesDetalle - 1)
+
+if(error){
+console.log(error)
+break
+}
+
+if(!loteAportesDetalle || loteAportesDetalle.length === 0) break
+
+aportes = [...aportes, ...loteAportesDetalle]
+
+if(loteAportesDetalle.length < bloqueAportesDetalle) break
+
+desdeAportesDetalle += bloqueAportesDetalle
+
+}
 
 const cajaFiltrada = caja.filter((c:any)=>
 c.fecha >= desde && c.fecha <= hasta
@@ -215,6 +472,10 @@ g.fecha >= desde && g.fecha <= hasta
 
 const produccionFiltrada = produccionCostos.filter((p:any)=>
 p.fecha >= desde && p.fecha <= hasta
+)
+
+const aportesFiltrados = aportes.filter((a:any)=>
+a.fecha >= desde && a.fecha <= hasta
 )
 
 let lista:any[] = []

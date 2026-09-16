@@ -20,10 +20,17 @@ cargarHistorial()
 
 async function cargarClientes(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error } = await supabase
 .from("clientes")
 .select("*")
-.order("nombre")
+.order("nombre",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
 
 if(error){
 
@@ -35,7 +42,17 @@ return
 
 }
 
-setClientes(data || [])
+if(!loteClientes || loteClientes.length === 0) break
+
+data = [...data, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
+
+setClientes(data)
 
 }
 
@@ -48,11 +65,18 @@ let clientesFiltrados = clientes.filter((c:any)=>
 async function cargarHistorial(){
     
 // 🔥 AHORA SE LEE DESDE envasesprestados
-const { data, error } = await supabase
+let data:any[] = []
+let desdeHistorial = 0
+const bloqueHistorial = 1000
+
+while(true){
+
+const { data: loteHistorial, error } = await supabase
 .from("envases_prestados")
 .select("*")
 .eq("tipo","devuelto")
 .order("id",{ascending:false})
+.range(desdeHistorial, desdeHistorial + bloqueHistorial - 1)
 
 if(error){
 
@@ -62,7 +86,17 @@ return
 
 }
 
-setHistorial(data || [])
+if(!loteHistorial || loteHistorial.length === 0) break
+
+data = [...data, ...loteHistorial]
+
+if(loteHistorial.length < bloqueHistorial) break
+
+desdeHistorial += bloqueHistorial
+
+}
+
+setHistorial(data)
 
 }
 
@@ -72,9 +106,17 @@ if(!cliente) return alert("Seleccione cliente")
 if(!producto) return alert("Seleccione producto")
 if(!cantidad) return alert("Ingrese cantidad")
 
-const { data: movimientos, error: errorMovimientos } = await supabase
+let movimientos:any[] = []
+let desdeMovimientos = 0
+const bloqueMovimientos = 1000
+
+while(true){
+
+const { data: loteMovimientos, error: errorMovimientos } = await supabase
 .from("envases_prestados")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeMovimientos, desdeMovimientos + bloqueMovimientos - 1)
 
 if(errorMovimientos){
 
@@ -83,6 +125,16 @@ console.log(errorMovimientos)
 alert("Error verificando saldo")
 
 return
+
+}
+
+if(!loteMovimientos || loteMovimientos.length === 0) break
+
+movimientos = [...movimientos, ...loteMovimientos]
+
+if(loteMovimientos.length < bloqueMovimientos) break
+
+desdeMovimientos += bloqueMovimientos
 
 }
 

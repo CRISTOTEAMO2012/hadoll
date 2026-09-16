@@ -21,10 +21,17 @@ cargar()
 
 async function cargarClientes(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdeClientes = 0
+const bloqueClientes = 1000
+
+while(true){
+
+const { data: loteClientes, error } = await supabase
 .from("clientes")
 .select("*")
-.order("nombre")
+.order("nombre",{ascending:true})
+.range(desdeClientes, desdeClientes + bloqueClientes - 1)
 
 if(error){
 
@@ -36,17 +43,34 @@ return
 
 }
 
-setClientes(data || [])
+if(!loteClientes || loteClientes.length === 0) break
+
+data = [...data, ...loteClientes]
+
+if(loteClientes.length < bloqueClientes) break
+
+desdeClientes += bloqueClientes
+
+}
+
+setClientes(data)
 
 }
 
 async function cargar(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdeInicial = 0
+const bloqueInicial = 1000
+
+while(true){
+
+const { data: loteInicial, error } = await supabase
 .from("envases_prestados")
 .select("*")
 .eq("tipo","inicial")
 .order("id",{ascending:false})
+.range(desdeInicial, desdeInicial + bloqueInicial - 1)
 
 if(error){
 
@@ -58,7 +82,17 @@ return
 
 }
 
-setData(data || [])
+if(!loteInicial || loteInicial.length === 0) break
+
+data = [...data, ...loteInicial]
+
+if(loteInicial.length < bloqueInicial) break
+
+desdeInicial += bloqueInicial
+
+}
+
+setData(data)
 
 }
 

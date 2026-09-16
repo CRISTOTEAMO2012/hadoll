@@ -28,15 +28,30 @@ cargarCaja()
 
 async function cargarCaja(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdeRegistro = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
 .from("caja")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeRegistro, desdeRegistro + bloque - 1)
 
 if(error){
-
 console.log(error)
-
 return
+}
+
+if(!lote || lote.length === 0) break
+
+data = [...data, ...lote]
+
+if(lote.length < bloque) break
+
+desdeRegistro += bloque
 
 }
 

@@ -57,16 +57,34 @@ setInsumos(data.map(i => i.nombre))
 
 async function cargarInventario(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdeInsumos = 0
+const bloqueInsumos = 1000
+
+while(true){
+
+const { data: loteInsumos, error } = await supabase
 .from("insumos")
 .select("*")
+.order("id",{ascending:true})
+.range(desdeInsumos, desdeInsumos + bloqueInsumos - 1)
 
 if(error){
 console.log(error)
 return
 }
 
-calcularInventario(data || [])
+if(!loteInsumos || loteInsumos.length === 0) break
+
+data = [...data, ...loteInsumos]
+
+if(loteInsumos.length < bloqueInsumos) break
+
+desdeInsumos += bloqueInsumos
+
+}
+
+calcularInventario(data)
 
 }
 

@@ -13,17 +13,37 @@ cargarPedidos()
 
 async function cargarPedidos(){
 
-const { data, error } = await supabase
+let data:any[] = []
+let desdePedidos = 0
+const bloquePedidos = 1000
+
+while(true){
+
+const { data: lotePedidos, error } = await supabase
 .from("pedidos")
 .select("*")
 .order("id",{ascending:false})
+.range(desdePedidos, desdePedidos + bloquePedidos - 1)
 
 if(error){
+
 console.log(error)
+
 return
+
 }
 
-setPedidos(data || [])
+if(!lotePedidos || lotePedidos.length === 0) break
+
+data = [...data, ...lotePedidos]
+
+if(lotePedidos.length < bloquePedidos) break
+
+desdePedidos += bloquePedidos
+
+}
+
+setPedidos(data)
 
 }
 
