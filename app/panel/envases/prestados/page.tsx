@@ -207,7 +207,10 @@ totalSinLlave += cantidadMovimiento
 
 const totalGeneral = totalConLlave + totalSinLlave
 
-const hayConsulta = fechaDesde !== "" || fechaHasta !== ""
+const hayConsulta =
+fechaDesde !== "" || fechaHasta !== "" || tipoEnvaseFiltro !== "todos"
+
+const resumenMostrar = hayConsulta ? resumenFiltrado : resumen
 
 // 🔥 NOMBRE BONITO
 function nombreBonito(envase:string){
@@ -496,9 +499,6 @@ onClick={exportarCliente}
 
 )}
 
-{hayConsulta && (
-
-<>
 
 <h2>📊 Total por cliente</h2>
 
@@ -517,7 +517,7 @@ onClick={exportarCliente}
 
 <tbody>
 
-{resumenFiltrado.map((r:any,i:number)=>(
+{resumenMostrar.map((r:any,i:number)=>(
 
 <tr
 key={i}
@@ -540,10 +540,6 @@ onClick={()=>verDetalle(r.cliente)}
 </table>
 
 </div>
-
-</>
-
-)}
 
 {/* 🔽 DETALLE */}
 {clienteSeleccionado && (

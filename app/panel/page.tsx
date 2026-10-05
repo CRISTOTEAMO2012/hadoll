@@ -161,6 +161,10 @@ style={{...boton,background:"#0891b2"}}
 📝 Pedidos
 </Link>
 
+<Link href="/panel/envases" style={{...boton,background:"#14b8a6"}}>
+🫙 Envases
+</Link>
+
 </>
 )}
 
