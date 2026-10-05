@@ -25,6 +25,91 @@ const [filtroCiudad,setFiltroCiudad]=useState("Todas")
 const [editandoIndex,setEditandoIndex]=useState<any>(null)
 
 const [mensaje,setMensaje]=useState("")
+const [mostrarRepetidos,setMostrarRepetidos]=useState(false)
+
+function normalizarTexto(texto:any){
+
+return String(texto || "")
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.toLowerCase()
+.replace(/\s+/g," ")
+.trim()
+
+}
+
+const nombreNormalizado = normalizarTexto(nombre)
+const referenciaNormalizada = normalizarTexto(referencia)
+
+const posiblesDuplicados = clientes
+.filter((c:any)=>{
+
+if(editandoIndex !== null && c.id === editandoIndex){
+return false
+}
+
+const nombreCliente = normalizarTexto(c.nombre)
+const referenciaCliente = normalizarTexto(c.referencia)
+
+const coincideNombre =
+nombreNormalizado.length >= 5 &&
+(
+nombreCliente.includes(nombreNormalizado) ||
+nombreNormalizado.includes(nombreCliente)
+)
+
+const coincideReferencia =
+referenciaNormalizada.length >= 5 &&
+(
+referenciaCliente.includes(referenciaNormalizada) ||
+referenciaNormalizada.includes(referenciaCliente)
+)
+
+return coincideNombre || coincideReferencia
+
+})
+.slice(0,5)
+
+const clientesPotencialmenteRepetidos = clientes
+.map((cliente:any,index:number)=>{
+
+const nombreCliente = normalizarTexto(cliente.nombre)
+const referenciaCliente = normalizarTexto(cliente.referencia)
+
+const similares = clientes.filter((otro:any,otroIndex:number)=>{
+
+if(index === otroIndex) return false
+
+const nombreOtro = normalizarTexto(otro.nombre)
+const referenciaOtro = normalizarTexto(otro.referencia)
+
+const nombreParecido =
+nombreCliente.length >= 5 &&
+nombreOtro.length >= 5 &&
+(
+nombreCliente.includes(nombreOtro) ||
+nombreOtro.includes(nombreCliente)
+)
+
+const referenciaParecida =
+referenciaCliente.length >= 5 &&
+referenciaOtro.length >= 5 &&
+(
+referenciaCliente.includes(referenciaOtro) ||
+referenciaOtro.includes(referenciaCliente)
+)
+
+return nombreParecido || referenciaParecida
+
+})
+
+return {
+cliente,
+similares
+}
+
+})
+.filter((grupo:any)=>grupo.similares.length > 0)
 
 // CARGAR CLIENTES
 useEffect(()=>{
@@ -454,6 +539,32 @@ value={referencia}
 onChange={e=>setReferencia(e.target.value)}
 />
 
+{posiblesDuplicados.length > 0 && (
+
+<div style={alertaDuplicado}>
+
+<div style={{fontWeight:"bold",marginBottom:"8px"}}>
+⚠️ CLIENTE POSIBLEMENTE YA AGREGADO
+</div>
+
+{posiblesDuplicados.map((c:any)=>(
+
+<div key={c.id} style={{marginBottom:"5px"}}>
+
+<b>{c.nombre}</b>
+
+{c.referencia && (
+<span> — {c.referencia}</span>
+)}
+
+</div>
+
+))}
+
+</div>
+
+)}
+
 <input
 style={input}
 placeholder="Teléfono"
@@ -531,6 +642,143 @@ onClick={guardarCliente}
 <hr style={{margin:"40px 0"}}/>
 
 <h2>Buscar clientes</h2>
+
+<button
+style={{
+background:"#f59e0b",
+color:"#fff",
+padding:"12px",
+border:"none",
+borderRadius:"6px",
+cursor:"pointer",
+marginBottom:"15px",
+marginRight:"10px"
+}}
+onClick={()=>setMostrarRepetidos(!mostrarRepetidos)}
+>
+⚠️ Potencialmente repetidos ({clientesPotencialmenteRepetidos.length})
+</button>
+
+{mostrarRepetidos && (
+
+<div style={{
+background:"#fff7ed",
+border:"2px solid #f59e0b",
+padding:"15px",
+borderRadius:"10px",
+marginBottom:"20px"
+}}>
+
+<h3>
+⚠️ Clientes potencialmente repetidos
+</h3>
+
+{clientesPotencialmenteRepetidos.length === 0 ? (
+
+<p>No se encontraron posibles duplicados ✅</p>
+
+) : (
+
+clientesPotencialmenteRepetidos.map((grupo:any)=>(
+
+<div
+key={grupo.cliente.id}
+style={{
+background:"#fff",
+padding:"15px",
+borderRadius:"8px",
+marginBottom:"15px",
+border:"1px solid #fed7aa"
+}}
+>
+
+<div style={{
+fontWeight:"bold",
+fontSize:"16px",
+marginBottom:"5px"
+}}>
+{grupo.cliente.nombre}
+</div>
+
+<div>
+📝 Referencia: {grupo.cliente.referencia || "Sin referencia"}
+</div>
+
+<div>
+🏙 Ciudad: {grupo.cliente.ciudad || ""}
+</div>
+
+<div>
+📞 {grupo.cliente.telefono || ""}
+</div>
+
+
+<div style={{
+marginTop:"12px",
+padding:"10px",
+background:"#fef3c7",
+borderRadius:"6px"
+}}>
+
+<div style={{
+fontWeight:"bold",
+color:"#92400e",
+marginBottom:"8px"
+}}>
+🔎 SE PARECE A:
+</div>
+
+{grupo.similares.map((similar:any)=>(
+
+<div
+key={similar.id}
+style={{
+padding:"8px",
+marginBottom:"6px",
+background:"#fff",
+borderRadius:"5px"
+}}
+>
+
+<div>
+➡️ <b>{similar.nombre}</b>
+</div>
+
+<div>
+📝 {similar.referencia || "Sin referencia"}
+</div>
+
+<div>
+📞 {similar.telefono || ""}
+</div>
+
+</div>
+
+))}
+
+</div>
+
+
+<button
+style={{
+...botonEliminar,
+marginTop:"10px",
+cursor:"pointer"
+}}
+onClick={()=>borrarCliente(grupo.cliente)}
+>
+🗑 Borrar este cliente
+</button>
+
+</div>
+
+))
+
+)}
+
+</div>
+
+)}
 
 <button
 style={{
@@ -768,4 +1016,16 @@ fontSize:"32px",
 textAlign:"center" as const,
 boxShadow:"0 10px 40px rgba(0,0,0,0.4)",
 animation:"zoomIn 0.3s ease"
+}
+
+const alertaDuplicado={
+
+background:"#fef3c7",
+border:"2px solid #f59e0b",
+color:"#92400e",
+padding:"12px",
+borderRadius:"8px",
+width:"320px",
+marginBottom:"10px"
+
 }

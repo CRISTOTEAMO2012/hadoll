@@ -44,6 +44,7 @@ const GASTOS_DEFAULT = [
 const [tipoGasto,setTipoGasto]=useState(GASTOS_DEFAULT[0])
 const [descripcion,setDescripcion]=useState("")
 const [monto,setMonto]=useState("")
+const [fechaGasto,setFechaGasto]=useState("")
 
 // 🔥 SOCIOS
 const SOCIOS_DEFAULT = [
@@ -54,12 +55,6 @@ const SOCIOS_DEFAULT = [
 
 const [socio,setSocio]=useState(SOCIOS_DEFAULT[0])
 const [montoAporte,setMontoAporte]=useState("")
-
-useEffect(()=>{
-let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
-setDesde(hoy)
-setHasta(hoy)
-},[])
 
 useEffect(()=>{
 if(desde && hasta){
@@ -542,6 +537,11 @@ return mapa
 
 async function guardarGasto(){
 
+  if(!fechaGasto){
+alert("Seleccione la fecha del gasto")
+return
+}
+
 if(!monto){
 alert("Ingrese monto")
 return
@@ -559,7 +559,7 @@ const { error } = await supabase
 tipo: tipoGasto === "Manual" ? descripcion : tipoGasto,
 descripcion,
 total: Number(monto),
-fecha: new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
+fecha: fechaGasto
 }
 ])
 
@@ -571,6 +571,7 @@ return
 
 setDescripcion("")
 setMonto("")
+setFechaGasto("")
 
 await calcularTodo()
 
@@ -677,6 +678,13 @@ style={input}
 />
 
 )}
+
+<input
+type="date"
+value={fechaGasto}
+onChange={(e)=>setFechaGasto(e.target.value)}
+style={input}
+/>
 
 <input
 type="number"

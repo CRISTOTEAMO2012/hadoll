@@ -384,8 +384,7 @@ correspondeDia = false
 if(fechaObjetivo){
 
 correspondeDia =
-obtenerDiaFecha(fechaObjetivo) ===
-dia.toLowerCase()
+fechaObjetivo === fechaRuta
 
 }
 
