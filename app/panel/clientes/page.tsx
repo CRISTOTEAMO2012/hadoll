@@ -219,7 +219,7 @@ return
 // EDITAR
 if(editandoIndex !== null){
 
-let clienteEditar:any = clientes[editandoIndex]
+let clienteEditar:any = clientes.find((c:any)=>c.id === editandoIndex)
 
 const { error } = await supabase
 .from("clientes")
@@ -243,20 +243,23 @@ return
 
 }
 
-let nuevos = [...clientes]
+let nuevos = clientes.map((c:any)=>
 
-nuevos[editandoIndex]={
-
-...clienteEditar,
+c.id === editandoIndex
+? {
+...c,
 nombre,
 direccion,
 referencia,
 telefono,
 dia,
 ciudad,
-coords
-
+lat:coords?.lat || null,
+lng:coords?.lng || null
 }
+: c
+
+)
 
 setClientes(nuevos)
 
@@ -312,9 +315,7 @@ setMensaje("")
 }
 
 // EDITAR
-function editarCliente(index:any){
-
-let c = clientes[index]
+function editarCliente(c:any){
 
 setNombre(c.nombre)
 setDireccion(c.direccion)
@@ -322,25 +323,28 @@ setReferencia(c.referencia || "")
 setTelefono(c.telefono)
 setDia(c.dia)
 setCiudad(c.ciudad)
+
 if(c.lat && c.lng){
+
 setCoords({
 lat:c.lat,
 lng:c.lng
 })
+
 }else{
+
 setCoords(null)
+
 }
 
-setEditandoIndex(index)
+setEditandoIndex(c.id)
 
 }
 
 // BORRAR
-async function borrarCliente(index:any){
+async function borrarCliente(cliente:any){
 
 if(!confirm("¿Eliminar cliente?")) return
-
-let cliente = clientes[index]
 
 const { error } = await supabase
 .from("clientes")
@@ -356,7 +360,7 @@ return
 }
 
 setClientes(
-clientes.filter((_,i)=>i !== index)
+clientes.filter((c:any)=>c.id !== cliente.id)
 )
 
 alert("CLIENTE ELIMINADO ✅")
@@ -375,9 +379,21 @@ lista = lista.filter(c=>c.ciudad===filtroCiudad)
 }
 
 if(buscar!==""){
+
 lista = lista.filter(c=>
-c.nombre.toLowerCase().includes(buscar.toLowerCase())
+
+(c.nombre || "")
+.toLowerCase()
+.includes(buscar.toLowerCase())
+
+||
+
+(c.referencia || "")
+.toLowerCase()
+.includes(buscar.toLowerCase())
+
 )
+
 }
 
 const animacion = `
@@ -604,14 +620,14 @@ onChange={e=>setFiltroCiudad(e.target.value)}
 
 <button
 style={botonEditar}
-onClick={()=>editarCliente(i)}
+onClick={()=>editarCliente(c)}
 >
 Editar
 </button>
 
 <button
 style={botonEliminar}
-onClick={()=>borrarCliente(i)}
+onClick={()=>borrarCliente(c)}
 >
 Borrar
 </button>

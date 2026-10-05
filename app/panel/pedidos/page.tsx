@@ -110,6 +110,25 @@ cargarPedidos()
 
 }
 
+function obtenerProductosPedido(valor:any){
+
+try{
+
+const lista = JSON.parse(valor)
+
+if(Array.isArray(lista)) return lista
+
+}catch{}
+
+return [
+{
+producto:valor,
+cantidad:null
+}
+]
+
+}
+
 return(
 
 <div style={contenedor}>
@@ -172,10 +191,36 @@ style={filtroSelect}
 {p.direccion || "-"}
 </td>
 
-<td>{p.producto}</td>
+<td>
+
+{obtenerProductosPedido(p.producto).map(
+(item:any,index:number)=>(
+
+<div key={index} style={{marginBottom:"5px"}}>
+
+<b>{item.producto}</b>
+
+</div>
+
+)
+)}
+
+</td>
 
 <td style={{fontWeight:"bold"}}>
-{p.cantidad}
+
+{obtenerProductosPedido(p.producto).map(
+(item:any,index:number)=>(
+
+<div key={index} style={{marginBottom:"5px"}}>
+
+{item.cantidad ?? p.cantidad}
+
+</div>
+
+)
+)}
+
 </td>
 
 <td style={{textTransform:"capitalize"}}>

@@ -11,6 +11,10 @@ const [verHistorial,setVerHistorial]=useState(false)
 const [mostrarMetodo,setMostrarMetodo]=useState(false)
 const [accionPendiente,setAccionPendiente]=useState<any>(null)
 const [mensaje,setMensaje]=useState("")
+const [fechaDesde,setFechaDesde]=useState("")
+const [fechaHasta,setFechaHasta]=useState("")
+const [pagosFiltrados,setPagosFiltrados]=useState<any[]>([])
+const [buscandoPagos,setBuscandoPagos]=useState(false)
 
 useEffect(()=>{
 cargar()
@@ -57,6 +61,104 @@ cantidad: d.cantidad || 1
 }))
 
 setDeudas(deudasFormateadas)
+
+}
+
+// 🔎 CONSULTAR COBROS POR FECHA
+async function consultarPagos(){
+
+if(!fechaDesde || !fechaHasta){
+
+alert("Seleccione fecha Desde y Hasta")
+
+return
+
+}
+
+if(fechaDesde > fechaHasta){
+
+alert("La fecha Desde no puede ser mayor que Hasta")
+
+return
+
+}
+
+setBuscandoPagos(true)
+
+let movimientos:any[] = []
+let desdeRegistro = 0
+const bloque = 1000
+
+while(true){
+
+const { data: lote, error } = await supabase
+.from("caja")
+.select("*")
+.gte("fecha",fechaDesde)
+.lte("fecha",fechaHasta)
+.order("id",{ascending:false})
+.range(desdeRegistro, desdeRegistro + bloque - 1)
+
+if(error){
+
+console.log(error)
+
+alert("Error consultando cobros")
+
+setBuscandoPagos(false)
+
+return
+
+}
+
+if(!lote || lote.length === 0) break
+
+movimientos = [...movimientos,...lote]
+
+if(lote.length < bloque) break
+
+desdeRegistro += bloque
+
+}
+
+const pagos = movimientos.filter((m:any)=>{
+
+const detalle = (m.detalle || "").toLowerCase()
+
+return (
+m.tipo === "ingreso" &&
+(
+detalle.includes("cobro deuda") ||
+detalle.includes("cobro total deuda") ||
+detalle.includes("abono deuda")
+)
+)
+
+})
+
+setPagosFiltrados(pagos)
+
+setBuscandoPagos(false)
+
+}
+
+function obtenerClientePago(detalle:string){
+
+if(!detalle) return "-"
+
+return detalle
+.replace(/Cobro total deuda /i,"")
+.replace(/Cobro deuda /i,"")
+.replace(/Abono deuda /i,"")
+.trim()
+
+}
+
+function limpiarConsultaPagos(){
+
+setFechaDesde("")
+setFechaHasta("")
+setPagosFiltrados([])
 
 }
 
@@ -350,7 +452,27 @@ Cancelar
 
 )}
 
-<h1 style={titulo}>💳 CUENTAS POR COBRAR</h1>
+<div style={{
+display:"flex",
+alignItems:"center",
+gap:"15px"
+}}>
+
+<h1 style={titulo}>
+💳 CUENTAS POR COBRAR
+</h1>
+
+<button
+style={{
+...botonHistorial,
+marginTop:0
+}}
+onClick={()=>setVerHistorial(true)}
+>
+📄 Ver historial
+</button>
+
+</div>
 
 {!clienteActivo && !verHistorial && (
 
@@ -388,13 +510,6 @@ Cobrar todo
 </div>
 
 ))}
-
-<button
-style={botonHistorial}
-onClick={()=>setVerHistorial(true)}
->
-Ver historial
-</button>
 
 </>
 
@@ -469,26 +584,153 @@ Abonar
 
 <button
 style={botonVolver}
-onClick={()=>setVerHistorial(false)}
+onClick={()=>{
+
+setVerHistorial(false)
+setFechaDesde("")
+setFechaHasta("")
+setPagosFiltrados([])
+
+}}
 >
 ⬅ Volver
 </button>
 
-<h2>Historial</h2>
+<h2>📄 Historial de cobros</h2>
 
-{Object.entries(pagados).map(([cliente,data]:any)=>(
 
-<div
-key={cliente}
-style={card}
-onClick={()=>setClienteActivo(cliente)}
->
+<div style={filtrosHistorial}>
 
-👤 {cliente} | 💲 {data.total}
+<div>
+
+<label style={labelFiltro}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={inputFiltro}
+/>
 
 </div>
 
+
+<div>
+
+<label style={labelFiltro}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+
+<button
+style={botonBuscar}
+onClick={consultarPagos}
+disabled={buscandoPagos}
+>
+
+{buscandoPagos
+? "⏳ Consultando..."
+: "🔍 Consultar"}
+
+</button>
+
+
+<button
+style={botonLimpiar}
+onClick={limpiarConsultaPagos}
+>
+
+🧹 Limpiar
+
+</button>
+
+</div>
+
+
+{pagosFiltrados.length > 0 && (
+
+<div style={tablaContainer}>
+
+<table style={tabla}>
+
+<thead style={thead}>
+
+<tr>
+
+<th style={th}>Fecha</th>
+<th style={th}>Cliente</th>
+<th style={th}>Tipo</th>
+<th style={th}>Método</th>
+<th style={th}>Monto</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{pagosFiltrados.map((p:any,i:number)=>(
+
+<tr key={i}>
+
+<td style={td}>
+{p.fecha}
+</td>
+
+<td style={td}>
+{obtenerClientePago(p.detalle)}
+</td>
+
+<td style={td}>
+
+{(p.detalle || "").toLowerCase().includes("abono")
+? "Abono"
+: "Cobro"}
+
+</td>
+
+<td style={td}>
+{p.metodo || "-"}
+</td>
+
+<td style={td}>
+$ {Number(p.monto || 0)}
+</td>
+
+</tr>
+
 ))}
+
+</tbody>
+
+</table>
+
+</div>
+
+)}
+
+
+{fechaDesde &&
+fechaHasta &&
+!buscandoPagos &&
+pagosFiltrados.length === 0 && (
+
+<div style={sinResultados}>
+No existen cobros registrados en este período.
+</div>
+
+)}
 
 </div>
 
@@ -644,4 +886,85 @@ border:"none",
 padding:"12px",
 borderRadius:"10px",
 cursor:"pointer"
+}
+
+const filtrosHistorial={
+background:"#f9fafb",
+padding:"15px",
+border:"1px solid #ddd",
+borderRadius:"10px",
+display:"flex",
+gap:"15px",
+alignItems:"end",
+flexWrap:"wrap" as const,
+marginBottom:"20px"
+}
+
+const labelFiltro={
+display:"block",
+fontWeight:"bold",
+marginBottom:"5px"
+}
+
+const inputFiltro={
+padding:"10px",
+border:"2px solid #2563eb",
+borderRadius:"7px",
+background:"#eff6ff",
+color:"#000",
+fontWeight:"bold"
+}
+
+const botonBuscar={
+background:"#16a34a",
+color:"#fff",
+border:"none",
+padding:"11px 16px",
+borderRadius:"7px",
+cursor:"pointer",
+fontWeight:"bold"
+}
+
+const botonLimpiar={
+background:"#64748b",
+color:"#fff",
+border:"none",
+padding:"11px 16px",
+borderRadius:"7px",
+cursor:"pointer",
+fontWeight:"bold"
+}
+
+const tablaContainer={
+background:"#fff",
+borderRadius:"10px",
+overflow:"hidden",
+boxShadow:"0 4px 10px rgba(0,0,0,0.1)"
+}
+
+const tabla={
+width:"100%",
+borderCollapse:"collapse" as const
+}
+
+const thead={
+background:"#1e293b",
+color:"#fff"
+}
+
+const th={
+padding:"10px"
+}
+
+const td={
+padding:"10px",
+textAlign:"center" as const,
+borderBottom:"1px solid #ddd"
+}
+
+const sinResultados={
+background:"#fef3c7",
+padding:"15px",
+borderRadius:"8px",
+fontWeight:"bold"
 }

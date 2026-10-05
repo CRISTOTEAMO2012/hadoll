@@ -13,6 +13,8 @@ const [ciudad,setCiudad]=useState("")
 const [direccion,setDireccion]=useState("")
 const [producto,setProducto]=useState("")
 const [cantidad,setCantidad]=useState<any>("")
+const [carrito,setCarrito]=useState<any[]>([])
+const [agregandoProducto,setAgregandoProducto]=useState(false)
 const [fechaSugerida,setFechaSugerida]=useState("")
 
 const [mensaje,setMensaje]=useState("")
@@ -88,6 +90,32 @@ setCiudad(encontrado.ciudad || "")
 function seleccionarProducto(nombreProd:string){
 
 setProducto(nombreProd)
+setCantidad("")
+
+}
+
+function agregarAlPedido(){
+
+if(!producto || !cantidad || Number(cantidad) <= 0){
+
+alert("Seleccione producto y cantidad")
+
+return
+
+}
+
+setCarrito([
+
+...carrito,
+
+{
+producto,
+cantidad:Number(cantidad)
+}
+
+])
+
+setProducto("")
 setCantidad("")
 
 }
@@ -203,13 +231,20 @@ day:"numeric"
 // 💾 GUARDAR
 async function enviar(){
 
-if(!nombre || !telefono || !producto || !ciudad || !cantidad){
+if(!nombre || !telefono || !ciudad || carrito.length === 0){
 
-alert("Completa datos")
+alert("Completa los datos y agrega al menos un producto")
 
 return
 
 }
+
+const productosPedido = JSON.stringify(carrito)
+
+const cantidadTotal = carrito.reduce(
+(total:any,item:any)=> total + Number(item.cantidad),
+0
+)
 
 const { error } = await supabase
 .from("pedidos")
@@ -219,8 +254,8 @@ cliente:nombre,
 telefono,
 ciudad,
 direccion,
-producto,
-cantidad:Number(cantidad),
+producto:productosPedido,
+cantidad:cantidadTotal,
 fecha:fechaSugerida,
 estado:"pendiente",
 origen:"qr"
@@ -237,7 +272,6 @@ return
 
 }
 
-// ✅ MENSAJE BONITO
 setMensaje("✅ PEDIDO REALIZADO CORRECTAMENTE")
 
 setTimeout(()=>{
@@ -252,9 +286,11 @@ setCiudad("")
 setDireccion("")
 setProducto("")
 setCantidad("")
+setCarrito([])
 setFechaSugerida("")
 
 }
+
 
 // 📲 WHATSAPP
 function whatsapp(){
@@ -404,6 +440,7 @@ style={input}
 
 <input
 type="number"
+placeholder="Cantidad"
 value={cantidad}
 min={1}
 onChange={e=>{
@@ -411,22 +448,83 @@ onChange={e=>{
 let valor = e.target.value
 
 if(valor === ""){
+
 setCantidad("")
+
 return
+
 }
 
 setCantidad(Number(valor))
 
 }}
-onBlur={()=>{
-
-if(cantidad === ""){
-setCantidad(1)
-}
-
-}}
 style={input}
 />
+
+<button
+onClick={agregarAlPedido}
+style={{
+...boton,
+background:"#2563eb",
+marginBottom:"12px"
+}}
+>
+➕ AGREGAR PRODUCTO
+</button>
+
+{carrito.length > 0 && (
+
+<div style={{
+background:"#f8fafc",
+padding:"12px",
+borderRadius:"10px",
+marginBottom:"12px"
+}}>
+
+<h3>🛒 Tu pedido</h3>
+
+{carrito.map((item:any,i:number)=>(
+
+<div
+key={i}
+style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center",
+marginBottom:"8px"
+}}
+>
+
+<span>
+{item.cantidad} x {item.producto}
+</span>
+
+<button
+onClick={()=>{
+
+setCarrito(
+carrito.filter((_:any,index:number)=>index !== i)
+)
+
+}}
+style={{
+background:"#ef4444",
+color:"#fff",
+border:"none",
+borderRadius:"5px",
+padding:"5px 8px"
+}}
+>
+✖
+</button>
+
+</div>
+
+))}
+
+</div>
+
+)}
 
 <button
 onClick={enviar}

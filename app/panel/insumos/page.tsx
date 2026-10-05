@@ -27,6 +27,11 @@ const[tipoGasto,setTipoGasto]=useState("fijo")
 
 const[mensaje,setMensaje]=useState("")
 
+const[verHistorial,setVerHistorial]=useState(false)
+const[fechaDesde,setFechaDesde]=useState("")
+const[fechaHasta,setFechaHasta]=useState("")
+const[historial,setHistorial]=useState<any[]>([])
+
 const[inventario,setInventario]=useState({})
 const[verInventario,setVerInventario]=useState(true)
 
@@ -226,6 +231,59 @@ setPrecio("")
 setTipoGasto("fijo")
 }
 
+async function consultarHistorial(){
+
+if(!fechaDesde || !fechaHasta){
+
+alert("Seleccione fecha Desde y Hasta")
+
+return
+
+}
+
+let data:any[] = []
+let desde = 0
+const bloque = 1000
+
+while(true){
+
+const { data:lote, error } = await supabase
+.from("insumos")
+.select("*")
+.gte("fecha",fechaDesde)
+.lte("fecha",fechaHasta)
+.order("id",{ascending:false})
+.range(desde,desde + bloque - 1)
+
+if(error){
+
+console.log(error)
+
+alert("Error consultando historial")
+
+return
+
+}
+
+if(!lote || lote.length === 0) break
+
+data = [...data,...lote]
+
+if(lote.length < bloque) break
+
+desde += bloque
+
+}
+
+const filtrados = data.filter((i:any)=>
+i.tipo === "consumo" ||
+i.tipo === "danado"
+)
+
+setHistorial(filtrados)
+
+}
+
 return(
 
 <div style={container}>
@@ -248,6 +306,17 @@ return(
 
 <button onClick={()=>setVerInventario(!verInventario)} style={btnInv}>
 📦 Inventario general
+</button>
+
+<button
+onClick={()=>setVerHistorial(!verHistorial)}
+style={{
+...btnInv,
+background:"#7c3aed",
+marginLeft:"10px"
+}}
+>
+📄 Historial consumo / dañado
 </button>
 
 <div style={bloque}>
@@ -380,21 +449,155 @@ return(
 
 </div>
 
+{verHistorial && (
+
+<div style={bloqueHistorial}>
+
+<h3>📄 Historial consumo / dañado</h3>
+
+<div style={{
+display:"flex",
+gap:"10px",
+flexWrap:"wrap",
+marginBottom:"15px"
+}}>
+
+<div>
+
+<label style={label}>
+Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={input}
+/>
+
+</div>
+
+<div>
+
+<label style={label}>
+Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={input}
+/>
+
+</div>
+
+<button
+onClick={consultarHistorial}
+style={{
+...guardar,
+width:"auto",
+padding:"10px 20px"
+}}
+>
+🔍 Consultar
+</button>
+
+<button
+onClick={()=>{
+
+setFechaDesde("")
+setFechaHasta("")
+setHistorial([])
+
+}}
+style={{
+...guardar,
+width:"auto",
+padding:"10px 20px",
+background:"#64748b"
+}}
+>
+🧹 Limpiar
+</button>
+
+</div>
+
+{historial.length === 0 ? (
+
+<p>No existen movimientos consultados.</p>
+
+) : (
+
+<table style={tablaHistorial}>
+
+<thead>
+
+<tr>
+<th style={thHistorial}>Fecha</th>
+<th style={thHistorial}>Insumo</th>
+<th style={thHistorial}>Tipo</th>
+<th style={thHistorial}>Cantidad</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{historial.map((h:any,i:number)=>(
+
+<tr key={i}>
+
+<td style={tdHistorial}>{h.fecha}</td>
+<td style={tdHistorial}>{h.insumo}</td>
+<td style={tdHistorial}>
+{h.tipo === "danado" ? "Dañado" : "Consumo"}
+</td>
+<td style={tdHistorial}>{h.cantidad}</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+)}
+
+</div>
+
+)}
+
 </div>
 )
 }
 
+
 // estilos intactos
 const container={padding:"40px",background:"#f4f6f9",minHeight:"100vh",color:"#000"}
 const titulo={textAlign:"center",marginBottom:"20px"}
-const filaPrincipal={display:"flex",gap:"30px",flexWrap:"wrap"}
-const bloque={background:"#fff",padding:"20px",borderRadius:"10px",marginBottom:"20px",width:"350px"}
+const filaPrincipal={
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(350px,1fr))",
+gap:"30px",
+width:"100%"
+}
+const bloque={
+background:"#fff",
+padding:"20px",
+borderRadius:"10px",
+marginBottom:"20px",
+width:"100%",
+boxSizing:"border-box" as const
+}
 
 const bloqueInventario={
 background:"#fff",
 padding:"20px",
 borderRadius:"12px",
-width:"320px",
+width:"100%",
+boxSizing:"border-box" as const,
 boxShadow:"0 4px 10px rgba(0,0,0,0.05)"
 }
 
@@ -448,4 +651,29 @@ borderRadius:"14px",
 fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,0.4)"
+}
+
+const bloqueHistorial={
+background:"#fff",
+padding:"20px",
+borderRadius:"12px",
+marginTop:"20px",
+width:"100%"
+}
+
+const tablaHistorial={
+width:"100%",
+borderCollapse:"collapse" as const
+}
+
+const thHistorial={
+background:"#1e293b",
+color:"#fff",
+padding:"10px"
+}
+
+const tdHistorial={
+padding:"10px",
+borderBottom:"1px solid #ddd",
+textAlign:"center" as const
 }

@@ -194,27 +194,234 @@ return ordenados
 }
 
 // CLIENTES DEL DÍA
-let hoy = new Date().toISOString().substring(0,10)
+
+function soloFecha(valor:any){
+
+if(!valor) return ""
+
+return String(valor).substring(0,10)
+
+}
+
+function sumarDiasFecha(fecha:string,diasSumar:number){
+
+let f = new Date(fecha + "T00:00:00")
+
+f.setDate(f.getDate() + diasSumar)
+
+return f.toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+
+}
+
+function obtenerDiaFecha(fecha:string){
+
+let f = new Date(fecha + "T00:00:00")
+
+return f.toLocaleDateString(
+"es-EC",
+{weekday:"long"}
+).toLowerCase()
+
+}
+
+const fechaRuta = fechaPorDia(dia)
 
 let filtrados = ordenarRuta(
 
 clientes.filter((c:any)=>{
 
-if(
-c.dia?.toLowerCase()!==dia.toLowerCase()
-)return false
-
 if(!c.lat || !c.lng)
 return false
 
-const visitaHoy = visitas.find((v:any)=>
+const ciudadCliente =
+(c.ciudad || "").trim().toUpperCase()
 
-v.cliente_id===c.id &&
-v.fecha_visita===hoy
+let correspondeDia = false
+
+
+// 🔵 CHIMBO - SAN MIGUEL - CHILLANES
+// SIEMPRE JUEVES
+
+if(
+ciudadCliente === "CHIMBO" ||
+ciudadCliente === "SAN MIGUEL" ||
+ciudadCliente === "CHILLANES"
+){
+
+correspondeDia =
+dia.toLowerCase() === "jueves"
+
+}
+
+
+// 🟢 GUARANDA
+// SE CALCULA SEGÚN ÚLTIMA COMPRA O REPROGRAMACIÓN
+
+else if(ciudadCliente === "GUARANDA"){
+
+const FECHA_INICIO_RUTAS = "2026-10-04"
+
+const ventasCliente = ventas.filter(
+(v:any)=>
+v.cliente === c.nombre &&
+v.fecha &&
+soloFecha(v.fecha) >= FECHA_INICIO_RUTAS
+)
+
+const ultimaVenta = [...ventasCliente]
+.sort((a:any,b:any)=>
+String(b.fecha).localeCompare(String(a.fecha))
+)[0]
+
+
+const visitasReprogramadas = visitas.filter(
+(v:any)=>
+v.cliente_id === c.id &&
+v.estado === "NO VENDIDO" &&
+v.revisitar_el &&
+soloFecha(
+v.fecha_visita ||
+v.fecha_ecuador
+) >= FECHA_INICIO_RUTAS
+)
+
+const ultimaReprogramacion =
+[...visitasReprogramadas]
+.sort((a:any,b:any)=>
+
+String(
+b.fecha_visita ||
+b.fecha_ecuador ||
+""
+).localeCompare(
+
+String(
+a.fecha_visita ||
+a.fecha_ecuador ||
+""
+)
 
 )
 
-return !visitaHoy
+)[0]
+
+
+let fechaUltimaVenta = ""
+
+if(ultimaVenta){
+
+fechaUltimaVenta =
+soloFecha(ultimaVenta.fecha)
+
+}
+
+
+let fechaReprogramada = ""
+
+let fechaVisitaReprogramada = ""
+
+if(ultimaReprogramacion){
+
+fechaReprogramada =
+soloFecha(
+ultimaReprogramacion.revisitar_el
+)
+
+fechaVisitaReprogramada =
+soloFecha(
+ultimaReprogramacion.fecha_visita ||
+ultimaReprogramacion.fecha_ecuador
+)
+
+}
+
+
+let fechaObjetivo = ""
+
+
+// SI FUE REPROGRAMADO DESPUÉS DE SU ÚLTIMA COMPRA
+
+if(
+fechaReprogramada &&
+(
+!fechaUltimaVenta ||
+fechaVisitaReprogramada >= fechaUltimaVenta
+)
+){
+
+fechaObjetivo = fechaReprogramada
+
+}
+
+
+// SI TIENE UNA COMPRA
+// PRÓXIMA VISITA = 7 DÍAS
+
+else if(fechaUltimaVenta){
+
+fechaObjetivo =
+sumarDiasFecha(
+fechaUltimaVenta,
+7
+)
+
+}
+
+
+// SI NUNCA HA COMPRADO
+// CONSERVA TEMPORALMENTE EL DÍA DEL CLIENTE
+
+else{
+
+correspondeDia = false
+
+}
+
+
+if(fechaObjetivo){
+
+correspondeDia =
+obtenerDiaFecha(fechaObjetivo) ===
+dia.toLowerCase()
+
+}
+
+}
+
+
+// ⚪ OTRAS CIUDADES
+// POR AHORA SE CONSERVA SU DÍA ACTUAL
+
+else{
+
+correspondeDia =
+(c.dia || "").toLowerCase() ===
+dia.toLowerCase()
+
+}
+
+
+if(!correspondeDia)
+return false
+
+
+// NO VOLVER A MOSTRAR SI YA FUE VISITADO
+// EN LA FECHA DE ESA RUTA
+
+const visitaRuta = visitas.find(
+(v:any)=>
+
+v.cliente_id === c.id &&
+
+soloFecha(v.fecha_visita) ===
+fechaRuta
+
+)
+
+return !visitaRuta
 
 })
 
@@ -283,31 +490,35 @@ window.open(`https://www.google.com/maps?q=${c.lat},${c.lng}`)
 }
 // 🔥 CLIENTES RECOMENDADOS POR ÚLTIMA COMPRA
 
+const FECHA_INICIO_PRIORITARIOS = "2026-10-04"
+
 let recomendados = clientes.filter((c:any)=>{
 
 const ventasCliente = ventas.filter(
-(v:any)=>v.cliente === c.nombre
+(v:any)=>
+v.cliente === c.nombre &&
+v.fecha &&
+soloFecha(v.fecha) >= FECHA_INICIO_PRIORITARIOS
 )
 
 if(ventasCliente.length === 0){
 return false
 }
 
-let ultimaFecha = ventasCliente
+let ultimaFecha = [...ventasCliente]
 .sort((a:any,b:any)=>
-new Date(b.fecha).getTime() -
-new Date(a.fecha).getTime()
+String(b.fecha).localeCompare(String(a.fecha))
 )[0]
 
 let dias = Math.floor(
 (
 new Date().getTime() -
-new Date(ultimaFecha.fecha).getTime()
+new Date(ultimaFecha.fecha + "T00:00:00").getTime()
 )
 /(1000*60*60*24)
 )
 
-return dias >= 8
+return dias > 10
 
 })
 // MAPA

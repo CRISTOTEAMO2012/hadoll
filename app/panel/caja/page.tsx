@@ -4,7 +4,8 @@ import {useEffect,useState} from "react"
 import { supabase } from "@/supabase"
 export default function Caja(){
 
-const [fecha,setFecha]=useState("")
+const [fechaDesde,setFechaDesde]=useState("")
+const [fechaHasta,setFechaHasta]=useState("")
 const [total,setTotal]=useState(0)
 
 const [ventaEfectivo,setVentaEfectivo]=useState(0)
@@ -15,16 +16,17 @@ const [cobroTransferencia,setCobroTransferencia]=useState(0)
 
 useEffect(()=>{
 let hoy = new Date().toLocaleDateString("en-CA",{timeZone:"America/Guayaquil"})
-setFecha(hoy)
+setFechaDesde(hoy)
+setFechaHasta(hoy)
 },[])
 
 useEffect(()=>{
 
-if(!fecha) return
+if(!fechaDesde || !fechaHasta) return
 
 cargarCaja()
 
-},[fecha])
+},[fechaDesde,fechaHasta])
 
 async function cargarCaja(){
 
@@ -65,7 +67,10 @@ let cTr=0
 
 data?.forEach((m:any)=>{
 
-if(m.fecha === fecha){
+if(
+m.fecha >= fechaDesde &&
+m.fecha <= fechaHasta
+){
 
 let monto = Number(m.monto || 0)
 
@@ -130,10 +135,38 @@ return(
 
 <h1 style={titulo}>💰 Caja</h1>
 
-<input type="date" value={fecha} onChange={(e)=>setFecha(e.target.value)} style={input}/>
+<div style={{display:"flex",gap:"15px",marginBottom:"20px",flexWrap:"wrap"}}>
+
+<div>
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={input}
+/>
+</div>
+
+<div>
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={input}
+/>
+</div>
+
+</div>
 
 <div style={totalBox}>
-Total del día: $ {total}
+Total del período: $ {total}
 </div>
 
 <div style={grid}>

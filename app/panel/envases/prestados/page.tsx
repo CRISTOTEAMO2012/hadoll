@@ -11,10 +11,20 @@ const [resumen,setResumen]=useState<any[]>([])
 const [clienteSeleccionado,setClienteSeleccionado]=useState("")
 const [detalle,setDetalle]=useState<any[]>([])
 const [saldo,setSaldo]=useState<any>({})
-
+const [fechaDesde,setFechaDesde]=useState("")
+const [fechaHasta,setFechaHasta]=useState("")
+const [tipoEnvaseFiltro,setTipoEnvaseFiltro]=useState("todos")
 useEffect(()=>{
 cargar()
 },[])
+
+useEffect(()=>{
+
+setClienteSeleccionado("")
+setDetalle([])
+setSaldo({})
+
+},[fechaDesde,fechaHasta,tipoEnvaseFiltro])
 
 async function cargar(){
 
@@ -95,6 +105,110 @@ setResumen(resumenArray)
 
 }
 
+// 🔎 FILTROS FECHA Y TIPO DE ENVASE
+
+const datosFiltrados = data.filter((p:any)=>{
+
+const fechaCorrecta =
+(!fechaDesde || p.fecha >= fechaDesde) &&
+(!fechaHasta || p.fecha <= fechaHasta)
+
+const nombreEnvase = (p.envase || p.producto || "").toLowerCase()
+
+let tipoCorrecto = true
+
+if(tipoEnvaseFiltro === "con_llave"){
+tipoCorrecto =
+nombreEnvase.includes("con llave") ||
+nombreEnvase.includes("20llave")
+}
+
+if(tipoEnvaseFiltro === "sin_llave"){
+tipoCorrecto =
+nombreEnvase.includes("sin llave") ||
+nombreEnvase.includes("20sin")
+}
+
+return fechaCorrecta && tipoCorrecto
+
+})
+
+
+// 🔥 AGRUPAR RESULTADOS FILTRADOS POR CLIENTE
+
+let agrupadoFiltrado:any = {}
+
+datosFiltrados.forEach((p:any)=>{
+
+let cliente = (p.cliente || "").trim()
+
+if(agrupadoFiltrado[cliente] === undefined){
+agrupadoFiltrado[cliente] = 0
+}
+
+if(
+p.tipo==="prestado" ||
+p.tipo==="inicial"
+){
+agrupadoFiltrado[cliente] += Number(p.cantidad)
+}
+
+if(p.tipo==="devuelto"){
+agrupadoFiltrado[cliente] -= Number(p.cantidad)
+}
+
+})
+
+const resumenFiltrado = Object.entries(agrupadoFiltrado).map(
+([cliente,total])=>({
+cliente,
+total
+})
+)
+
+
+// 🔥 TOTALES GENERALES
+
+let totalConLlave = 0
+let totalSinLlave = 0
+
+datosFiltrados.forEach((p:any)=>{
+
+const envase = (p.envase || p.producto || "").toLowerCase()
+
+let cantidadMovimiento = 0
+
+if(
+p.tipo==="prestado" ||
+p.tipo==="inicial"
+){
+cantidadMovimiento = Number(p.cantidad || 0)
+}
+
+if(p.tipo==="devuelto"){
+cantidadMovimiento = -Number(p.cantidad || 0)
+}
+
+if(
+envase.includes("con llave") ||
+envase.includes("20llave")
+){
+totalConLlave += cantidadMovimiento
+}
+
+if(
+envase.includes("sin llave") ||
+envase.includes("20sin")
+){
+totalSinLlave += cantidadMovimiento
+}
+
+})
+
+const totalGeneral = totalConLlave + totalSinLlave
+
+const hayConsulta = fechaDesde !== "" || fechaHasta !== ""
+
 // 🔥 NOMBRE BONITO
 function nombreBonito(envase:string){
 
@@ -124,7 +238,9 @@ return
 
 setClienteSeleccionado(cliente)
 
-let filtrado = data.filter(d=>d.cliente===cliente)
+let filtrado = datosFiltrados.filter(
+d=>(d.cliente || "").trim()===cliente
+)
 
 setDetalle(filtrado)
 
@@ -186,7 +302,7 @@ sinLlave: saldoSinLlave
 // 🔥 EXPORTAR GENERAL
 function exportarGeneral(){
 
-let ws = XLSX.utils.json_to_sheet(resumen)
+let ws = XLSX.utils.json_to_sheet(resumenFiltrado)
 let wb = XLSX.utils.book_new()
 
 XLSX.utils.book_append_sheet(wb, ws, "Resumen")
@@ -225,6 +341,140 @@ return(
 
 <h1 style={titulo}>🫙 ENVASES PRESTADOS</h1>
 
+<div
+style={{
+background:"#fff",
+padding:"15px",
+borderRadius:"10px",
+marginBottom:"20px",
+display:"flex",
+gap:"15px",
+flexWrap:"wrap",
+alignItems:"end"
+}}
+>
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+🫙 Tipo de envase
+</label>
+
+<select
+value={tipoEnvaseFiltro}
+onChange={(e)=>setTipoEnvaseFiltro(e.target.value)}
+style={inputFiltro}
+>
+
+<option value="todos">
+Todos
+</option>
+
+<option value="con_llave">
+20L con llave
+</option>
+
+<option value="sin_llave">
+20L sin llave
+</option>
+
+</select>
+
+</div>
+
+<button
+style={{
+...boton,
+background:"#64748b"
+}}
+onClick={()=>{
+
+setFechaDesde("")
+setFechaHasta("")
+setTipoEnvaseFiltro("todos")
+setClienteSeleccionado("")
+setDetalle([])
+setSaldo({})
+
+}}
+>
+
+🔄 Limpiar filtros
+
+</button>
+
+</div>
+
+{hayConsulta && (
+
+<div style={resumenGeneral}>
+
+<div style={tarjetaResumen}>
+
+<h3>🔵 Con llave</h3>
+
+<p style={numeroResumen}>
+{totalConLlave}
+</p>
+
+</div>
+
+<div style={tarjetaResumen}>
+
+<h3>⚪ Sin llave</h3>
+
+<p style={numeroResumen}>
+{totalSinLlave}
+</p>
+
+</div>
+
+<div style={tarjetaResumen}>
+
+<h3>📦 Total general</h3>
+
+<p style={numeroResumen}>
+{totalGeneral}
+</p>
+
+</div>
+
+</div>
+
+)}
+
+{hayConsulta && (
+
 <div style={{marginBottom:"20px"}}>
 
 <button style={boton} onClick={exportarGeneral}>
@@ -232,15 +482,23 @@ return(
 </button>
 
 {clienteSeleccionado && (
+
 <button
 style={{...boton,background:"#2563eb",marginLeft:"10px"}}
 onClick={exportarCliente}
 >
 📄 Exportar cliente
 </button>
+
 )}
 
 </div>
+
+)}
+
+{hayConsulta && (
+
+<>
 
 <h2>📊 Total por cliente</h2>
 
@@ -249,15 +507,17 @@ onClick={exportarCliente}
 <table style={tabla}>
 
 <thead style={thead}>
+
 <tr>
 <th style={th}>Cliente</th>
 <th style={th}>Total envases</th>
 </tr>
+
 </thead>
 
 <tbody>
 
-{resumen.map((r,i)=>(
+{resumenFiltrado.map((r:any,i:number)=>(
 
 <tr
 key={i}
@@ -280,6 +540,10 @@ onClick={()=>verDetalle(r.cliente)}
 </table>
 
 </div>
+
+</>
+
+)}
 
 {/* 🔽 DETALLE */}
 {clienteSeleccionado && (
@@ -427,4 +691,34 @@ const fila={
 textAlign:"center",
 borderBottom:"1px solid #ddd",
 cursor:"pointer"
+}
+
+const inputFiltro={
+padding:"10px",
+border:"2px solid #2563eb",
+borderRadius:"7px",
+background:"#eff6ff",
+color:"#000",
+fontWeight:"bold"
+}
+
+const resumenGeneral={
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",
+gap:"15px",
+marginBottom:"20px"
+}
+
+const tarjetaResumen={
+background:"#fff",
+padding:"18px",
+borderRadius:"10px",
+textAlign:"center" as const,
+boxShadow:"0 4px 10px rgba(0,0,0,0.1)"
+}
+
+const numeroResumen={
+fontSize:"28px",
+fontWeight:"bold",
+margin:"8px 0 0 0"
 }

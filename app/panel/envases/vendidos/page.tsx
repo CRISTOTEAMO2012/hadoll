@@ -10,10 +10,19 @@ const [data,setData]=useState<any[]>([])
 const [resumen,setResumen]=useState<any[]>([])
 const [clienteSeleccionado,setClienteSeleccionado]=useState("")
 const [detalle,setDetalle]=useState<any[]>([])
-
+const [fechaDesde,setFechaDesde]=useState("")
+const [fechaHasta,setFechaHasta]=useState("")
+const [tipoEnvaseFiltro,setTipoEnvaseFiltro]=useState("todos")
 useEffect(()=>{
 cargar()
 },[])
+
+useEffect(()=>{
+
+setClienteSeleccionado("")
+setDetalle([])
+
+},[fechaDesde,fechaHasta,tipoEnvaseFiltro])
 
 async function cargar(){
 
@@ -73,6 +82,71 @@ setResumen(resumenArray)
 
 }
 
+// 🔎 FILTROS FECHA Y TIPO DE ENVASE
+
+const datosFiltrados = data.filter((v:any)=>{
+
+const fechaCorrecta =
+(!fechaDesde || v.fecha >= fechaDesde) &&
+(!fechaHasta || v.fecha <= fechaHasta)
+
+const nombreProducto = (v.producto || "").toLowerCase()
+
+let tipoCorrecto = true
+
+if(tipoEnvaseFiltro === "con_llave"){
+tipoCorrecto = nombreProducto.includes("con llave")
+}
+
+if(tipoEnvaseFiltro === "sin_llave"){
+tipoCorrecto = nombreProducto.includes("sin llave")
+}
+
+return fechaCorrecta && tipoCorrecto
+
+})
+
+
+// 🔥 AGRUPAR RESULTADOS FILTRADOS POR CLIENTE
+
+let agrupadoFiltrado:any = {}
+
+datosFiltrados.forEach((v:any)=>{
+
+if(!agrupadoFiltrado[v.cliente]){
+agrupadoFiltrado[v.cliente] = 0
+}
+
+agrupadoFiltrado[v.cliente] += Number(v.cantidad)
+
+})
+
+const resumenFiltrado = Object.entries(agrupadoFiltrado).map(
+([cliente,total])=>({
+cliente,
+total
+})
+)
+
+const totalConLlave = datosFiltrados
+.filter((v:any)=>
+(v.producto || "").toLowerCase().includes("con llave")
+)
+.reduce((total:number,v:any)=>
+total + Number(v.cantidad || 0),0
+)
+
+const totalSinLlave = datosFiltrados
+.filter((v:any)=>
+(v.producto || "").toLowerCase().includes("sin llave")
+)
+.reduce((total:number,v:any)=>
+total + Number(v.cantidad || 0),0
+)
+
+const totalGeneral = totalConLlave + totalSinLlave
+const hayConsulta = fechaDesde !== "" || fechaHasta !== ""
+
 // 🔥 ABRIR / CERRAR DETALLE
 function verDetalle(cliente:string){
 
@@ -84,7 +158,7 @@ return
 
 setClienteSeleccionado(cliente)
 
-let filtrado = data.filter(d=>d.cliente===cliente)
+let filtrado = datosFiltrados.filter(d=>d.cliente===cliente)
 setDetalle(filtrado)
 
 }
@@ -92,7 +166,7 @@ setDetalle(filtrado)
 // 🔥 EXPORTAR GENERAL
 function exportarGeneral(){
 
-let ws = XLSX.utils.json_to_sheet(resumen)
+let ws = XLSX.utils.json_to_sheet(resumenFiltrado)
 let wb = XLSX.utils.book_new()
 
 XLSX.utils.book_append_sheet(wb, ws, "Vendidos")
@@ -130,6 +204,134 @@ return(
 
 <h1 style={titulo}>🧾 ENVASES VENDIDOS</h1>
 
+<div
+style={{
+background:"#fff",
+padding:"15px",
+borderRadius:"10px",
+marginBottom:"20px",
+display:"flex",
+gap:"15px",
+flexWrap:"wrap",
+alignItems:"end"
+}}
+>
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+
+<div>
+
+<label style={{display:"block",fontWeight:"bold",marginBottom:"5px"}}>
+🫙 Tipo de envase
+</label>
+
+<select
+value={tipoEnvaseFiltro}
+onChange={(e)=>setTipoEnvaseFiltro(e.target.value)}
+style={inputFiltro}
+>
+
+<option value="todos">
+Todos
+</option>
+
+<option value="con_llave">
+20L con llave
+</option>
+
+<option value="sin_llave">
+20L sin llave
+</option>
+
+</select>
+
+</div>
+
+
+<button
+style={{
+...boton,
+background:"#64748b"
+}}
+onClick={()=>{
+
+setFechaDesde("")
+setFechaHasta("")
+setTipoEnvaseFiltro("todos")
+setClienteSeleccionado("")
+setDetalle([])
+
+}}
+>
+
+🔄 Limpiar filtros
+
+</button>
+
+</div>
+
+{hayConsulta && (
+
+<div style={resumenGeneral}>
+
+<div style={tarjetaResumen}>
+<h3>🔵 Con llave</h3>
+<p style={numeroResumen}>
+{totalConLlave}
+</p>
+</div>
+
+<div style={tarjetaResumen}>
+<h3>⚪ Sin llave</h3>
+<p style={numeroResumen}>
+{totalSinLlave}
+</p>
+</div>
+
+<div style={tarjetaResumen}>
+<h3>📦 Total general</h3>
+<p style={numeroResumen}>
+{totalGeneral}
+</p>
+</div>
+
+</div>
+
+)}
+
+
+{hayConsulta && (
+
 <div style={{marginBottom:"20px"}}>
 
 <button style={boton} onClick={exportarGeneral}>
@@ -147,6 +349,12 @@ onClick={exportarCliente}
 
 </div>
 
+)}
+
+{hayConsulta && (
+
+<>
+
 <h2>📊 Total por cliente</h2>
 
 <div style={tablaContainer}>
@@ -162,7 +370,7 @@ onClick={exportarCliente}
 
 <tbody>
 
-{resumen.map((r,i)=>(
+{resumenFiltrado.map((r:any,i:number)=>(
 
 <tr
 key={i}
@@ -185,6 +393,10 @@ onClick={()=>verDetalle(r.cliente)}
 </table>
 
 </div>
+
+</>
+
+)}
 
 {/* 🔽 DETALLE */}
 {clienteSeleccionado && (
@@ -290,4 +502,34 @@ const fila={
 textAlign:"center",
 borderBottom:"1px solid #ddd",
 cursor:"pointer"
+}
+
+const inputFiltro={
+padding:"10px",
+border:"2px solid #2563eb",
+borderRadius:"7px",
+background:"#eff6ff",
+color:"#000",
+fontWeight:"bold"
+}
+
+const resumenGeneral={
+display:"grid",
+gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",
+gap:"15px",
+marginBottom:"20px"
+}
+
+const tarjetaResumen={
+background:"#fff",
+padding:"18px",
+borderRadius:"10px",
+textAlign:"center" as const,
+boxShadow:"0 4px 10px rgba(0,0,0,0.1)"
+}
+
+const numeroResumen={
+fontSize:"28px",
+fontWeight:"bold",
+margin:"8px 0 0 0"
 }

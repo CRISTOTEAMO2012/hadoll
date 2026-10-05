@@ -71,7 +71,7 @@ style={logo}
 🏬 Bodega / Compras
 </Link>
 
-<Link href="/panel/produccion" style={{...boton,background:"#f97316"}}>
+<Link href="/panel/produccion/menu" style={{...boton,background:"#f97316"}}>
 🏭 Producción
 </Link>
 
@@ -83,7 +83,7 @@ style={logo}
 🚚 Vehículos Distribuidores
 </Link>
 
-<Link href="/panel/ventas" style={{...boton,background:"#16a34a"}}>
+<Link href="/panel/ventas/menu" style={{...boton,background:"#16a34a"}}>
 💰 Ventas
 </Link>
 
@@ -168,7 +168,7 @@ style={{...boton,background:"#0891b2"}}
 {rol === "operador" && (
 <>
 
-<Link href="/panel/produccion" style={{...boton,background:"#f97316"}}>
+<Link href="/panel/produccion/menu" style={{...boton,background:"#f97316"}}>
 🏭 Producción
 </Link>
 

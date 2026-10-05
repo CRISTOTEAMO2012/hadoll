@@ -24,7 +24,7 @@ const[clienteTop,setClienteTop]=useState("")
 const[dataPastel,setDataPastel]=useState([])
 
 const[topClientes,setTopClientes]=useState([])
-const[clientesPerdidos,setClientesPerdidos]=useState([])
+
 const[rankingProductos,setRankingProductos]=useState([])
 const[ciudadFiltro,setCiudadFiltro]=useState("")
 const[ciudades,setCiudades]=useState<any[]>([])
@@ -34,7 +34,11 @@ const [mostrarConfirmacion,setMostrarConfirmacion]=useState(false)
 const [ventaSeleccionada,setVentaSeleccionada]=useState<any>(null)
 const[resumenCiudad,setResumenCiudad]=useState<any[]>([])
 const [mensaje,setMensaje]=useState("")
+const [mostrarFiltrosVentas,setMostrarFiltrosVentas]=useState(false)
 
+const [filtroEnvase,setFiltroEnvase]=useState("")
+const [filtroPago,setFiltroPago]=useState("")
+const [filtroOrigen,setFiltroOrigen]=useState("")
 useEffect(()=>{
 generarReporte()
 },[fechaInicio,fechaFin,ciudadFiltro])
@@ -228,30 +232,6 @@ setTotalCxc(totalPendiente)
 // TOP CLIENTES
 let ranking = Object.entries(clientesConteo).sort((a,b)=>b[1]-a[1])
 setTopClientes(ranking.slice(0,10))
-
-// CLIENTES INACTIVOS
-let hoy = new Date()
-
-function diasSinComprar(fecha){
-let ultima = new Date(fecha)
-return Math.floor((hoy - ultima)/(1000*60*60*24))
-}
-
-let ultimaCompra = {}
-
-ventas.forEach(v=>{
-if(!ultimaCompra[v.cliente] || v.fecha > ultimaCompra[v.cliente]){
-ultimaCompra[v.cliente] = v.fecha
-}
-})
-
-let perdidos = clientesSistema.map(c=>{
-let ultima = ultimaCompra[c.nombre]
-if(!ultima) return null
-return {...c,dias:diasSinComprar(ultima)}
-}).filter(c=>c && c.dias >= 8)
-
-setClientesPerdidos(perdidos)
 
 // PRODUCTOS
 let rankingProd = Object.entries(productosConteo).sort((a,b)=>b[1]-a[1])
@@ -604,6 +584,24 @@ let maxProducto = rankingProductos[0]?.[1] || 1
 
 const COLORS = ["#22c55e","#3b82f6","#f97316","#ef4444","#a855f7"]
 
+const ventasFiltradas = ventasDia.filter((v:any)=>{
+
+const cumpleEnvase =
+!filtroEnvase ||
+(v.tipo_envase || "").toLowerCase() === filtroEnvase
+
+const cumplePago =
+!filtroPago ||
+(v.pago || "").toLowerCase() === filtroPago
+
+const cumpleOrigen =
+!filtroOrigen ||
+(v.origen || "").toLowerCase() === filtroOrigen
+
+return cumpleEnvase && cumplePago && cumpleOrigen
+
+})
+
 return(
 
 <div style={contenedor}>
@@ -753,20 +751,6 @@ resumenCiudad.map((p:any,i:number)=>(
 
 )}
 
-{/* INACTIVOS */}
-<div style={card}>
-<h3 style={subtitulo}>🚨 Clientes inactivos</h3>
-
-{clientesPerdidos.length===0 && <p style={{color:"#16a34a"}}>✅ Todos activos</p>}
-
-{clientesPerdidos.map((c,i)=>(
-<p key={i} style={{color:"#dc2626"}}>
-❌ {c.nombre} ({c.dias} días)
-</p>
-))}
-
-</div>
-
 {/* PIE */}
 <div style={{background:"#fff",padding:"20px",borderRadius:"12px",marginTop:"20px"}}>
 <PieChart width={400} height={400}>
@@ -785,13 +769,92 @@ resumenCiudad.map((p:any,i:number)=>(
 
 <h2>🧾 Ventas encontradas</h2>
 
-{ventasDia.length===0 ? (
+<button
+style={{
+...boton,
+background:"#2563eb",
+marginBottom:"15px"
+}}
+onClick={()=>setMostrarFiltrosVentas(!mostrarFiltrosVentas)}
+>
+🔎 Filtrar
+</button>
 
-<p>No existen ventas en ese rango de fechas.</p>
+{mostrarFiltrosVentas && (
+
+<div style={filtrosVentas}>
+
+<select
+style={input}
+value={filtroEnvase}
+onChange={(e)=>setFiltroEnvase(e.target.value)}
+>
+
+<option value="">Todos los tipos de envase</option>
+<option value="cambio">Cambio</option>
+<option value="prestado">Prestado</option>
+<option value="vendido">Vendido</option>
+
+</select>
+
+
+<select
+style={input}
+value={filtroPago}
+onChange={(e)=>setFiltroPago(e.target.value)}
+>
+
+<option value="">Todos los pagos</option>
+<option value="efectivo">Efectivo</option>
+<option value="transferencia">Transferencia</option>
+<option value="fiado">Fiado</option>
+<option value="mixto">Mixto</option>
+
+</select>
+
+
+<select
+style={input}
+value={filtroOrigen}
+onChange={(e)=>setFiltroOrigen(e.target.value)}
+>
+
+<option value="">Todos los orígenes</option>
+<option value="vehiculo1">Vehículo 1</option>
+<option value="vehiculo2">Vehículo 2</option>
+<option value="empresa">Empresa</option>
+<option value="dorita">Dorita</option>
+
+</select>
+
+
+<button
+style={{
+...boton,
+background:"#64748b"
+}}
+onClick={()=>{
+
+setFiltroEnvase("")
+setFiltroPago("")
+setFiltroOrigen("")
+
+}}
+>
+🧹 Limpiar filtros
+</button>
+
+</div>
+
+)}
+
+{ventasFiltradas.length===0 ? (
+
+<p>No existen ventas con los filtros seleccionados.</p>
 
 ) : (
 
-ventasDia.map((v:any,i:number)=>(
+ventasFiltradas.map((v:any,i:number)=>(
 
 <div key={i} style={detalleVenta}>
 
@@ -799,18 +862,32 @@ ventasDia.map((v:any,i:number)=>(
 <b>{v.cliente}</b>
 </div>
 
-<div>{v.producto}</div>
+<div>
+📦 {v.producto}
+</div>
 
 <div>
 Cantidad: {v.cantidad}
 </div>
 
 <div>
-${v.total}
+💲 ${v.total}
 </div>
 
 <div>
-{v.fecha}
+📅 {v.fecha}
+</div>
+
+<div>
+📍 Origen: {v.origen || "-"}
+</div>
+
+<div>
+🫙 Tipo envase: {v.tipo_envase || "-"}
+</div>
+
+<div>
+💳 Pago: {v.pago || "-"}
 </div>
 
 <button
@@ -972,4 +1049,14 @@ borderRadius:"14px",
 fontSize:"26px",
 fontWeight:"bold",
 boxShadow:"0 0 25px rgba(0,0,0,.4)"
+}
+
+const filtrosVentas={
+display:"flex",
+gap:"10px",
+flexWrap:"wrap" as const,
+marginBottom:"20px",
+padding:"15px",
+background:"#f1f5f9",
+borderRadius:"10px"
 }
