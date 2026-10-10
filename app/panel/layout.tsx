@@ -26,7 +26,9 @@ background:"linear-gradient(135deg,#60a5fa,#8b7cf6)"
 >
 
 <div
-onClick={()=>router.push("/panel")}
+onClick={()=>{
+window.location.href="/panel"
+}}
 title="Ir al Panel Principal"
 style={{
 height:"58px",

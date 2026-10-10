@@ -7,6 +7,7 @@ import { supabase } from "../../../../supabase"
 export default function Inicial(){
 
 const [cliente,setCliente]=useState("")
+const [busquedaCliente,setBusquedaCliente]=useState("")
 const [tipo,setTipo]=useState("")
 const [cantidad,setCantidad]=useState("")
 const [clientes, setClientes] = useState<any[]>([])
@@ -56,6 +57,16 @@ desdeClientes += bloqueClientes
 setClientes(data)
 
 }
+
+const clientesFiltrados = clientes.filter((c:any)=>
+
+(c.nombre || "")
+.toLowerCase()
+.includes(
+busquedaCliente.toLowerCase()
+)
+
+)
 
 async function cargar(){
 
@@ -199,6 +210,13 @@ return(
 
 <div style={card}>
 
+<input
+style={input}
+placeholder="🔎 Buscar cliente..."
+value={busquedaCliente}
+onChange={(e)=>setBusquedaCliente(e.target.value)}
+/>
+
 <select
 style={input}
 value={cliente}
@@ -207,7 +225,7 @@ onChange={(e)=>setCliente(e.target.value)}
 
 <option>Seleccionar cliente</option>
 
-{clientes.map((c,i)=>(
+{clientesFiltrados.map((c,i)=>(
 
 <option key={i}>
 {c.nombre}

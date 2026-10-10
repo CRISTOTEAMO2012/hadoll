@@ -39,6 +39,7 @@ const [mostrarFiltrosVentas,setMostrarFiltrosVentas]=useState(false)
 const [filtroEnvase,setFiltroEnvase]=useState("")
 const [filtroPago,setFiltroPago]=useState("")
 const [filtroOrigen,setFiltroOrigen]=useState("")
+const [filtroProducto,setFiltroProducto]=useState("")
 useEffect(()=>{
 generarReporte()
 },[fechaInicio,fechaFin,ciudadFiltro])
@@ -598,7 +599,15 @@ const cumpleOrigen =
 !filtroOrigen ||
 (v.origen || "").toLowerCase() === filtroOrigen
 
-return cumpleEnvase && cumplePago && cumpleOrigen
+const cumpleProducto =
+
+!filtroProducto ||
+
+(v.producto || "").toLowerCase() === filtroProducto
+
+
+
+return cumpleEnvase && cumplePago && cumpleOrigen && cumpleProducto
 
 })
 
@@ -827,6 +836,45 @@ onChange={(e)=>setFiltroOrigen(e.target.value)}
 
 </select>
 
+<select
+
+style={input}
+
+value={filtroProducto}
+
+onChange={(e)=>setFiltroProducto(e.target.value)}
+
+>
+
+<option value="">Todos los productos</option>
+
+<option value="botellón 20l con llave">
+Botellón 20L con llave
+</option>
+
+<option value="botellón 20l sin llave">
+Botellón 20L sin llave
+</option>
+
+<option value="paca 15 botellas 600 ml">
+Paca 15 botellas 600 ml
+</option>
+
+
+<option value="paca 24 botellas 600 ml">
+Paca 24 botellas 600 ml
+</option>
+
+<option value="botella 1l">
+Botella 1L
+</option>
+
+<option value="botella 6000 ml">
+Botella 6000 ml
+</option>
+
+</select>
+
 
 <button
 style={{
@@ -838,6 +886,7 @@ onClick={()=>{
 setFiltroEnvase("")
 setFiltroPago("")
 setFiltroOrigen("")
+setFiltroProducto("")
 
 }}
 >

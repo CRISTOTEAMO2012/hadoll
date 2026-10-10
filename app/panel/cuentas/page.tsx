@@ -15,6 +15,9 @@ const [fechaDesde,setFechaDesde]=useState("")
 const [fechaHasta,setFechaHasta]=useState("")
 const [pagosFiltrados,setPagosFiltrados]=useState<any[]>([])
 const [buscandoPagos,setBuscandoPagos]=useState(false)
+const [fechaDeudaDesde,setFechaDeudaDesde]=useState("")
+const [fechaDeudaHasta,setFechaDeudaHasta]=useState("")
+const [resultadoFecha,setResultadoFecha]=useState<any[]>([])
 
 useEffect(()=>{
 cargar()
@@ -65,6 +68,34 @@ setDeudas(deudasFormateadas)
 }
 
 // 🔎 CONSULTAR COBROS POR FECHA
+function consultarDeudasFecha(){
+
+if(!fechaDeudaDesde || !fechaDeudaHasta){
+
+alert("Seleccione fecha Desde y Hasta")
+return
+
+}
+
+
+const resultado = deudas.filter((d:any)=>{
+
+return (
+
+d.fecha >= fechaDeudaDesde &&
+
+d.fecha <= fechaDeudaHasta &&
+
+d.estado==="pendiente"
+
+)
+
+})
+
+
+setResultadoFecha(resultado)
+
+}
 async function consultarPagos(){
 
 if(!fechaDesde || !fechaHasta){
@@ -479,8 +510,102 @@ onClick={()=>setVerHistorial(true)}
 <>
 
 <h2>Pendientes</h2>
+<div style={filtrosHistorial}>
 
-{Object.entries(pendientes).map(([cliente,data]:any)=>(
+<div>
+
+<label style={labelFiltro}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDeudaDesde}
+onChange={(e)=>setFechaDeudaDesde(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+
+<div>
+
+<label style={labelFiltro}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaDeudaHasta}
+onChange={(e)=>setFechaDeudaHasta(e.target.value)}
+style={inputFiltro}
+/>
+
+</div>
+
+
+<button
+style={botonBuscar}
+onClick={consultarDeudasFecha}
+>
+🔎 Consultar fiados
+</button>
+
+<button
+style={botonLimpiar}
+onClick={()=>setResultadoFecha([])}
+>
+❌ Dejar de consultar
+</button>
+
+
+</div>
+
+{
+resultadoFecha.length > 0 && (
+
+<div>
+
+<h3>
+Resultado por fecha
+</h3>
+
+{
+resultadoFecha.map((d:any,i:number)=>(
+
+<div key={i} style={card}>
+
+<b>
+{d.cliente}
+</b>
+
+<br/>
+
+📅 {d.fecha}
+
+<br/>
+
+📦 {d.producto}
+
+<br/>
+
+💲 {d.monto}
+
+</div>
+
+))
+
+}
+
+</div>
+
+)
+}
+
+{
+resultadoFecha.length === 0 &&
+
+Object.entries(pendientes).map(([cliente,data]:any)=>(
 
 <div key={cliente} style={card}>
 

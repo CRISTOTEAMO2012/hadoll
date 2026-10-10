@@ -20,39 +20,98 @@ cargarHistorial()
 
 async function cargarClientes(){
 
-let data:any[] = []
-let desdeClientes = 0
-const bloqueClientes = 1000
+let movimientos:any[] = []
+let desde = 0
+const bloque = 1000
+
 
 while(true){
 
-const { data: loteClientes, error } = await supabase
-.from("clientes")
+const { data:lote, error } = await supabase
+.from("envases_prestados")
 .select("*")
-.order("nombre",{ascending:true})
-.range(desdeClientes, desdeClientes + bloqueClientes - 1)
+.order("id",{ascending:false})
+.range(desde, desde + bloque - 1)
+
 
 if(error){
 
 console.log(error)
 
-alert("Error cargando clientes")
+alert("Error cargando clientes con envases")
 
 return
 
 }
 
-if(!loteClientes || loteClientes.length === 0) break
 
-data = [...data, ...loteClientes]
+if(!lote || lote.length===0) break
 
-if(loteClientes.length < bloqueClientes) break
 
-desdeClientes += bloqueClientes
+movimientos=[
+...movimientos,
+...lote
+]
+
+
+if(lote.length < bloque) break
+
+
+desde += bloque
 
 }
 
-setClientes(data)
+
+// calcular clientes que todavía tienen envases
+
+let saldo:any={}
+
+
+movimientos.forEach((m:any)=>{
+
+
+if(!saldo[m.cliente]){
+
+saldo[m.cliente]=0
+
+}
+
+
+if(
+m.tipo==="prestado" ||
+m.tipo==="inicial"
+){
+
+saldo[m.cliente]+=Number(m.cantidad)
+
+}
+
+
+if(m.tipo==="devuelto"){
+
+saldo[m.cliente]-=Number(m.cantidad)
+
+}
+
+
+})
+
+
+// dejar solamente clientes con saldo pendiente
+
+let clientesConEnvases = Object.keys(saldo)
+.filter(nombre=>saldo[nombre]>0)
+.map(nombre=>({
+
+nombre
+
+}))
+.sort((a,b)=>
+a.nombre.localeCompare(b.nombre)
+)
+
+
+setClientes(clientesConEnvases)
 
 }
 
