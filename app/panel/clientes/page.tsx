@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api"
 import * as XLSX from "xlsx"
 import { saveAs } from "file-saver"
@@ -27,89 +27,95 @@ const [editandoIndex,setEditandoIndex]=useState<any>(null)
 const [mensaje,setMensaje]=useState("")
 const [mostrarRepetidos,setMostrarRepetidos]=useState(false)
 
-function normalizarTexto(texto:any){
 
-return String(texto || "")
-.normalize("NFD")
-.replace(/[\u0300-\u036f]/g,"")
-.toLowerCase()
-.replace(/\s+/g," ")
-.trim()
+const normalizarTexto = useCallback((texto: any) => {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+}, [])
 
-}
 
 const nombreNormalizado = normalizarTexto(nombre)
 const referenciaNormalizada = normalizarTexto(referencia)
 
-const posiblesDuplicados = clientes
-.filter((c:any)=>{
 
-if(editandoIndex !== null && c.id === editandoIndex){
-return false
-}
+const posiblesDuplicados = useMemo(() => {
+  return clientes
+    .filter((c: any) => {
+      if (editandoIndex !== null && c.id === editandoIndex) {
+        return false
+      }
 
-const nombreCliente = normalizarTexto(c.nombre)
-const referenciaCliente = normalizarTexto(c.referencia)
+      const nombreCliente = normalizarTexto(c.nombre)
+      const referenciaCliente = normalizarTexto(c.referencia)
 
-const coincideNombre =
-nombreNormalizado.length >= 5 &&
-(
-nombreCliente.includes(nombreNormalizado) ||
-nombreNormalizado.includes(nombreCliente)
-)
+      const coincideNombre =
+        nombreNormalizado.length >= 5 &&
+        (
+          nombreCliente.includes(nombreNormalizado) ||
+          nombreNormalizado.includes(nombreCliente)
+        )
 
-const coincideReferencia =
-referenciaNormalizada.length >= 5 &&
-(
-referenciaCliente.includes(referenciaNormalizada) ||
-referenciaNormalizada.includes(referenciaCliente)
-)
+      const coincideReferencia =
+        referenciaNormalizada.length >= 5 &&
+        (
+          referenciaCliente.includes(referenciaNormalizada) ||
+          referenciaNormalizada.includes(referenciaCliente)
+        )
 
-return coincideNombre || coincideReferencia
+      return coincideNombre || coincideReferencia
+    })
+    .slice(0, 5)
+}, [
+  clientes,
+  editandoIndex,
+  nombreNormalizado,
+  referenciaNormalizada,
+  normalizarTexto
+])
 
-})
-.slice(0,5)
 
-const clientesPotencialmenteRepetidos = clientes
-.map((cliente:any,index:number)=>{
+const clientesPotencialmenteRepetidos = useMemo(() => {
+  return clientes
+    .map((cliente: any, index: number) => {
+      const nombreCliente = normalizarTexto(cliente.nombre)
+      const referenciaCliente = normalizarTexto(cliente.referencia)
 
-const nombreCliente = normalizarTexto(cliente.nombre)
-const referenciaCliente = normalizarTexto(cliente.referencia)
+      const similares = clientes.filter((otro: any, otroIndex: number) => {
+        if (index === otroIndex) return false
 
-const similares = clientes.filter((otro:any,otroIndex:number)=>{
+        const nombreOtro = normalizarTexto(otro.nombre)
+        const referenciaOtro = normalizarTexto(otro.referencia)
 
-if(index === otroIndex) return false
+        const nombreParecido =
+          nombreCliente.length >= 5 &&
+          nombreOtro.length >= 5 &&
+          (
+            nombreCliente.includes(nombreOtro) ||
+            nombreOtro.includes(nombreCliente)
+          )
 
-const nombreOtro = normalizarTexto(otro.nombre)
-const referenciaOtro = normalizarTexto(otro.referencia)
+        const referenciaParecida =
+          referenciaCliente.length >= 5 &&
+          referenciaOtro.length >= 5 &&
+          (
+            referenciaCliente.includes(referenciaOtro) ||
+            referenciaOtro.includes(referenciaCliente)
+          )
 
-const nombreParecido =
-nombreCliente.length >= 5 &&
-nombreOtro.length >= 5 &&
-(
-nombreCliente.includes(nombreOtro) ||
-nombreOtro.includes(nombreCliente)
-)
+        return nombreParecido || referenciaParecida
+      })
 
-const referenciaParecida =
-referenciaCliente.length >= 5 &&
-referenciaOtro.length >= 5 &&
-(
-referenciaCliente.includes(referenciaOtro) ||
-referenciaOtro.includes(referenciaCliente)
-)
-
-return nombreParecido || referenciaParecida
-
-})
-
-return {
-cliente,
-similares
-}
-
-})
-.filter((grupo:any)=>grupo.similares.length > 0)
+      return {
+        cliente,
+        similares
+      }
+    })
+    .filter((grupo: any) => grupo.similares.length > 0)
+}, [clientes, normalizarTexto])
 
 // CARGAR CLIENTES
 useEffect(()=>{
@@ -452,34 +458,35 @@ alert("CLIENTE ELIMINADO ✅")
 
 }
 
-// FILTROS
-let lista = clientes
 
-if(filtroDia!=="Todos"){
-lista = lista.filter(c=>c.dia===filtroDia)
-}
+const lista = useMemo(() => {
+  let resultado = clientes
 
-if(filtroCiudad!=="Todas"){
-lista = lista.filter(c=>c.ciudad===filtroCiudad)
-}
+  if (filtroDia !== "Todos") {
+    resultado = resultado.filter(
+      (c: any) => c.dia === filtroDia
+    )
+  }
 
-if(buscar!==""){
+  if (filtroCiudad !== "Todas") {
+    resultado = resultado.filter(
+      (c: any) => c.ciudad === filtroCiudad
+    )
+  }
 
-lista = lista.filter(c=>
+  const termino = buscar.toLowerCase().trim()
 
-(c.nombre || "")
-.toLowerCase()
-.includes(buscar.toLowerCase())
+  if (termino !== "") {
+    resultado = resultado.filter(
+      (c: any) =>
+        (c.nombre || "").toLowerCase().includes(termino) ||
+        (c.referencia || "").toLowerCase().includes(termino)
+    )
+  }
 
-||
+  return resultado
+}, [clientes, filtroDia, filtroCiudad, buscar])
 
-(c.referencia || "")
-.toLowerCase()
-.includes(buscar.toLowerCase())
-
-)
-
-}
 
 const animacion = `
 @keyframes zoomIn {

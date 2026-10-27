@@ -145,9 +145,11 @@ style={{...boton,background:"#0891b2"}}
 👥 Clientes
 </Link>
 
-<Link href="/panel/ventas" style={{...boton,background:"#16a34a"}}>
-💰 Ventas
+
+<Link href="/panel/ventas/menu" style={{...boton,background:"#16a34a"}}>
+  💰 Ventas
 </Link>
+
 
 <Link href="/panel/traslados" style={{...boton,background:"#f43f5e"}}>
 🔄 Traslados
