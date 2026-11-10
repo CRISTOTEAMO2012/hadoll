@@ -13,6 +13,8 @@ const [destino,setDestino]=useState("empresa")
 const [historial,setHistorial]=useState<any[]>([])
 const [mensaje,setMensaje]=useState("")
 const [verHistorial,setVerHistorial]=useState(false)
+const [fechaDesde,setFechaDesde]=useState("")
+const [fechaHasta,setFechaHasta]=useState("")
 useEffect(()=>{
 cargarClientes()
 cargarHistorial()
@@ -120,6 +122,15 @@ let clientesFiltrados = clientes.filter((c:any)=>
 .toLowerCase()
 .includes(busqueda.toLowerCase())
 )
+
+const historialFiltrado = historial.filter((d:any)=>{
+
+return (
+(!fechaDesde || d.fecha >= fechaDesde) &&
+(!fechaHasta || d.fecha <= fechaHasta)
+)
+
+})
 
 async function cargarHistorial(){
     
@@ -429,37 +440,161 @@ onClick={()=>setVerHistorial(!verHistorial)}
 📋 Historial devoluciones
 </h2>
 
-{historial.length === 0 ? (
+<div style={{
+display:"flex",
+gap:"12px",
+flexWrap:"wrap",
+marginBottom:"20px",
+alignItems:"end"
+}}>
 
-<p>No hay devoluciones registradas</p>
+<div>
+<label style={{display:"block",marginBottom:"5px",fontWeight:"bold"}}>
+📅 Desde
+</label>
+
+<input
+type="date"
+value={fechaDesde}
+onChange={(e)=>setFechaDesde(e.target.value)}
+style={input}
+/>
+</div>
+
+<div>
+<label style={{display:"block",marginBottom:"5px",fontWeight:"bold"}}>
+📅 Hasta
+</label>
+
+<input
+type="date"
+value={fechaHasta}
+onChange={(e)=>setFechaHasta(e.target.value)}
+style={input}
+/>
+</div>
+
+<button
+style={{...boton,background:"#64748b"}}
+onClick={()=>{
+setFechaDesde("")
+setFechaHasta("")
+}}
+>
+🧹 Limpiar fechas
+</button>
+
+</div>
+
+{historialFiltrado.length === 0 ? (
+
+<p style={{
+textAlign:"center",
+padding:"30px",
+fontSize:"17px",
+color:"#64748b"
+}}>
+📭 No hay devoluciones registradas en este período.
+</p>
 
 ) : (
 
-historial.map((d:any,i:number)=>(
+<div style={{overflowX:"auto"}}>
 
-<div key={i} style={item}>
+<table style={{
+width:"100%",
+borderCollapse:"collapse",
+fontSize:"15px",
+background:"#fff"
+}}>
 
-<div>
+<thead>
 
-<b>{d.cliente}</b>
+<tr style={{
+background:"#1e293b",
+color:"#fff"
+}}>
 
-<div style={{fontSize:"14px",color:"#666"}}>
-{d.envase}
-</div>
+<th style={{padding:"16px",textAlign:"left"}}>
+CLIENTE
+</th>
 
-<div style={{fontSize:"13px",color:"#999"}}>
+<th style={{padding:"16px",textAlign:"left"}}>
+ENVASE
+</th>
+
+<th style={{padding:"16px",textAlign:"center"}}>
+FECHA
+</th>
+
+<th style={{padding:"16px",textAlign:"center"}}>
+CANTIDAD DEVUELTA
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{historialFiltrado.map((d:any,i:number)=>(
+
+<tr key={i} style={{
+background:i%2===0 ? "#ffffff" : "#f1f5f9",
+borderBottom:"1px solid #e2e8f0"
+}}>
+
+<td style={{
+padding:"17px",
+fontWeight:"bold",
+color:"#1e293b"
+}}>
+{d.cliente}
+</td>
+
+<td style={{
+padding:"17px",
+color:"#475569"
+}}>
+🫙 {d.envase}
+</td>
+
+<td style={{
+padding:"17px",
+textAlign:"center",
+color:"#475569"
+}}>
 {d.fecha}
-</div>
+</td>
 
-</div>
+<td style={{
+padding:"17px",
+textAlign:"center"
+}}>
 
-<div style={cantidadBox}>
+<span style={{
+background:"#dcfce7",
+color:"#166534",
+padding:"9px 20px",
+borderRadius:"8px",
+fontWeight:"bold",
+fontSize:"16px",
+display:"inline-block"
+}}>
 -{d.cantidad}
-</div>
+</span>
+
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
 
 </div>
-
-))
 
 )}
 

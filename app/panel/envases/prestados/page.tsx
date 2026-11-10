@@ -140,22 +140,15 @@ let agrupadoFiltrado:any = {}
 
 datosFiltrados.forEach((p:any)=>{
 
+if(p.tipo !== "prestado") return
+
 let cliente = (p.cliente || "").trim()
 
 if(agrupadoFiltrado[cliente] === undefined){
 agrupadoFiltrado[cliente] = 0
 }
 
-if(
-p.tipo==="prestado" ||
-p.tipo==="inicial"
-){
 agrupadoFiltrado[cliente] += Number(p.cantidad)
-}
-
-if(p.tipo==="devuelto"){
-agrupadoFiltrado[cliente] -= Number(p.cantidad)
-}
 
 })
 
@@ -167,27 +160,18 @@ total
 )
 
 
-// 🔥 TOTALES GENERALES
+// 🔥 TOTALES GENERALES: SOLO ENVASES PRESTADOS
 
 let totalConLlave = 0
 let totalSinLlave = 0
 
 datosFiltrados.forEach((p:any)=>{
 
+if(p.tipo !== "prestado") return
+
 const envase = (p.envase || p.producto || "").toLowerCase()
 
-let cantidadMovimiento = 0
-
-if(
-p.tipo==="prestado" ||
-p.tipo==="inicial"
-){
-cantidadMovimiento = Number(p.cantidad || 0)
-}
-
-if(p.tipo==="devuelto"){
-cantidadMovimiento = -Number(p.cantidad || 0)
-}
+let cantidadMovimiento = Number(p.cantidad || 0)
 
 if(
 envase.includes("con llave") ||

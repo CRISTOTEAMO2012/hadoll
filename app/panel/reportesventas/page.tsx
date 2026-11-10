@@ -589,7 +589,19 @@ const ventasFiltradas = ventasDia.filter((v:any)=>{
 
 const cumpleEnvase =
 !filtroEnvase ||
-(v.tipo_envase || "").toLowerCase() === filtroEnvase
+
+(
+filtroEnvase === "cambio_personalizado"
+?
+v.tipo_envase === "cambio" &&
+v.devolucion_manual === true
+:
+v.tipo_envase === filtroEnvase &&
+(
+filtroEnvase !== "cambio" ||
+v.devolucion_manual !== true
+)
+)
 
 const cumplePago =
 !filtroPago ||
@@ -801,6 +813,7 @@ onChange={(e)=>setFiltroEnvase(e.target.value)}
 
 <option value="">Todos los tipos de envase</option>
 <option value="cambio">Cambio</option>
+<option value="cambio_personalizado">Cambio Personalizado</option>
 <option value="prestado">Prestado</option>
 <option value="vendido">Vendido</option>
 
@@ -908,12 +921,34 @@ ventasFiltradas.map((v:any,i:number)=>(
 <div key={i} style={detalleVenta}>
 
 <div>
-<b>{v.cliente}</b>
+  <b>{v.cliente}</b>
 </div>
 
 <div>
-📦 {v.producto}
+  📦 {v.producto}
 </div>
+
+{v.devolucion_manual === true && (
+
+  <div style={{color:"#16a34a",fontWeight:"bold"}}>
+
+    🫙 Envases recibidos:
+
+    {Number(v.vacios_con_llave) > 0 && (
+      <div>
+        🔵 {v.vacios_con_llave} botellón(es) con llave
+      </div>
+    )}
+
+    {Number(v.vacios_sin_llave) > 0 && (
+      <div>
+        ⚪ {v.vacios_sin_llave} botellón(es) sin llave
+      </div>
+    )}
+
+  </div>
+
+)}
 
 <div>
 Cantidad: {v.cantidad}
