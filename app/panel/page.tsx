@@ -55,8 +55,8 @@ style={logo}
 {rol === "admin" && (
 <>
 
-<Link href="/panel/dashboard" style={{...boton,background:"#6366f1"}}>
-📊 Dashboard
+<Link href="/panel/dashboard" style={{...boton,background:"#0f766e"}}>
+📊 REPORTE GENERAL
 </Link>
 
 <Link href="/panel/clientes" style={{...boton,background:"#22c55e"}}>

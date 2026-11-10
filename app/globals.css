@@ -24,3 +24,66 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+/* ==================================
+   HADOLL WATER - REPORTE PDF
+================================== */
+
+@media print {
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    color: #111827 !important;
+    font-size: 10px !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  .contenido-tabla {
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+  }
+
+  th {
+    background: #e2e8f0 !important;
+    color: #111827 !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 6px !important;
+  }
+
+  td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 5px !important;
+    color: #111827 !important;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    color: #0f172a !important;
+    break-after: avoid;
+  }
+
+  .contenido-tabla,
+  table {
+    break-inside: auto;
+  }
+
+}
+

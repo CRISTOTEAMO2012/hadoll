@@ -332,8 +332,9 @@ const { data: ventaCreada, error: errorVenta } = await supabase
 .from("ventas")
 .insert([
 {
-
 fecha: hoy,
+
+tipo_venta: "cortesia",
 
 cliente,
 

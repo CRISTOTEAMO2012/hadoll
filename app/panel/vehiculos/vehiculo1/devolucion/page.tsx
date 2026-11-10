@@ -86,7 +86,8 @@ if(!inv[destino][clave]) inv[destino][clave]=0
 
 inv[destino][clave] += cant
 
-await supabase
+
+const { error: errorActualizar } = await supabase
 .from("inventario")
 .update({
 empresa: inv.empresa,
@@ -95,7 +96,40 @@ vehiculo1: inv.vehiculo1,
 vehiculo2: inv.vehiculo2
 })
 .eq("id", data.id)
+
+if(errorActualizar){
+alert("Error actualizando inventario: " + errorActualizar.message)
+return
+}
+
+// 📋 GUARDAR HISTORIAL DE DEVOLUCIÓN DE PRODUCTO LLENO
+const hoy = new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+
+const { error: errorHistorial } = await supabase
+.from("movimientos_vehiculos")
+.insert([
+{
+vehiculo: "vehiculo1",
+tipo: "devolucion_producto_lleno",
+producto: producto,
+cantidad: cant,
+origen: "vehiculo1",
+destino: destino,
+fecha: hoy
+}
+])
+
+if(errorHistorial){
+console.log("Error guardando historial:", errorHistorial)
+alert("El inventario se actualizó correctamente, pero no se guardó el historial. No repitas la devolución.")
+return
+}
+
 setInventario(inv.vehiculo1)
+
 
 setMensaje("✅ Producto devuelto exitosamente")
 
@@ -136,7 +170,8 @@ if(!inv[destino][clave]) inv[destino][clave]=0
 
 inv[destino][clave] += cant
 
-await supabase
+
+const { error: errorActualizar } = await supabase
 .from("inventario")
 .update({
 empresa: inv.empresa,
@@ -145,7 +180,40 @@ vehiculo1: inv.vehiculo1,
 vehiculo2: inv.vehiculo2
 })
 .eq("id", data.id)
+
+if(errorActualizar){
+alert("Error actualizando inventario: " + errorActualizar.message)
+return
+}
+
+// 📋 GUARDAR HISTORIAL DE DEVOLUCIÓN DE ENVASE VACÍO
+const hoy = new Date().toLocaleDateString(
+"en-CA",
+{timeZone:"America/Guayaquil"}
+)
+
+const { error: errorHistorial } = await supabase
+.from("movimientos_vehiculos")
+.insert([
+{
+vehiculo: "vehiculo1",
+tipo: "devolucion_envase_vacio",
+producto: envase,
+cantidad: cant,
+origen: "vehiculo1",
+destino: destino,
+fecha: hoy
+}
+])
+
+if(errorHistorial){
+console.log("Error guardando historial:", errorHistorial)
+alert("El inventario se actualizó correctamente, pero no se guardó el historial. No repitas la devolución.")
+return
+}
+
 setInventario(inv.vehiculo1)
+
 
 setMensaje("✅ Envase devuelto exitosamente")
 

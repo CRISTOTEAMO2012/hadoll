@@ -119,6 +119,7 @@ vehiculo2: inventario.vehiculo2
 })
 .eq("id", data.id)
 
+
 if(errorGuardar){
 
 alert(errorGuardar.message)
@@ -128,7 +129,34 @@ return
 
 }
 
+
+// REGISTRAR HISTORIAL DE CARGA
+const hoy = new Date().toLocaleDateString(
+  "en-CA",
+  { timeZone: "America/Guayaquil" }
+)
+
+const { error: errorHistorial } = await supabase
+  .from("movimientos_vehiculos")
+  .insert([{
+    vehiculo: "vehiculo1",
+    tipo: "carga",
+    producto: producto,
+    cantidad: Number(cantidad),
+    origen: origen,
+    destino: "vehiculo1",
+    fecha: hoy,
+    hora: new Date().toISOString()
+  }])
+
+if(errorHistorial){
+  console.log("Error registrando historial:", errorHistorial)
+  alert("El inventario se actualizó, pero no se pudo guardar el historial. Avísale al administrador.")
+  return
+}
+
 setMensaje("✅ Producto cargado exitosamente")
+
 
 setTimeout(()=>{
 setMensaje("")

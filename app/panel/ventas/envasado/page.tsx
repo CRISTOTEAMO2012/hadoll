@@ -156,6 +156,8 @@ const { data: ventaCreada, error: errorVenta } = await supabase
 
 fecha: hoy,
 
+tipo_venta: "envasado",
+
 cliente,
 
 producto,
